@@ -1,0 +1,8 @@
+graph TB
+<% graph_nodes.each do |node| %>
+    <%= node.gsub(/\s+/, '_') %>[<%= node %>]
+<% end %>
+
+<% graph_edges.each do |edge| %>
+    <%= edge[:from].gsub(/\s+/, '_') %> -->|<%= edge[:type] %>| <%= edge[:to].gsub(/\s+/, '_') %>
+<% end %>

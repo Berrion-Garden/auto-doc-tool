@@ -1,0 +1,29 @@
+{
+  "project": "/home/kyle/Projects/auto-doc-tool/fixtures/partial_docs_project",
+  "generated_at": "2026-07-14T11:05:58-07:00",
+  "overall_coverage": 0.0,
+  "total_symbols": 2,
+  "documented_symbols": 0,
+  "undocumented": [
+    "module_Calculator",
+    "class_Silo"
+  ],
+  "modules": {
+    "calculator": {
+      "file": "/home/kyle/Projects/auto-doc-tool/fixtures/partial_docs_project/lib/calculator.rb",
+      "total": 2,
+      "documented": 0,
+      "coverage_pct": 0.0
+    }
+  },
+  "failures": [
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/fixtures/partial_docs_project/lib/calculator.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 100
+    }
+  ],
+  "passed": false,
+  "min_coverage": 100
+}

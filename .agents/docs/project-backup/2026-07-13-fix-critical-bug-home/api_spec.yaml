@@ -1,0 +1,193 @@
+openapi: "3.0.3"
+info:
+  title: Auto-Doc CLI
+  description: |
+    Auto-Doc is a Ruby gem CLI tool. This spec documents the command-line interface as an API surface.
+    Commands are invoked via `auto-doc <command> [args] [--flags]`.
+  version: "1.0.0"
+
+servers:
+  - url: "cli://auto-doc"
+    description: CLI entry point (exe/auto-doc)
+
+tags:
+  - name: Documentation Generation
+    description: Commands for generating developer documentation
+  - name: Setup
+    description: Commands for initializing and inspecting the tool
+
+paths:
+  /generate:
+    post:
+      tags:
+        - Documentation Generation
+      summary: Generate documentation from a source directory
+      description: |
+        Reads all Ruby source files in the given path, builds a directory tree (excluding configured patterns),
+        extracts documentation via YardReader, and writes AGENTS.md, README.md, and diagrams/deps.mmd
+        to the output directory.
+
+        THIS IS THE COMMAND AFFECTED BY THE BUG. The FileTreeBuilder exclusion logic crash prevents this
+        command from completing. The fix is in the `should_exclude?` method.
+      operationId: generate
+      parameters:
+        - name: path
+          in: query
+          required: true
+          schema:
+            type: string
+          description: |
+            Path to the source directory to generate documentation from.
+            Examples: "fixtures/sample_ruby_project", "fixtures/minimal_gem"
+        - name: output-dir
+          in: query
+          required: false
+          schema:
+            type: string
+            default: ".autodoc"
+          description: Custom output directory. Defaults to .autodoc/ relative to the source path.
+      responses:
+        "0":
+          description: Success. All three output files created and non-empty.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: ["success"]
+                  output_dir:
+                    type: string
+                  files:
+                    type: array
+                    items:
+                      type: string
+                    example: ["AGENTS.md", "README.md", "diagrams/deps.mmd"]
+        "1":
+          description: |
+            Error. Possible causes:
+            - TypeError/ArgumentError in FileTreeBuilder (THE BUG BEING FIXED)
+            - Invalid path (directory does not exist)
+            - No Ruby files found
+            - YARD extraction failure
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  details:
+                    type: string
+
+  /init:
+    post:
+      tags:
+        - Setup
+      summary: Initialize auto-doc configuration in a directory
+      description: |
+        Creates necessary configuration files and directory structure for auto-doc in the target path.
+        This command does NOT use FileTreeBuilder — it is not affected by the exclusion crash.
+      operationId: init
+      parameters:
+        - name: path
+          in: query
+          required: false
+          schema:
+            type: string
+            default: "."
+          description: Target directory to initialize. Defaults to current directory.
+      responses:
+        "0":
+          description: Success. Target directory initialized.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: ["initialized"]
+                  path:
+                    type: string
+        "1":
+          description: Error. Directory already initialized, or path is invalid.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+
+  /version:
+    get:
+      tags:
+        - Setup
+      summary: Display the current auto-doc version
+      description: |
+        Prints the version string from AutoDoc::VERSION.
+        This command does NOT use FileTreeBuilder — it is not affected by the exclusion crash.
+      operationId: version
+      parameters: []
+      responses:
+        "0":
+          description: Success. Version string printed.
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "0.1.0"
+        "1":
+          description: Error. Version constant not found.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+
+components:
+  schemas:
+    ExclusionPatterns:
+      type: array
+      description: |
+        Glob patterns for excluding files/directories from documentation generation.
+        MAY contain nested arrays from configuration merging — the FileTreeBuilder fix
+        handles this by flattening before fnmatch evaluation.
+      items:
+        oneOf:
+          - type: string
+            description: A glob pattern. Examples: "/lib", "/test", "**/*.spec.rb"
+          - type: array
+            description: Nested array of patterns (handled by flatten in the fix)
+            items:
+              type: string
+
+    FileTree:
+      type: object
+      description: The directory tree structure produced by FileTreeBuilder.build_tree
+      properties:
+        path:
+          type: string
+        children:
+          type: array
+          items:
+            $ref: "#/components/schemas/FileTreeNode"
+
+    FileTreeNode:
+      type: object
+      properties:
+        name:
+          type: string
+        path:
+          type: string
+        type:
+          type: string
+          enum: ["file", "directory"]
+        children:
+          type: array
+          items:
+            $ref: "#/components/schemas/FileTreeNode"

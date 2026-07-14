@@ -1,0 +1,217 @@
+openapi: "3.0.3"
+info:
+  title: "auto-doc — Auto-Documentation Tool for Ruby Projects"
+  version: "1.0.0"
+  description: >
+    CLI gem that analyzes Ruby source code and generates draft documentation.
+    This tool has NO HTTP API, NO web server, and NO database. All interaction is via command-line subcommands.
+
+    State per invocation: reads source files → produces .autodoc/ output directory. No persistence between runs.
+
+    IMPORTANT: There are no /paths (REST endpoints) in this specification because auto-doc is a Thor-based CLI gem, not a web service.
+    The interface is documented under x-cli-commands below.
+
+x-cli-commands:
+  generate:
+    summary: "Analyze Ruby project and generate documentation drafts"
+    usage: "auto-doc generate <source_path>"
+    description: >
+      Scans all .rb files under source_path, extracts classes/modules/methods via Ripper,
+      reads YARD-style doc comments, builds dependency graph, then generates AGENTS.md per module dir,
+      README.md at module roots, and Mermaid dependency diagrams in .autodoc/.
+
+      Workflow:
+        1. Walk directory tree (excluding vendor, spec, test, etc.)
+        2. Parse each .rb file with Ripper to extract symbols
+        3. Match extracted symbols against the dependency map from require/include/extend calls
+        4. Write AGENTS.md in .autodoc/<module_path>/ for each namespace boundary
+        5. Write README.md in .autodoc/<module_root>/ for each configured module root
+        6. Write Mermaid dependency diagrams in .autodoc/diagrams/
+    arguments:
+      - name: source_path
+        required: true
+        type: string
+        description: "Path to the root directory of the Ruby project to document"
+        example: "./my-ruby-project"
+    flags:
+      - name: config
+        short: "-c"
+        type: string
+        default: ".autodoc.yml (if present in source_path)"
+        description: "Path to custom configuration file"
+    output:
+      - ".autodoc/AGENTS.md — one per module directory, documenting symbols and relationships"
+      - ".autodoc/README.md — one per module root, with Mermaid dir tree diagram"
+      - ".autodoc/diagrams/deps.mmd — Mermaid dependency graph across the project"
+
+  audit:
+    summary: "Check documentation coverage of a Ruby project"
+    usage: "auto-doc audit <source_path>"
+    description: >
+      Scans .rb files, counts documented vs. undocumented symbols (classes, modules, methods),
+      prints a coverage table to stdout and writes report.json to .autodoc/.
+
+      Exit code is 0 when coverage meets or exceeds --threshold; otherwise exits 1
+      so this command can be used in CI pipelines.
+    arguments:
+      - name: source_path
+        required: true
+        type: string
+        description: "Path to the root directory of the Ruby project"
+        example: "./my-ruby-project"
+    flags:
+      - name: threshold
+        short: "-t"
+        type: integer
+        default: 80
+        description: "Minimum coverage percentage for exit code 0. Below this threshold exits with code 1."
+      - name: format
+        short: "-f"
+        type: enum
+        values: [table, json]
+        default: table
+        description: "Output format for the coverage report"
+    output:
+      - Table on stdout (default) or JSON when --format json is set
+      - ".autodoc/report.json — machine-readable coverage data"
+
+  init:
+    summary: "Create default .autodoc.yml configuration file"
+    usage: "auto-doc init [target_directory]"
+    description: >
+      Generates a .autodoc.yml with sensible defaults in the target directory.
+      Safe to re-run — overwrites existing config if present.
+    arguments:
+      - name: target_directory
+        required: false
+        default: "."
+        type: string
+        description: "Directory where .autodoc.yml will be created"
+        example: "."
+    output:
+      - ".autodoc.yml in the target directory"
+
+  version:
+    summary: "Print auto-doc gem version"
+    usage: "auto-doc version"
+    description: "Displays the current installed version of the auto-doc gem."
+    arguments: []
+    flags: []
+    output:
+      - "auto-doc <semver> on stdout (e.g. 'auto-doc 1.0.0')"
+
+x-config-schema:
+  title: AutoDoc Configuration (.autodoc.yml)
+  type: object
+  properties:
+    exclude_patterns:
+      type: array
+      items:
+        type: string
+      default: ["spec", "test", "vendor", "node_modules", ".git"]
+      description: Glob patterns for directories and files to skip during tree building
+    module_roots:
+      type: array
+      items:
+        type: string
+      default: ["lib"]
+      description: Subdirectories treated as module boundaries for README.md generation
+    output_dir:
+      type: string
+      default: ".autodoc"
+      description: Directory where generated documentation is written
+
+components:
+  schemas:
+    ParsedFile:
+      type: object
+      description: "Result of parsing a single .rb file with Ripper"
+      properties:
+        file_path:
+          type: string
+          example: "lib/auto_doc/analyzer/source_parser.rb"
+        classes:
+          type: array
+          items:
+            $ref: "#/components/schemas/SymbolDef"
+        modules:
+          type: array
+          items:
+            $ref: "#/components/schemas/SymbolDef"
+        methods:
+          type: array
+          items:
+            $ref: "#/components/schemas/MethodDef"
+
+    SymbolDef:
+      type: object
+      description: "A class or module extracted from source via Ripper"
+      properties:
+        name:
+          type: string
+          example: "AutoDoc::Analyzer::SourceParser"
+        line_number:
+          type: integer
+          example: 1
+        nested_in:
+          $ref: "#/components/schemas/SymbolDef"
+          nullable: true
+
+    MethodDef:
+      type: object
+      description: "A method definition extracted from source via Ripper"
+      properties:
+        name:
+          type: string
+          example: "should_exclude?"
+        line_number:
+          type: integer
+          example: 14
+        visibility:
+          type: string
+          enum: [public, private, protected]
+          default: public
+        has_doc_comment:
+          type: boolean
+          example: false
+        doc_text:
+          type: string
+          nullable: true
+          example: null
+
+    ImportEdge:
+      type: object
+      description: "An import relationship discovered between two files"
+      properties:
+        source_file:
+          type: string
+          example: "lib/auto_doc/analyzer.rb"
+        target_path:
+          type: string
+          example: "lib/auto_doc/analyzer/source_parser"
+        import_type:
+          type: string
+          enum: [require, include, extend]
+          example: require
+        line_number:
+          type: integer
+          example: 3
+
+    DirectoryTreeEntry:
+      type: object
+      description: "Node in the project directory tree after applying exclude_patterns"
+      properties:
+        path:
+          type: string
+          example: "lib/auto_doc/analyzer"
+        basename:
+          type: string
+          example: "analyzer"
+        is_directory:
+          type: boolean
+        excluded:
+          type: boolean
+          default: false
+        depth:
+          type: integer
+          example: 2
