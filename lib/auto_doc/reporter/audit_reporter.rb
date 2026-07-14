@@ -2,6 +2,7 @@
 
 require "json"
 require "time"
+require "set"
 
 module AutoDoc
   module Reporter
@@ -35,7 +36,11 @@ module AutoDoc
         failures        = []
 
         # Accept both Array<Hash> (old format) and Hash<String, Hash> (CLI format)
+        # When Hash format, delegate overall coverage to CompletenessChecker (single source of truth)
+        overall_pct_from_checker = nil
         input = if analyses.is_a?(Hash)
+                  cc_result = AutoDoc::Reporter::CompletenessChecker.check(analyses)
+                  overall_pct_from_checker = cc_result[:coverage_pct]
                   analyses.map do |file_path, analysis|
                     definitions = analysis[:definitions] || []
                     {
@@ -85,10 +90,15 @@ module AutoDoc
           end
         end
 
-        # Compute overall coverage inline from collected data
+        # Compute overall coverage — use CompletenessChecker for Hash format (single source of truth),
+        # fall back to inline calculation for Array format (legacy string symbols)
+        if overall_pct_from_checker
+          overall_pct = overall_pct_from_checker
+        else
+          overall_pct = all_symbols.empty? ? 100.0 : (documented.size.to_f / all_symbols.size * 100).round(2)
+        end
         documented_symbols_set = documented.to_a
         undocumented_symbols  = all_symbols - documented_symbols_set
-        overall_pct  = all_symbols.empty? ? 100.0 : (documented.size.to_f / all_symbols.size * 100).round(2)
         passed       = overall_pct >= min_coverage && failures.empty?
 
         {

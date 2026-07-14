@@ -83,7 +83,8 @@ module AutoDoc
             if target_name
               body       = comment_lines.map { |l| l.sub(/\A\s*#\s?/, "") }.join("\n")
               has_summary = !body.strip.empty?
-              comment = Comment.new(target_type, target_name, body, start_idx + 1, has_summary)
+              comment = Comment.new(target_type, target_name, body, start_idx + 1, has_summary,
+                                     [], nil, nil, [])
 
               # Enrich with YARD structured data if the gem is available.
               if YARD_AVAILABLE && !body.strip.empty?

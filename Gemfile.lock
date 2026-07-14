@@ -1,10 +1,9 @@
 PATH
   remote: .
   specs:
-    auto-doc (0.1.0)
+    auto-doc (0.2.0)
       sinatra (~> 4.0)
       thor (~> 1.0)
-      yard (~> 0.9)
 
 GEM
   remote: https://rubygems.org/
@@ -58,6 +57,7 @@ DEPENDENCIES
   rake (~> 13.0)
   rspec (~> 3.0)
   sinatra (~> 4.0)
+  yard (~> 0.9.44)
 
 BUNDLED WITH
    2.6.9

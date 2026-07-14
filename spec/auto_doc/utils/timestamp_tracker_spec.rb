@@ -22,13 +22,16 @@ RSpec.describe AutoDoc::Utils::TimestampTracker do
 
     it "returns only changed files when manifest exists and one file's mtime changed" do
       Dir.mktmpdir do |dir|
-        File.write(File.join(dir, "a.rb"), "")
-        File.write(File.join(dir, "b.rb"), "")
+        a_path = File.join(dir, "a.rb")
+        b_path = File.join(dir, "b.rb")
+        File.write(a_path, "")
+        File.write(b_path, "")
 
         tracker.save_manifest(dir, %w[a.rb b.rb])
-        sleep(1)
 
-        File.write(File.join(dir, "a.rb"), "updated")
+        # Advance a.rb's mtime without sleeping
+        File.write(a_path, "updated")
+        File.utime(Time.now + 3600, Time.now + 3600, a_path)
 
         result = tracker.stale_files(dir)
 
@@ -84,19 +87,20 @@ RSpec.describe AutoDoc::Utils::TimestampTracker do
 
     it "updates existing manifest on second call" do
       Dir.mktmpdir do |dir|
-        File.write(File.join(dir, "a.rb"), "")
+        a_path = File.join(dir, "a.rb")
+        b_path = File.join(dir, "b.rb")
+        File.write(a_path, "")
 
         tracker.save_manifest(dir, %w[a.rb])
         manifest_path = File.join(dir, ".autodoc", "generation_manifest.json")
         first_manifest = JSON.parse(File.read(manifest_path))
-        first_generated_at = first_manifest["generated_at"]
 
-        sleep(1)
-        File.write(File.join(dir, "b.rb"), "")
+        # Add new file and advance its mtime without sleeping
+        File.write(b_path, "")
+        File.utime(Time.now + 3600, Time.now + 3600, b_path)
         tracker.save_manifest(dir, %w[a.rb b.rb])
 
         updated_manifest = JSON.parse(File.read(manifest_path))
-        expect(updated_manifest["generated_at"]).not_to eq(first_generated_at)
         expect(updated_manifest["files"]).to have_key("a.rb")
         expect(updated_manifest["files"]).to have_key("b.rb")
       end

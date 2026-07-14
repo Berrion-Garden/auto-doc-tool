@@ -19,6 +19,8 @@ module AutoDoc
   require_relative "auto_doc/analyzer/source_parser"
   require_relative "auto_doc/analyzer/import_extractor"
   require_relative "auto_doc/analyzer/yard_reader"
+  require_relative "auto_doc/analyzer/diff_service"
+  require_relative "auto_doc/analyzer/orphans_service"
 
   # Load generators
   require_relative "auto_doc/generator/agents_md_generator"
@@ -28,6 +30,9 @@ module AutoDoc
   # Load reporters
   require_relative "auto_doc/reporter/completeness_checker"
   require_relative "auto_doc/reporter/audit_reporter"
+
+  # Load orchestrator
+  require_relative "auto_doc/orchestrator"
 
   # Load CLI
   require_relative "auto_doc/cli"

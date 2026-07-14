@@ -4,7 +4,7 @@ require "spec_helper"
 
 RSpec.describe "AutoDoc module" do
   it "has a VERSION constant" do
-    expect(AutoDoc::VERSION).to eq("0.1.0")
+    expect(AutoDoc::VERSION).to eq("0.2.0")
     expect(AutoDoc::VERSION).to be_frozen
   end
 

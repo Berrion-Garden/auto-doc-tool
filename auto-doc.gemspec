@@ -11,11 +11,12 @@ Gem::Specification.new do |spec|
 
   spec.summary       = "Automated documentation generator for Ruby projects"
   spec.description   = "Analyzes Ruby source files to generate AGENTS.md, README.md, and dependency DAG diagrams. Extracts classes, modules, methods, constants, imports, and doc comments — no external dependencies."
-  spec.homepage      = ""
+  spec.homepage      = "https://github.com/pik-ai/auto-doc"
   spec.license       = "MIT"
   spec.required_ruby_version = ">= 3.0.0"
 
-  spec.metadata["allowed_push_host"] = ""
+  spec.metadata["source_code_uri"] = "https://github.com/pik-ai/auto-doc"
+  spec.metadata["changelog_uri"] = "https://github.com/pik-ai/auto-doc/blob/main/CHANGELOG.md"
 
   spec.files = Dir.chdir(File.expand_path(__dir__)) do
     `git ls-files -z`.split("\x0").reject { |f| f.match?(%r{\A(?:test|spec|features)/}) }
@@ -32,6 +33,6 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency "thor", "~> 1.0"
   spec.add_dependency "sinatra", "~> 4.0"
-  spec.add_dependency "yard", "~> 0.9"
+
   spec.add_development_dependency "rake", "~> 13.0"
 end

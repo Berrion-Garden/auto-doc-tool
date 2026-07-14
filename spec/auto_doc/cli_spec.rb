@@ -159,11 +159,11 @@ RSpec.describe AutoDoc::CLI do
         File.write(File.join(dir, "lib", "b.rb"), "class B; end")
 
         config = AutoDoc::Config.load(dir)
-        cli_instance = described_class.new
+        orchestrator = AutoDoc::Orchestrator.new
 
-        # analyze only a.rb
+        # analyze only a.rb via orchestrator's private method
         file_list = [File.join(dir, "lib", "a.rb")]
-        analyses = cli_instance.send(:analyze_project, dir, config, file_list)
+        analyses = orchestrator.send(:analyze_project, dir, config, file_list)
 
         expect(analyses.keys).to contain_exactly(File.join(dir, "lib", "a.rb"))
         expect(analyses.keys).not_to include(File.join(dir, "lib", "b.rb"))

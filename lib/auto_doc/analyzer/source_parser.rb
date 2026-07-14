@@ -92,7 +92,7 @@ module AutoDoc
         line    = extract_line(name_node)
          methods = []
 
-        scope   = Definition.new(nil, :top_level, 0, ancestor_modules.dup, [])
+        scope   = Definition.new(nil, :class_body, 0, ancestor_modules.dup, [])
         body    = sexp[3]
         walk_sexp(body, scope) if body
         @definitions << Definition.new(name, :class, line, ancestor_modules.dup, scope.methods || [])
@@ -107,14 +107,14 @@ module AutoDoc
         child_modules = ancestor_modules.dup + [name]
         methods       = []
 
-        scope   = Definition.new(nil, :top_level, 0, child_modules.dup, [])
+        scope   = Definition.new(nil, :module_body, 0, child_modules.dup, [])
         body    = sexp[3]
         walk_sexp(body, scope) if body
         @definitions << Definition.new(name, :module, line, ancestor_modules.dup, scope.methods || [])
 
         # Also walk to find nested definitions within this module context
         if body
-          inner_scope = Definition.new(nil, :top_level, 0, child_modules.dup, [])
+          inner_scope = Definition.new(nil, :module_body, 0, child_modules.dup, [])
           walk_sexp(body, inner_scope)
         end
       end
@@ -127,7 +127,8 @@ module AutoDoc
           return unless name
 
           # If we're inside a class or module context, add to that scope's methods
-          if current_scope.respond_to?(:methods) && !current_scope.name.nil?
+          inside_class_or_module = %i[class_body module_body].include?(current_scope.type)
+          if current_scope.respond_to?(:methods) && inside_class_or_module
             current_scope.methods << { name: name, type: :method, line: line }
           else
             @definitions << Definition.new(name, :method, line, [], [])
