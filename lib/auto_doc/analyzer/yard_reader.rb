@@ -1,5 +1,11 @@
 # frozen_string_literal: true
 
+begin
+  require "yard"
+rescue LoadError
+  # YARD is an optional dependency; parsing falls back to regex-only.
+end
+
 module AutoDoc
   module Analyzer
     # Extracts doc comments from Ruby source files.
@@ -14,16 +20,31 @@ module AutoDoc
       #   The full comment block text (without leading # markers)
       # @!attribute [r] line
       #   Line number where the comment block starts
+      YARD_AVAILABLE = defined?(YARD)
+
       # @!attribute [r] has_summary?
       #   Whether the comment block contains non-whitespace content
-      Comment = Struct.new(:target_type, :target_name, :text, :line, :has_summary?) do
+      # @!attribute [r] params
+      #   Array of parameter hashes with name, types, and description
+      # @!attribute [r] return_type
+      #   The documented return type as a string, or nil
+      # @!attribute [r] yield_type
+      #   The documented yield type as a string, or nil
+      # @!attribute [r] tags
+      #   Array of unrecognized tag hashes with tag_name and text
+      Comment = Struct.new(:target_type, :target_name, :text, :line, :has_summary?,
+                           :params, :return_type, :yield_type, :tags) do
         def to_h
           {
             target_type:  target_type,
             target_name:  target_name,
             text:         text,
             line:         line,
-            has_summary?: has_summary?
+            has_summary?: has_summary?,
+            params:       params,
+            return_type:  return_type,
+            yield_type:   yield_type,
+            tags:         tags
           }
         end
       end
@@ -62,7 +83,33 @@ module AutoDoc
             if target_name
               body       = comment_lines.map { |l| l.sub(/\A\s*#\s?/, "") }.join("\n")
               has_summary = !body.strip.empty?
-              comments << Comment.new(target_type, target_name, body, start_idx + 1, has_summary)
+              comment = Comment.new(target_type, target_name, body, start_idx + 1, has_summary)
+
+              # Enrich with YARD structured data if the gem is available.
+              if YARD_AVAILABLE && !body.strip.empty?
+                parser = YARD::Docstring.parser
+                parser.parse(body)
+                docstring = parser.to_docstring
+                comment.params = docstring.tags(:param).map do |t|
+                  { name: t.name, types: t.types || [], description: t.text }
+                end
+                if (rt = docstring.tag(:return))
+                  comment.return_type = rt.types&.first
+                end
+                # Check yieldreturn first, then yield/yieldparam for yield type
+                if (yt = docstring.tag(:yieldreturn))
+                  comment.yield_type = yt.types&.first
+                elsif (yt = docstring.tag(:yield))
+                  comment.yield_type = yt.types&.first
+                elsif (yp = docstring.tag(:yieldparam))
+                  comment.yield_type = yp.types&.first
+                end
+                known_tags = %i[param return yield yieldreturn yieldparam]
+                comment.tags = docstring.tags.reject { |t| known_tags.include?(t.tag_name.to_sym) }
+                                            .map { |t| { tag_name: t.tag_name, text: t.text } }
+              end
+
+              comments << comment
             end
           end
 

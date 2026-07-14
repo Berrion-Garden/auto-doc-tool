@@ -101,4 +101,73 @@ RSpec.describe AutoDoc::CLI do
       end
     end
   end
+
+  describe "generate --incremental" do
+    let(:tmpdir) { Dir.mktmpdir }
+    after { FileUtils.remove_entry(tmpdir) }
+
+    it "passes file_list to analyze_project when --incremental is given" do
+      # Create a Ruby file in tmpdir
+      FileUtils.mkdir_p(File.join(tmpdir, "lib"))
+      File.write(File.join(tmpdir, "lib", "test.rb"), "class Test; end")
+
+      # Run generate --incremental first time (acts like full gen since no manifest)
+      expect {
+        described_class.start(["generate", "--incremental", tmpdir])
+      }.to output(/Incremental mode: \d+ file\(s\) changed/).to_stdout
+
+      # Verify manifest was created
+      manifest = File.join(tmpdir, ".autodoc", "generation_manifest.json")
+      expect(File).to exist(manifest)
+    end
+
+    it "creates and updates generation manifest" do
+      FileUtils.mkdir_p(File.join(tmpdir, "lib"))
+      File.write(File.join(tmpdir, "lib", "test.rb"), "class Test; end")
+
+      # First run creates manifest
+      described_class.start(["generate", "--incremental", tmpdir])
+      manifest = File.join(tmpdir, ".autodoc", "generation_manifest.json")
+      expect(File).to exist(manifest)
+
+      # Second run shouldn't crash
+      expect {
+        described_class.start(["generate", "--incremental", tmpdir])
+      }.to output(/Incremental mode/).to_stdout
+    end
+
+    it "non-incremental generate always does full regeneration regardless of manifest" do
+      FileUtils.mkdir_p(File.join(tmpdir, "lib"))
+      File.write(File.join(tmpdir, "lib", "test.rb"), "class Test; end")
+
+      described_class.start(["generate", "--incremental", tmpdir])
+      manifest = File.join(tmpdir, ".autodoc", "generation_manifest.json")
+      expect(File).to exist(manifest)
+
+      # Non-incremental run
+      expect {
+        described_class.start(["generate", tmpdir])
+      }.to output(/Documentation generation complete/).to_stdout
+    end
+  end
+
+  describe "analyze_project" do
+    it "accepts file_list parameter and only analyzes given files" do
+      Dir.mktmpdir do |dir|
+        FileUtils.mkdir_p(File.join(dir, "lib"))
+        File.write(File.join(dir, "lib", "a.rb"), "class A; end")
+        File.write(File.join(dir, "lib", "b.rb"), "class B; end")
+
+        config = AutoDoc::Config.load(dir)
+        cli_instance = described_class.new
+
+        # analyze only a.rb
+        file_list = [File.join(dir, "lib", "a.rb")]
+        analyses = cli_instance.send(:analyze_project, dir, config, file_list)
+
+        expect(analyses.keys).to contain_exactly(File.join(dir, "lib", "a.rb"))
+        expect(analyses.keys).not_to include(File.join(dir, "lib", "b.rb"))
+      end
+    end
+  end
 end

@@ -39,87 +39,7 @@ module AutoDoc
     method_option :output_dir,  type: :string,
                                 desc: "Output directory (default: .autodoc)"
     def generate(path = ".")
-      target_dir = File.expand_path(path)
-      config     = AutoDoc::Config.load(target_dir, cli_overrides(options))
-
-      # Determine output directory: CLI flag > format option > config default
-      output_dir = if options[:output_dir]
-                     options[:output_dir]
-                   elsif options[:format] == "docs"
-                     config.instance_variable_get(:@config)[:output] ||= {}
-                     config.instance_variable_get(:@config)[:output][:directory] = ".docs"
-                     ".docs"
-                   else
-                     config.output_dir
-                   end
-
-      say "Generating documentation for #{target_dir}...", :green
-
-      module_roots = resolve_module_roots(target_dir, config)
-      analyses     = analyze_project(target_dir, config)
-
-      # Generate AGENTS.md for each module root
-      module_roots.each do |root|
-        dir_name   = File.basename(root)
-        tree_text  = AutoDoc::Utils::FileTreeBuilder.build(root, config.exclude_patterns || [])
-
-        file_analyses = analyses.select { |fp, _| fp.start_with?(root) }
-
-        files_data = build_files_data(file_analyses)
-
-        output_path = File.join(target_dir, output_dir, dir_name, "AGENTS.md")
-        content     = AutoDoc::Generator::AgentsMdGenerator.generate(dir_name, tree_text, files_data, output_path: output_path)
-
-        say "  Created #{output_path}", :green
-      end
-
-      # Generate README.md at project level
-      if module_roots.any?
-        structure   = {}
-        total_cls   = 0
-        total_methods = 0
-
-        module_roots.each do |root|
-          dir_name  = File.basename(root)
-          tree_text = AutoDoc::Utils::FileTreeBuilder.build(root, config.exclude_patterns || [])
-          structure[dir_name] = tree_text
-
-          root_analyses = analyses.select { |fp, _| fp.start_with?(root) }
-          count_classes_and_methods(root_analyses) do |cls_count, method_count|
-            total_cls       += cls_count
-            total_methods  += method_count
-          end
-        end
-
-        coverage_pct = calculate_coverage(analyses)
-
-        summary = {
-          total_modules: module_roots.size,
-          total_classes: total_cls,
-          total_methods: total_methods,
-          coverage_pct:  coverage_pct
-        }
-
-        readme_path  = File.join(target_dir, output_dir, "README.md")
-        project_name = File.basename(target_dir)
-
-        AutoDoc::Generator::ReadmeGenerator.generate(project_name, structure, summary, output_path: readme_path)
-        say "  Created #{readme_path}", :green
-      end
-
-      # Generate dependency DAG if enabled in config
-      generate_dag = options[:incremental] ? true : true  # always generate for now
-
-      if generate_dag && !module_roots.empty?
-        nodes, edges = build_graph_data(analyses)
-        dag_path     = File.join(target_dir, output_dir, "diagrams", "deps.mmd")
-        project_name = File.basename(target_dir)
-
-        AutoDoc::Generator::DiagramGenerator.generate(project_name, nodes, edges, output_path: dag_path)
-        say "  Created #{dag_path}", :green
-      end
-
-      say "\nDocumentation generation complete.", :green
+      perform_generate(path)
     end
 
     desc "diff SINCE", "Show documentation drift since a git ref or last generation"
@@ -181,26 +101,7 @@ module AutoDoc
     method_option :threshold, type: :numeric, default: 80,
                               desc: "Minimum doc coverage percentage for passing CI gate"
     def audit(path = ".")
-      target_dir = File.expand_path(path)
-      config     = AutoDoc::Config.load(target_dir, { audit: { min_doc_coverage: options[:threshold] } })
-
-      say "Running documentation audit for #{target_dir}...", :green
-
-      analyses = analyze_project(target_dir, config)
-
-      report = AutoDoc::Reporter::AuditReporter.generate(target_dir, config, analyses)
-
-      puts AutoDoc::Reporter::AuditReporter.format_text(report)
-
-      # Write JSON report for CI pipelines
-      json_path = File.join(target_dir, ".autodoc", "report.json")
-      FileUtils.mkdir_p(File.dirname(json_path)) rescue nil
-      File.write(json_path, AutoDoc::Reporter::AuditReporter.format_json(report)) if File.writable?(File.dirname(json_path))
-
-      unless report[:passed]
-        say "\nAudit FAILED: coverage #{report[:overall_coverage]}% < threshold #{report[:min_coverage]}%", :red
-        exit(1)
-      end
+      perform_audit(path, options[:threshold])
     end
 
     desc "version", "Print gem version"
@@ -296,31 +197,8 @@ module AutoDoc
     method_option :ci, type: :boolean, default: false,
               desc: "Exit with code 1 on audit failure (for CI pipelines)"
     def verify(path = ".")
-      # Run generate directly (not via Thor#invoke which resolves to the test
-      # binary name when running under RSpec)
-      generate(path)
-
-      # Now run audit directly with the verify-specific threshold option
-      target_dir  = File.expand_path(path)
-      audit_cfg   = { audit: { min_doc_coverage: options[:threshold] } }
-      config      = AutoDoc::Config.load(target_dir, audit_cfg)
-      analyses    = analyze_project(target_dir, config)
-      report      = AutoDoc::Reporter::AuditReporter.generate(target_dir, config, analyses)
-
-      puts AutoDoc::Reporter::AuditReporter.format_text(report)
-
-      json_path = File.join(target_dir, ".autodoc", "report.json")
-      FileUtils.mkdir_p(File.dirname(json_path))
-      File.write(json_path, AutoDoc::Reporter::AuditReporter.format_json(report))
-
-      return if report[:passed]
-
-      if options[:ci]
-        say "\nAudit FAILED: coverage #{report[:overall_coverage]}% < threshold #{report[:min_coverage]}%", :red
-        exit(1)
-      else
-        say "\nAudit failed (use --ci to exit with code 1)", :yellow
-      end
+      perform_generate(path)
+      perform_audit(path, options[:threshold], exit_on_failure: options[:ci])
     end
 
     private
@@ -362,14 +240,21 @@ module AutoDoc
     end
 
     # Analyzes all Ruby files in the project and returns structured analysis data.
-    def analyze_project(base_dir, config)
+    def analyze_project(base_dir, config, file_list = nil)
       analyses = {}
       excludes = config.exclude_patterns || []
 
-      ruby_files = Dir.glob(File.join(base_dir, "**", "*.rb")).reject do |f|
-        relative = f.sub("#{base_dir}/", "")
-        excludes.any? { |pat| File.fnmatch?(pat, relative, File::FNM_PATHNAME) }
-      end
+      ruby_files = if file_list
+                     file_list.reject do |f|
+                       relative = f.sub("#{base_dir}/", "")
+                       excludes.any? { |pat| File.fnmatch?(pat, relative, File::FNM_PATHNAME) }
+                     end
+                   else
+                     Dir.glob(File.join(base_dir, "**", "*.rb")).reject do |f|
+                       relative = f.sub("#{base_dir}/", "")
+                       excludes.any? { |pat| File.fnmatch?(pat, relative, File::FNM_PATHNAME) }
+                     end
+                   end
 
       ruby_files.each do |file_path|
         definitions = AutoDoc::Analyzer::SourceParser.parse_file(file_path)
@@ -460,6 +345,135 @@ module AutoDoc
       end
 
       [nodes.uniq.sort, edges]
+    end
+
+    # Performs full documentation generation for the given path.
+    def perform_generate(path)
+      target_dir = File.expand_path(path)
+      config     = AutoDoc::Config.load(target_dir, cli_overrides(options))
+
+      # Determine output directory: CLI flag > format option > config default
+      output_dir = if options[:output_dir]
+                      options[:output_dir]
+                    elsif options[:format] == "docs"
+                      config.instance_variable_get(:@config)[:output] ||= {}
+                      config.instance_variable_get(:@config)[:output][:directory] = ".docs"
+                      ".docs"
+                    else
+                      config.output_dir
+                    end
+
+      say "Generating documentation for #{target_dir}...", :green
+
+      module_roots = resolve_module_roots(target_dir, config)
+      analyses     = if options[:incremental]
+                       stale = AutoDoc::Utils::TimestampTracker.stale_files(target_dir).map { |f| File.join(target_dir, f) }
+                       say "Incremental mode: #{stale.size} file(s) changed", :yellow
+                       analyze_project(target_dir, config, stale)
+                     else
+                       analyze_project(target_dir, config)
+                     end
+
+      # Generate AGENTS.md for each module root
+      module_roots.each do |root|
+        dir_name   = File.basename(root)
+        tree_text  = AutoDoc::Utils::FileTreeBuilder.build(root, config.exclude_patterns || [])
+
+        file_analyses = analyses.select { |fp, _| fp.start_with?(root) }
+
+        files_data = build_files_data(file_analyses)
+
+        output_path = File.join(target_dir, output_dir, dir_name, "AGENTS.md")
+        content     = AutoDoc::Generator::AgentsMdGenerator.generate(dir_name, tree_text, files_data, output_path: output_path)
+
+        say "  Created #{output_path}", :green
+      end
+
+      # Generate README.md at project level
+      if module_roots.any?
+        structure   = {}
+        total_cls   = 0
+        total_methods = 0
+
+        module_roots.each do |root|
+          dir_name  = File.basename(root)
+          tree_text = AutoDoc::Utils::FileTreeBuilder.build(root, config.exclude_patterns || [])
+          structure[dir_name] = tree_text
+
+          root_analyses = analyses.select { |fp, _| fp.start_with?(root) }
+          count_classes_and_methods(root_analyses) do |cls_count, method_count|
+            total_cls       += cls_count
+            total_methods  += method_count
+          end
+        end
+
+        coverage_pct = calculate_coverage(analyses)
+
+        summary = {
+          total_modules: module_roots.size,
+          total_classes: total_cls,
+          total_methods: total_methods,
+          coverage_pct:  coverage_pct
+        }
+
+        readme_path  = File.join(target_dir, output_dir, "README.md")
+        project_name = File.basename(target_dir)
+
+        AutoDoc::Generator::ReadmeGenerator.generate(project_name, structure, summary, output_path: readme_path)
+        say "  Created #{readme_path}", :green
+      end
+
+      # Generate dependency DAG if enabled in config
+      generate_dag = config.generate_dag?
+
+      if generate_dag && !module_roots.empty?
+        nodes, edges = build_graph_data(analyses)
+        dag_path     = File.join(target_dir, output_dir, "diagrams", "deps.mmd")
+        project_name = File.basename(target_dir)
+
+        AutoDoc::Generator::DiagramGenerator.generate(project_name, nodes, edges, output_path: dag_path)
+        say "  Created #{dag_path}", :green
+      end
+
+      # Save manifest for incremental tracking
+      ruby_files_list = Dir.glob(File.join(target_dir, "**", "*.rb")).reject do |f|
+        relative = f.sub("#{target_dir}/", "")
+        (config.exclude_patterns || []).any? { |pat| File.fnmatch?(pat, relative, File::FNM_PATHNAME) }
+      end.map { |f| f.sub("#{target_dir}/", "") }
+      AutoDoc::Utils::TimestampTracker.save_manifest(target_dir, ruby_files_list)
+
+      say "\nDocumentation generation complete.", :green
+    end
+
+    # Runs audit analysis, prints the report, and handles failure output/exit.
+    # When exit_on_failure is true (default) the process exits with code 1 on failure.
+    # When exit_on_failure is false a yellow warning is printed without exiting.
+    def perform_audit(path, threshold = 80, exit_on_failure: true)
+      target_dir = File.expand_path(path)
+      say "Running documentation audit for #{target_dir}...", :green
+
+      config = AutoDoc::Config.load(target_dir, { audit: { min_doc_coverage: threshold } })
+
+      analyses = analyze_project(target_dir, config)
+      report   = AutoDoc::Reporter::AuditReporter.generate(target_dir, config, analyses)
+
+      puts AutoDoc::Reporter::AuditReporter.format_text(report)
+
+      # Write JSON report for CI pipelines
+      json_path = File.join(target_dir, ".autodoc", "report.json")
+      FileUtils.mkdir_p(File.dirname(json_path)) rescue nil
+      File.write(json_path, AutoDoc::Reporter::AuditReporter.format_json(report)) if File.writable?(File.dirname(json_path))
+
+      unless report[:passed]
+        if exit_on_failure
+          say "\nAudit FAILED: coverage #{report[:overall_coverage]}% < threshold #{report[:min_coverage]}%", :red
+          exit(1)
+        else
+          say "\nAudit failed (use --ci to exit with code 1)", :yellow
+        end
+      end
+
+      report
     end
 
     # Extracts CLI overrides from Thor options.

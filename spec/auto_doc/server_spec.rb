@@ -106,6 +106,20 @@ RSpec.describe AutoDoc::Server do
       expect(last_response.status).to eq(200)
       expect(last_response.body).to include("coverage")
     end
+
+    it "returns JSON coverage data from report.json" do
+      get "/api/stats"
+      json = JSON.parse(last_response.body)
+      expect(json).to have_key("coverage")
+    end
+
+    it "returns error when report.json is missing" do
+      File.delete(File.join(autodoc_dir, "report.json"))
+      get "/api/stats"
+      expect(last_response.status).to eq(200)
+      json = JSON.parse(last_response.body)
+      expect(json["error"]).to include("report.json")
+    end
   end
 
   describe "GET /api/search" do

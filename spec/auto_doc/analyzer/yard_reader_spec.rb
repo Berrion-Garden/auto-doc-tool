@@ -73,5 +73,84 @@ RSpec.describe AutoDoc::Analyzer::YardReader do
         expect(result).to eq([])
       end
     end
+
+    context "YARD enrichment" do
+      let(:fixture) { fixture_path("sample_ruby_project", "lib", "yard_example.rb") }
+
+      it "includes params/return_type/yield_type/tags fields with correct defaults" do
+        result = described_class.extract(fixture_path("sample_ruby_project", "app", "models", "user.rb"))
+
+        result.each do |comment|
+          expect(comment).to have_key(:params)
+          expect(comment).to have_key(:return_type)
+          expect(comment).to have_key(:yield_type)
+          expect(comment).to have_key(:tags)
+          expect(comment[:params]).to eq([])
+          expect(comment[:yield_type]).to be_nil
+          expect(comment[:tags]).to eq([])
+        end
+      end
+
+      it "extracts @param tags from fixture with YARD doc blocks" do
+        result = described_class.extract(fixture)
+
+        pmt = result.find { |c| c[:target_name] == "process_payment" }
+        expect(pmt).not_to be_nil
+        expect(pmt[:params]).to be_an(Array)
+        expect(pmt[:params].size).to eq(2)
+
+        amount_param = pmt[:params].find { |p| p[:name] == "amount" }
+        expect(amount_param).not_to be_nil
+        expect(amount_param[:types]).to eq(["Float"])
+        expect(amount_param[:description]).to eq("The payment amount")
+
+        currency_param = pmt[:params].find { |p| p[:name] == "currency" }
+        expect(currency_param).not_to be_nil
+        expect(currency_param[:types]).to eq(["String"])
+      end
+
+      it "extracts @return tag" do
+        result = described_class.extract(fixture)
+
+        pmt = result.find { |c| c[:target_name] == "process_payment" }
+        expect(pmt).not_to be_nil
+        expect(pmt[:return_type]).to eq("Boolean")
+      end
+
+      it "extracts @yield information" do
+        result = described_class.extract(fixture)
+
+        refund = result.find { |c| c[:target_name] == "refund" }
+        expect(refund).not_to be_nil
+        expect(refund[:yield_type]).to eq("Float")
+      end
+
+      it "extracts unrecognized @tags" do
+        result = described_class.extract(fixture)
+
+        history = result.find { |c| c[:target_name] == "history" }
+        expect(history).not_to be_nil
+        expect(history[:tags]).to be_an(Array)
+        expect(history[:tags].size).to be >= 2
+
+        example_tag = history[:tags].find { |t| t[:tag_name] == "example" }
+        expect(example_tag).not_to be_nil
+        expect(example_tag[:text]).to be_a(String)
+
+        see_tag = history[:tags].find { |t| t[:tag_name] == "see" }
+        expect(see_tag).not_to be_nil
+      end
+
+      it "Comment with no @tags returns empty arrays/nil" do
+        result = described_class.extract(fixture)
+
+        version = result.find { |c| c[:target_name] == "version" }
+        expect(version).not_to be_nil
+        expect(version[:params]).to eq([])
+        expect(version[:return_type]).to be_nil
+        expect(version[:yield_type]).to be_nil
+        expect(version[:tags]).to eq([])
+      end
+    end
   end
 end

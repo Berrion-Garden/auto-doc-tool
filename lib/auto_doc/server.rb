@@ -114,6 +114,6 @@ module AutoDoc
       text.gsub("&", "&amp;").gsub("<", "&lt;").gsub(">", "&gt;")
     end
 
-    run! if app_file == $0
+    run! if app_file == $0 && !defined?(Rack::Test)
   end
 end

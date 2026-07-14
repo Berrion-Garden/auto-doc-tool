@@ -4,6 +4,7 @@ PATH
     auto-doc (0.1.0)
       sinatra (~> 4.0)
       thor (~> 1.0)
+      yard (~> 0.9)
 
 GEM
   remote: https://rubygems.org/
@@ -45,6 +46,7 @@ GEM
       tilt (~> 2.0)
     thor (1.5.0)
     tilt (2.8.0)
+    yard (0.9.44)
 
 PLATFORMS
   ruby
