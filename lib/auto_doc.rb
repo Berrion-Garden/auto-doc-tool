@@ -26,6 +26,9 @@ module AutoDoc
   require_relative "auto_doc/generator/agents_md_generator"
   require_relative "auto_doc/generator/readme_generator"
   require_relative "auto_doc/generator/diagram_generator"
+  require_relative "auto_doc/generator/index_generator"
+  require_relative "auto_doc/generator/summary_generator"
+  require_relative "auto_doc/generator/vector_generator"
 
   # Load reporters
   require_relative "auto_doc/reporter/completeness_checker"

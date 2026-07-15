@@ -46,7 +46,7 @@ module AutoDoc
         dir_name   = File.basename(root)
         tree_text  = AutoDoc::Utils::FileTreeBuilder.build(root, config.exclude_patterns || [])
 
-        file_analyses = analyses.select { |fp, _| fp.start_with?(root) }
+        file_analyses = analyses.select { |fp, _| fp.start_with?("#{root}/") }
 
         files_data = build_files_data(file_analyses)
 
@@ -54,6 +54,11 @@ module AutoDoc
         AutoDoc::Generator::AgentsMdGenerator.generate(dir_name, tree_text, files_data, output_path: output_path)
 
         say.call("  Created #{output_path}", :green)
+      end
+
+      # Walk all subdirectories under each module root for INDEX.md, SUMMARY.md, vectors.json
+      module_roots.each do |root|
+        walk_subdirectories(root, analyses, target_dir, output_dir, config, say)
       end
 
       # Generate README.md at project level
@@ -67,7 +72,7 @@ module AutoDoc
           tree_text = AutoDoc::Utils::FileTreeBuilder.build(root, config.exclude_patterns || [])
           structure[dir_name] = tree_text
 
-          root_analyses = analyses.select { |fp, _| fp.start_with?(root) }
+          root_analyses = analyses.select { |fp, _| fp.start_with?("#{root}/") }
           count_classes_and_methods(root_analyses) do |cls_count, method_count|
             total_cls       += cls_count
             total_methods  += method_count
@@ -101,6 +106,25 @@ module AutoDoc
         AutoDoc::Generator::DiagramGenerator.generate(project_name, nodes, edges, output_path: dag_path)
         say.call("  Created #{dag_path}", :green)
       end
+
+      # Generate project-level INDEX.md, SUMMARY.md, VECTORS.json
+      project_name = File.basename(target_dir)
+
+      # Project-level INDEX.md using all analyses
+      project_index_path = File.join(target_dir, output_dir, "INDEX.md")
+      AutoDoc::Generator::IndexGenerator.generate(project_name, analyses, config, output_path: project_index_path)
+      say.call("  Created #{project_index_path}", :green)
+
+      # Project-level SUMMARY.md using all analyses
+      project_summary_path = File.join(target_dir, output_dir, "SUMMARY.md")
+      AutoDoc::Generator::SummaryGenerator.generate(project_name, analyses, config, output_path: project_summary_path)
+      say.call("  Created #{project_summary_path}", :green)
+
+      # Project-level VECTORS.json using all analyses
+      project_vectors_path = File.join(target_dir, output_dir, "VECTORS.json")
+      vectors_data = AutoDoc::Generator::VectorGenerator.generate_project(analyses, config)
+      AutoDoc::Generator::VectorGenerator.write(project_vectors_path, vectors_data)
+      say.call("  Created #{project_vectors_path}", :green)
 
       # Save manifest for incremental tracking
       ruby_files_list = Dir.glob(File.join(target_dir, "**", "*.rb")).reject do |f|
@@ -256,6 +280,50 @@ module AutoDoc
       end
 
       [nodes.uniq.sort, edges]
+    end
+
+    # Walks all subdirectories under a root and generates INDEX.md, SUMMARY.md,
+    # and vectors.json for any directory that contains Ruby files.
+    # @param root [String] Root directory path
+    # @param analyses [Hash<String, Hash>] Full analysis data
+    # @param target_dir [String] Project target directory
+    # @param output_dir [String] Output directory name relative to target_dir
+    # @param config [AutoDoc::Config] Configuration object
+    # @param say [Proc] Callable for output messages
+    # @return [void]
+    def walk_subdirectories(root, analyses, target_dir, output_dir, config, say)
+      # Collect all subdirectories including the root itself
+      dirs_to_process = [root]
+      Dir.glob(File.join(root, "**", "*")).select { |e| File.directory?(e) }.each do |subdir|
+        dirs_to_process << subdir
+      end
+
+      dirs_to_process.each do |dir|
+        # Check if directory contains Ruby files
+        ruby_files = Dir.glob(File.join(dir, "*.rb"))
+        next if ruby_files.empty?
+
+        display_name  = File.basename(dir)
+        output_rel    = Pathname.new(dir).relative_path_from(Pathname.new(root)).to_s
+        dir_analyses  = analyses.select { |fp, _| fp.start_with?("#{dir}/") }
+        next if dir_analyses.empty?
+
+        # Generate INDEX.md
+        index_path = File.join(target_dir, output_dir, output_rel, "INDEX.md")
+        AutoDoc::Generator::IndexGenerator.generate(display_name, dir_analyses, config, output_path: index_path)
+        say.call("  Created #{index_path}", :green)
+
+        # Generate SUMMARY.md
+        summary_path = File.join(target_dir, output_dir, output_rel, "SUMMARY.md")
+        AutoDoc::Generator::SummaryGenerator.generate(display_name, dir_analyses, config, output_path: summary_path)
+        say.call("  Created #{summary_path}", :green)
+
+        # Generate vectors.json
+        vectors_data = AutoDoc::Generator::VectorGenerator.generate_directory(display_name, dir_analyses, config)
+        vectors_path = File.join(target_dir, output_dir, output_rel, "vectors.json")
+        AutoDoc::Generator::VectorGenerator.write(vectors_path, vectors_data)
+        say.call("  Created #{vectors_path}", :green)
+      end
     end
   end
 end
