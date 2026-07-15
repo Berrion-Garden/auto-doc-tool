@@ -160,6 +160,124 @@ module AutoDoc
       end
     end
 
+    desc "search TERM [PATH]", "Search documentation for a term across INDEX.md, SUMMARY.md, vectors.json, and AGENTS.md"
+    method_option :source, type: :boolean, default: false, desc: "Also search source .rb files"
+    method_option :limit, type: :numeric, default: 20, desc: "Maximum number of results"
+    def search(term, path = ".")
+      output_format = output_format_for(options)
+      project_dir = File.expand_path(path)
+
+      result = AutoDoc::SearchService.search(project_dir, term, options: { source: options[:source], limit: options[:limit] })
+
+      if output_format != :text
+        AutoDoc::Utils::OutputFormatter.format(result, format: output_format, say: method(:say))
+      else
+        say "Search results for '#{term}':"
+        result[:results].each do |r|
+          say "  #{r[:file]}:#{r[:line]} (#{r[:match_type]}, score: #{r[:score]})"
+          say "    #{r[:context]}"
+        end
+        say "Total: #{result[:total]} results"
+      end
+    end
+
+    desc "query MODULE [PATH]", "Show structured summary for a module (INDEX.md + SUMMARY.md + VECTORS.json)"
+    def query(mod, path = ".")
+      output_format = output_format_for(options)
+      project_dir = File.expand_path(path)
+      docs_dir = File.join(project_dir, ".docs", mod)
+
+      index_path   = File.join(docs_dir, "INDEX.md")
+      summary_path = File.join(docs_dir, "SUMMARY.md")
+      vectors_path = File.join(docs_dir, "VECTORS.json")
+      unless File.exist?(vectors_path)
+        alt = Dir.glob(File.join(docs_dir, "vectors.json")).first
+        vectors_path = alt if alt
+      end
+
+      result = {
+        module: mod,
+        index:   File.exist?(index_path)   ? File.read(index_path, encoding: "UTF-8")   : nil,
+        summary: File.exist?(summary_path) ? File.read(summary_path, encoding: "UTF-8") : nil,
+        vectors: (File.exist?(vectors_path) ? JSON.parse(File.read(vectors_path, encoding: "UTF-8")) : nil)
+      }
+
+      if output_format != :text
+        AutoDoc::Utils::OutputFormatter.format(result, format: output_format, say: method(:say))
+      else
+        say "Module: #{mod}"
+        say "  INDEX.md:   #{result[:index]   ? result[:index].lines.first&.strip : 'not found'}"
+        say "  SUMMARY.md: #{result[:summary] ? result[:summary].lines.first&.strip : 'not found'}"
+        say "  VECTORS.json: #{result[:vectors] ? "#{result[:vectors]['symbols']&.size || 0} symbols" : 'not found'}"
+      end
+    end
+
+    desc "tree [PATH]", "Display directory tree with box-drawing characters"
+    method_option :depth, type: :numeric, desc: "Maximum depth (default: unlimited)"
+    def tree(path = ".")
+      output_format = output_format_for(options)
+      target = File.expand_path(path)
+
+      tree_str = AutoDoc::Utils::FileTreeBuilder.build(target)
+
+      if output_format != :text
+        AutoDoc::Utils::OutputFormatter.format({ path: target, tree: tree_str }, format: output_format, say: method(:say))
+      else
+        say tree_str
+      end
+    end
+
+    desc "diagram NAME [PATH]", "Display a Mermaid diagram from .docs/diagrams/"
+    method_option :format, type: :string, default: "mermaid", desc: "Output format: mermaid or ascii"
+    def diagram(name, path = ".")
+      output_format = output_format_for(options)
+      project_dir = File.expand_path(path)
+      diagram_path = File.join(project_dir, ".docs", "diagrams", "#{name}.mmd")
+
+      unless File.exist?(diagram_path)
+        say "ERROR: Diagram '#{name}' not found at #{diagram_path}", :red
+        exit(1)
+      end
+
+      content = File.read(diagram_path, encoding: "UTF-8")
+      result = { name: name, content: content, format: options[:format] }
+
+      if output_format != :text
+        AutoDoc::Utils::OutputFormatter.format(result, format: output_format, say: method(:say))
+      else
+        say content
+      end
+    end
+
+    desc "agent PROMPT", "Query documentation using natural language (e.g., 'what depends on Calculator')"
+    long_desc <<~LONGDESC
+      Interpret natural-language prompts about the project's documentation.
+      Examples:
+        auto-doc agent what depends on Calculator
+        auto-doc agent describe the SearchService
+        auto-doc agent diagram for architecture
+        auto-doc agent --json list all symbols
+    LONGDESC
+    def agent(*prompt_parts)
+      output_format = output_format_for(options)
+      prompt = prompt_parts.join(" ")
+      if prompt.empty?
+        say "ERROR: PROMPT is required", :red
+        exit(1)
+      end
+
+      project_dir = File.expand_path(".")
+      result = AutoDoc::AgentQueryService.query(project_dir, prompt)
+
+      if output_format != :text
+        AutoDoc::Utils::OutputFormatter.format(result, format: output_format, say: method(:say))
+      else
+        say "Intent: #{result[:intent]}"
+        formatted_result = result[:result].is_a?(String) ? result[:result] : JSON.pretty_generate(result[:result])
+        say "Result: #{formatted_result}"
+      end
+    end
+
     private
 
     # Determines the output format from CLI options.

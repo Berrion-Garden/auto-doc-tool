@@ -278,6 +278,125 @@ RSpec.describe AutoDoc::CLI do
     end
   end
 
+  describe "search" do
+    let(:fixture) { fixture_path("partial_docs_project") }
+
+    it "searches INDEX.md, SUMMARY.md, VECTORS.json for a term and prints results" do
+      expect { cli.start(["search", "Calculator", fixture]) }.to output(/Search results for 'Calculator'/).to_stdout
+    end
+
+    it "outputs JSON when --json flag is given" do
+      expect {
+        cli.start(["search", "--json", "Calculator", fixture])
+      }.to output { |captured|
+        parsed = JSON.parse(captured)
+        expect(parsed).to be_a(Hash)
+        expect(parsed).to have_key("query")
+        expect(parsed).to have_key("results")
+        expect(parsed).to have_key("total")
+      }.to_stdout
+    end
+
+    it "accepts --source and --limit options" do
+      expect { cli.start(["search", "--source", "--limit", "5", "Calculator", fixture]) }.to output(/Search results/).to_stdout
+    end
+  end
+
+  describe "query" do
+    let(:fixture) { fixture_path("partial_docs_project") }
+
+    it "prints structured module summary for a module with INDEX.md, SUMMARY.md, VECTORS.json" do
+      expect { cli.start(["query", "lib", fixture]) }.to output(/Module: lib/).to_stdout
+    end
+
+    it "outputs JSON when --json flag is given" do
+      expect {
+        cli.start(["query", "--json", "lib", fixture])
+      }.to output { |captured|
+        parsed = JSON.parse(captured)
+        expect(parsed).to be_a(Hash)
+        expect(parsed).to have_key("module")
+        expect(parsed).to have_key("index")
+        expect(parsed).to have_key("summary")
+        expect(parsed).to have_key("vectors")
+      }.to_stdout
+    end
+  end
+
+  describe "tree" do
+    let(:tmpdir) { Dir.mktmpdir }
+    after { FileUtils.remove_entry(tmpdir) }
+
+    it "prints directory tree with box-drawing characters" do
+      FileUtils.mkdir_p(File.join(tmpdir, "subdir"))
+      File.write(File.join(tmpdir, "file.rb"), "# test")
+      expect { cli.start(["tree", tmpdir]) }.to output(/├──|└──/).to_stdout
+    end
+
+    it "outputs JSON when --json flag is given" do
+      expect {
+        cli.start(["tree", "--json", tmpdir])
+      }.to output { |captured|
+        parsed = JSON.parse(captured)
+        expect(parsed).to be_a(Hash)
+        expect(parsed).to have_key("path")
+        expect(parsed).to have_key("tree")
+      }.to_stdout
+    end
+  end
+
+  describe "diagram" do
+    let(:fixture) { fixture_path("partial_docs_project") }
+
+    it "prints diagram content for existing diagram" do
+      expect { cli.start(["diagram", "deps", fixture]) }.to output(/graph TD|graph/).to_stdout
+    end
+
+    it "exits with error for nonexistent diagram" do
+      expect { cli.start(["diagram", "nonexistent", fixture]) }.to raise_error(SystemExit)
+    end
+
+    it "outputs JSON when --json flag is given" do
+      expect {
+        cli.start(["diagram", "--json", "deps", fixture])
+      }.to output { |captured|
+        parsed = JSON.parse(captured)
+        expect(parsed).to be_a(Hash)
+        expect(parsed).to have_key("name")
+        expect(parsed).to have_key("content")
+        expect(parsed).to have_key("format")
+      }.to_stdout
+    end
+  end
+
+  describe "agent" do
+    let(:fixture) { fixture_path("partial_docs_project") }
+
+    it "executes natural-language query and prints intent + result" do
+      Dir.chdir(fixture) do
+        expect { cli.start(["agent", "list", "all"]) }.to output(/Intent:/).to_stdout
+      end
+    end
+
+    it "exits with error when PROMPT is empty" do
+      expect { cli.start(["agent"]) }.to raise_error(SystemExit)
+    end
+
+    it "outputs JSON when --json flag is given" do
+      Dir.chdir(fixture) do
+        expect {
+          cli.start(["agent", "--json", "describe", "Calculator"])
+        }.to output { |captured|
+          parsed = JSON.parse(captured)
+          expect(parsed).to be_a(Hash)
+          expect(parsed).to have_key("intent")
+          expect(parsed).to have_key("result")
+          expect(parsed).to have_key("query")
+        }.to_stdout
+      end
+    end
+  end
+
   describe "analyze_project" do
     it "accepts file_list parameter and only analyzes given files" do
       Dir.mktmpdir do |dir|
