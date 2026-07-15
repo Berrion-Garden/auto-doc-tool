@@ -46,6 +46,12 @@
 <% if cross_references[:parent] %>
 - **Parent:** [<%= cross_references[:parent][:name] %>](<%= cross_references[:parent][:path] %>)
 <% end %>
+<% if cross_references[:children] && cross_references[:children].any? %>
+- **Modules:**
+<% cross_references[:children].each do |child| %>
+  - [<%= child[:name] %>](<%= child[:path] %>)
+<% end %>
+<% end %>
 <% if cross_references[:siblings] && cross_references[:siblings].any? %>
 - **Siblings:**
 <% cross_references[:siblings].each do |sib| %>

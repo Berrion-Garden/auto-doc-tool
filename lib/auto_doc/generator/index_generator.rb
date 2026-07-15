@@ -136,34 +136,55 @@ module AutoDoc
       end
 
       # Builds cross-references hash for parent and sibling directories.
-      # @return [Hash] Cross-reference data with :parent and :siblings keys
+      # When INDEX.md is at the project root level, links point to module root children.
+      # @return [Hash] Cross-reference data with :children, :parent, and :siblings keys
       def build_cross_references
         return {} if @analyses.empty?
 
+        first_path = @analyses.keys.first
+        parent_dir = first_path ? File.dirname(first_path) : nil
         refs = {}
 
-        # Determine parent directory from the first analysis file path
-        first_path = @analyses.keys.first
-        if first_path
-          parent_dir = File.dirname(first_path)
-          parent_name = File.basename(parent_dir)
-          refs[:parent] = { name: parent_name, path: "../#{parent_name}/INDEX.md" }
+        # Detect if we are at the project root: all analysis paths have the same
+        # grandparent directory (the project root), and parent_dir is not a module root.
+        is_project_root = if parent_dir && @config.respond_to?(:module_roots)
+          @config.module_roots.none? { |r| parent_dir.include?(r) }
+        else
+          true
         end
 
-        # Siblings are other directories at the same level
-        siblings = []
-        seen = {}
-        @analyses.each_key do |fp|
-          dir = File.dirname(fp)
-          Dir.glob(File.join(dir, "*")).each do |entry|
-            next unless File.directory?(entry)
-            sib_name = File.basename(entry)
-            next if sib_name == @dir_name || seen[sib_name]
+        if is_project_root
+          # At project root, link to module root children
+          children = []
+          seen = {}
+          @analyses.each_key do |fp|
+            dir = File.dirname(fp)
+            sib_name = File.basename(dir)
+            next if seen[sib_name]
             seen[sib_name] = true
-            siblings << { name: sib_name, path: "../#{sib_name}/INDEX.md" }
+            children << { name: sib_name, path: "#{sib_name}/INDEX.md" }
           end
+          refs[:children] = children.sort_by { |c| c[:name].downcase } if children.any?
+        else
+          # In a subdirectory, link to parent
+          parent_name = File.basename(parent_dir)
+          refs[:parent] = { name: parent_name, path: "../#{parent_name}/INDEX.md" }
+
+          # Siblings are other directories at the same level
+          siblings = []
+          seen = {}
+          @analyses.each_key do |fp|
+            dir = File.dirname(fp)
+            Dir.glob(File.join(dir, "*")).each do |entry|
+              next unless File.directory?(entry)
+              sib_name = File.basename(entry)
+              next if sib_name == @dir_name || seen[sib_name]
+              seen[sib_name] = true
+              siblings << { name: sib_name, path: "../#{sib_name}/INDEX.md" }
+            end
+          end
+          refs[:siblings] = siblings.sort_by { |s| s[:name].downcase } if siblings.any?
         end
-        refs[:siblings] = siblings.sort_by { |s| s[:name].downcase } if siblings.any?
 
         refs
       end
