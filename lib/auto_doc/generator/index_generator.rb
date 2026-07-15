@@ -135,58 +135,21 @@ module AutoDoc
         deps
       end
 
-      # Builds cross-references hash for parent and sibling directories.
-      # When INDEX.md is at the project root level, links point to module root children.
-      # @return [Hash] Cross-reference data with :children, :parent, and :siblings keys
+      # Builds cross-references hash for the project root INDEX.md.
+      # Shows links to module roots when analyses span multiple directories.
+      # Subdirectory INDEX.md files skip cross-references to avoid broken links.
+      # @return [Hash] Cross-reference data with :children key (at root only)
       def build_cross_references
         return {} if @analyses.empty?
 
-        first_path = @analyses.keys.first
-        parent_dir = first_path ? File.dirname(first_path) : nil
-        refs = {}
+        # Collect all unique parent directory names from analysis file paths
+        parent_dirs = @analyses.keys.map { |fp| File.basename(File.dirname(fp)) }.uniq
 
-        # Detect if we are at the project root: all analysis paths have the same
-        # grandparent directory (the project root), and parent_dir is not a module root.
-        is_project_root = if parent_dir && @config.respond_to?(:module_roots)
-          @config.module_roots.none? { |r| parent_dir.include?(r) }
-        else
-          true
-        end
+        # Only show cross-references at the project root (analyses span multiple dirs)
+        return {} if parent_dirs.size <= 1
 
-        if is_project_root
-          # At project root, link to module root children
-          children = []
-          seen = {}
-          @analyses.each_key do |fp|
-            dir = File.dirname(fp)
-            sib_name = File.basename(dir)
-            next if seen[sib_name]
-            seen[sib_name] = true
-            children << { name: sib_name, path: "#{sib_name}/INDEX.md" }
-          end
-          refs[:children] = children.sort_by { |c| c[:name].downcase } if children.any?
-        else
-          # In a subdirectory, link to parent
-          parent_name = File.basename(parent_dir)
-          refs[:parent] = { name: parent_name, path: "../#{parent_name}/INDEX.md" }
-
-          # Siblings are other directories at the same level
-          siblings = []
-          seen = {}
-          @analyses.each_key do |fp|
-            dir = File.dirname(fp)
-            Dir.glob(File.join(dir, "*")).each do |entry|
-              next unless File.directory?(entry)
-              sib_name = File.basename(entry)
-              next if sib_name == @dir_name || seen[sib_name]
-              seen[sib_name] = true
-              siblings << { name: sib_name, path: "../#{sib_name}/INDEX.md" }
-            end
-          end
-          refs[:siblings] = siblings.sort_by { |s| s[:name].downcase } if siblings.any?
-        end
-
-        refs
+        children = parent_dirs.sort.map { |d| { name: d, path: "#{d}/INDEX.md" } }
+        { children: children }
       end
 
       # Calculates documentation coverage percentage for the directory's symbols.

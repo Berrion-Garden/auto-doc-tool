@@ -250,6 +250,7 @@ module AutoDoc
     end
 
     desc "agent PROMPT", "Query documentation using natural language (e.g., 'what depends on Calculator')"
+    method_option :path, type: :string, default: ".", desc: "Project path"
     long_desc <<~LONGDESC
       Interpret natural-language prompts about the project's documentation.
       Examples:
@@ -266,7 +267,7 @@ module AutoDoc
         exit(1)
       end
 
-      project_dir = File.expand_path(".")
+      project_dir = File.expand_path(options[:path])
       result = AutoDoc::AgentQueryService.query(project_dir, prompt)
 
       if output_format != :text
