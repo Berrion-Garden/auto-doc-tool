@@ -131,14 +131,14 @@ coverage_pct: 50.0, threshold: 80 }],
       expect(text).to include("FAILED")
     end
 
-    it "includes project name" do
+    it "includes coverage stats" do
       text = reporter.format_text(report)
-      expect(text).to include("/test")
+      expect(text).to include("75.0%")
+      expect(text).to include("FAILED")
     end
 
     it "includes failure details" do
       text = reporter.format_text(report)
-      expect(text).to include("low_coverage")
       expect(text).to include("50.0%")
     end
   end

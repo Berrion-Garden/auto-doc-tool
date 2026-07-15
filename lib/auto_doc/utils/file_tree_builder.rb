@@ -43,15 +43,21 @@ module AutoDoc
           full_path = File.join(dir, name)
           next if should_exclude?(full_path)
 
-          stat = File.stat(full_path) rescue nil
-          next unless stat && (stat.directory? || stat.file?)
+          begin
+            stat = File.stat(full_path)
+            next unless stat.directory? || stat.file?
 
-          {
-            name: name,
-            path: full_path,
-            type: stat.directory? ? :directory : :file
-          }
+            {
+              name: name,
+              path: full_path,
+              type: stat.directory? ? :directory : :file
+            }
+          rescue Errno::EACCES, Errno::ENOENT, Errno::ELOOP
+            nil
+          end
         end.compact
+      rescue Errno::EACCES, Errno::ENOENT, Errno::ELOOP
+        []
       end
 
       # Renders a list of entries with proper tree connectors and recurses into directories.

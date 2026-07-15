@@ -71,27 +71,22 @@ module AutoDoc
       # Generate README.md at project level
       if module_roots.any?
         structure   = {}
-        total_cls   = 0
-        total_methods = 0
 
         module_roots.each do |root|
           dir_name  = File.basename(root)
           tree_text = AutoDoc::Utils::FileTreeBuilder.build(root, config.exclude_patterns || [])
           structure[dir_name] = tree_text
-
-          root_analyses = analyses.select { |fp, _| fp.start_with?("#{root}/") }
-          count_classes_and_methods(root_analyses) do |cls_count, method_count|
-            total_cls       += cls_count
-            total_methods  += method_count
-          end
         end
+
+        # Count classes/methods across ALL analyses (not just per-root)
+        all_cls, all_methods = count_classes_and_methods(analyses)
 
         coverage_pct = calculate_coverage(analyses)
 
         summary = {
           total_modules: module_roots.size,
-          total_classes: total_cls,
-          total_methods: total_methods,
+          total_classes: all_cls,
+          total_methods: all_methods,
           coverage_pct:  coverage_pct
         }
 
@@ -231,7 +226,16 @@ module AutoDoc
       AutoDoc::Generator::MapGenerator.generate(target_dir, output_dir, config, analyses, map_extra)
       wrapped_say.call("  Created #{File.join(target_dir, output_dir, ".map.json")}", :green)
 
-      wrapped_say.call("\nDocumentation generation complete.", :green)
+      # Summary stats
+      all_cls, all_methods = count_classes_and_methods(analyses)
+      coverage_pct_num = calculate_coverage(analyses).to_f
+
+      wrapped_say.call("", :green)
+      wrapped_say.call("Documentation generation complete.", :green)
+      wrapped_say.call("  #{analyses.size} Ruby files analyzed", :green)
+      wrapped_say.call("  #{all_cls} classes/modules, #{all_methods} methods", :green)
+      wrapped_say.call("  #{created_files.size} documentation files created", :green)
+      wrapped_say.call("  Documentation coverage: #{coverage_pct_num.round(1)}%", :green)
 
       # Return structured result for formatters
       {
@@ -240,6 +244,9 @@ module AutoDoc
         module_roots: module_roots.map { |r| File.basename(r) },
         created_files: created_files,
         analyses_count: analyses.size,
+        classes_count: all_cls,
+        methods_count: all_methods,
+        coverage_pct: coverage_pct_num.round(1),
         generated_at: Time.now.iso8601,
         schema_tables: schema_tables,
         models: models
@@ -253,14 +260,12 @@ module AutoDoc
     # @return [Hash] Audit report with pass/fail status
     def audit(path, threshold = 80, say: method(:puts))
       target_dir = File.expand_path(path)
-      say.call("Running documentation audit for #{target_dir}...", :green)
+      say.call("  Analyzing #{target_dir}...", :green)
 
       config = AutoDoc::Config.load(target_dir, { audit: { min_doc_coverage: threshold } })
 
       analyses = analyze_project(target_dir, config)
       report   = AutoDoc::Reporter::AuditReporter.generate(target_dir, config, analyses)
-
-      say.call(AutoDoc::Reporter::AuditReporter.format_text(report))
 
       # Write JSON report for CI pipelines
       json_path = File.join(target_dir, config.output_dir, "report.json")
@@ -278,6 +283,7 @@ module AutoDoc
       overrides[:exclude_patterns] = options[:exclude] if options[:exclude]
       overrides[:incremental] = options[:incremental] if options.key?(:incremental)
       overrides.compact!
+      overrides
     end
 
     # Resolves which directories are module roots worth documenting.

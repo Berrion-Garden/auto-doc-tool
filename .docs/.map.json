@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "generated_at": "2026-07-15T07:13:45-07:00",
+  "generated_at": "2026-07-15T11:49:19-07:00",
   "project": "auto-doc-tool",
   "artifacts": {
     "indexes": [
@@ -58,7 +58,7 @@
     "lib",
     "bin"
   ],
-  "coverage_pct": 11.3,
-  "total_symbols": 53,
-  "total_files": 53
+  "coverage_pct": 17.7,
+  "total_symbols": 62,
+  "total_files": 86
 }

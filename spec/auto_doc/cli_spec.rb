@@ -57,7 +57,7 @@ RSpec.describe AutoDoc::CLI do
     context "with a real project" do
       it "runs without crash on fixtures" do
         fixture = fixture_path("sample_ruby_project")
-        expect { cli.start(["audit", "--threshold", "0", fixture]) }.to output(/AUDIT REPORT/).to_stdout
+        expect { cli.start(["audit", "--threshold", "0", fixture]) }.to output(/Coverage:/).to_stdout
       end
     end
   end
@@ -85,7 +85,7 @@ RSpec.describe AutoDoc::CLI do
 
       it "passes audit threshold option through to audit" do
         fixture = fixture_path("sample_ruby_project")
-        expect { cli.start(["verify", "--threshold", "0", fixture]) }.to output(/AUDIT REPORT/).to_stdout
+        expect { cli.start(["verify", "--threshold", "0", fixture]) }.to output(/Coverage:/).to_stdout
       end
 
       it "accepts --ci flag" do

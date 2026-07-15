@@ -1,9 +1,12 @@
 {
   "project": "/home/kyle/Projects/auto-doc-tool",
-  "generated_at": "2026-07-15T07:13:45-07:00",
-  "overall_coverage": 11.3,
-  "total_symbols": 53,
+  "project_path": "/home/kyle/Projects/auto-doc-tool",
+  "generated_at": "2026-07-15T11:49:19-07:00",
+  "overall_coverage": 11.1,
+  "total_symbols": 54,
   "documented_symbols": 4,
+  "documented_count": 4,
+  "undocumented_count": 50,
   "undocumented": [
     "module_Calculator",
     "class_Silo",
@@ -12,6 +15,7 @@
     "class_CreateUsers",
     "method_deep_merge"
   ],
+  "low_coverage": [],
   "modules": {
     "calculator": {
       "file": "/home/kyle/Projects/auto-doc-tool/fixtures/partial_docs_project/lib/calculator.rb",
@@ -273,6 +277,12 @@
     },
     "file_tree_builder": {
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/utils/file_tree_builder.rb",
+      "total": 1,
+      "documented": 0,
+      "coverage_pct": 0.0
+    },
+    "markdown_helper": {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/utils/markdown_helper.rb",
       "total": 1,
       "documented": 0,
       "coverage_pct": 0.0

@@ -148,6 +148,30 @@ RSpec.describe AutoDoc::SearchService do
         expect(matches).to be_empty
       end
     end
+
+    it "returns source matches even when .docs/ directory does not exist" do
+      dir = Dir.mktmpdir("search_spec_no_docs")
+      begin
+        File.write(File.join(dir, "app.rb"), <<~RUBY)
+          class MyApp
+            def process
+              puts "processing data"
+            end
+          end
+        RUBY
+
+        result = service.search(dir, "processing", options: { source: true })
+
+        expect(result[:query]).to eq("processing")
+        expect(result[:total]).to be >= 1
+        match = result[:results].find { |r| r[:match_type] == "source_grep" }
+        expect(match).not_to be_nil
+        expect(match[:score]).to eq(10)
+        expect(match[:file]).to eq("app.rb")
+      ensure
+        FileUtils.remove_entry(dir) if dir && Dir.exist?(dir)
+      end
+    end
   end
 
   # ── Test 5: Missing .docs/ directory ────────────────────────────────
@@ -475,6 +499,38 @@ RSpec.describe AutoDoc::SearchService do
         match = result[:results].find { |r| r[:match_type] == "vector_keyword_low" }
         expect(match).not_to be_nil
         expect(match[:score]).to eq(40)
+      end
+    end
+
+    it "handles edge-case terms with leading/trailing underscores that would produce empty strings" do
+      with_project_dir do |dir|
+        vectors = {
+          "symbols" => [
+            { "symbol" => "Processor", "keywords" => %w[processor] }
+          ]
+        }
+        File.write(File.join(dir, ".docs", "vectors.json"), JSON.pretty_generate(vectors))
+
+        result = service.search(dir, "_CamelCase_")
+
+        expect(result).to be_a(Hash)
+        expect(result[:results]).to be_an(Array)
+      end
+    end
+
+    it "handles double underscore edge cases without crashing" do
+      with_project_dir do |dir|
+        vectors = {
+          "symbols" => [
+            { "symbol" => "Helper", "keywords" => %w[helper] }
+          ]
+        }
+        File.write(File.join(dir, ".docs", "vectors.json"), JSON.pretty_generate(vectors))
+
+        result = service.search(dir, "__double__")
+
+        expect(result).to be_a(Hash)
+        expect(result[:results]).to be_an(Array)
       end
     end
   end

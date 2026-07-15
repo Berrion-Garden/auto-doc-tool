@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "json"
+require_relative "utils/markdown_helper"
 
 module AutoDoc
   # Multi-strategy ranked search engine for .docs/ documentation artifacts.
@@ -92,7 +93,7 @@ module AutoDoc
 
         case current_section
         when "symbols"
-          cols = parse_pipe_row(line)
+          cols = AutoDoc::Utils::MarkdownHelper.parse_pipe_row(line)
           next if cols.size < 3
 
           symbol_name = cols[0].to_s.strip
@@ -109,7 +110,7 @@ module AutoDoc
           end
 
         when "dependencies"
-          cols = parse_pipe_row(line)
+          cols = AutoDoc::Utils::MarkdownHelper.parse_pipe_row(line)
           next if cols.size < 3
 
           from_val = cols[0].to_s.strip
@@ -144,7 +145,7 @@ module AutoDoc
       symbols = data["symbols"]
       return results unless symbols.is_a?(Array)
 
-      search_words = term.split(/\s+|_|(?<=[a-z])(?=[A-Z])/).reject(&:empty?).map(&:downcase)
+      search_words = term.split(/\s+|_|(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])/).reject(&:empty?).map(&:downcase)
 
       symbols.each do |entry|
         keywords = entry["keywords"]
@@ -250,19 +251,8 @@ module AutoDoc
       results
     end
 
-    # Parses a pipe-delimited markdown row into column values.
-    # @param line [String] A line containing a pipe-delimited row
-    # @return [Array<String>] Trimmed column values
-    def self.parse_pipe_row(line)
-      line.strip
-          .gsub(/\A\||\|\z/, "") # Remove leading/trailing pipes
-          .split("|")
-          .map(&:strip)
-    end
-
     private_class_method :search_index_md, :search_vectors_json,
                          :search_summary_md, :search_agents_md,
-                         :grep_md_file, :search_source_files,
-                         :parse_pipe_row
+                         :grep_md_file, :search_source_files
   end
 end

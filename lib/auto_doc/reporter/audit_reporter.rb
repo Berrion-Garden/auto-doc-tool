@@ -101,13 +101,20 @@ module AutoDoc
         undocumented_symbols  = all_symbols - documented_symbols_set
         passed       = overall_pct >= min_coverage && failures.empty?
 
+        documented_count = all_symbols.empty? ? 0 : documented_symbols_set.size
+        undocumented_count = all_symbols.size - documented_count
+
         {
           project:           @project_dir,
+          project_path:      @project_dir,
           generated_at:      Time.now.iso8601,
           overall_coverage:  overall_pct.round(2),
           total_symbols:     all_symbols.size,
           documented_symbols: documented.size,
+          documented_count:  documented_count,
+          undocumented_count: undocumented_count,
           undocumented:      undocumented_symbols.uniq,
+          low_coverage:      failures.select { |f| f[:reason] == "low_coverage" },
           modules:           modules,
           failures:          failures,
           passed:            passed,
@@ -120,40 +127,30 @@ module AutoDoc
       # @return [String] Formatted text output
       def self.format_text(report)
         lines = []
-        lines << "=" * 60
-        lines << "AUDIT REPORT"
-        lines << "Project: #{report[:project]}"
-        lines << "Generated at: #{report[:generated_at]}"
-        lines << "=" * 60
-        lines << ""
-
         min_cov = report[:min_coverage] || 80
-        lines << "Coverage threshold: #{min_cov}%"
-        lines << "Overall coverage:   #{report[:overall_coverage]}%"
-        lines << "Total symbols:      #{report[:total_symbols]}"
-        lines << "Documented:         #{report[:documented_symbols]}"
-        lines << "Undocumented:       #{report[:undocumented].size}"
+        project_path = report[:project_path] || ""
+
+        lines << "Coverage: #{report[:overall_coverage]}% (#{report[:documented_count] || 0} / #{report[:total_symbols] || 0})"
+        lines << "Threshold: #{min_cov}%"
         lines << ""
 
-        if report[:failures] && !report[:failures].empty?
-          lines << "--- FAILURES ---"
-          report[:failures].each do |failure|
-            lines << "  [#{failure[:reason]}] #{failure[:file]}"
-            case failure[:reason]
-            when "low_coverage"
-              lines << "    Coverage: #{failure[:coverage_pct]}% (threshold: #{failure[:threshold]}%)"
-            when "module_too_large"
-              lines << "    Size: #{failure[:size]} symbols (limit: #{failure[:limit]})"
+        if report[:passed]
+          lines << "Result: PASSED"
+        else
+          lines << "Result: FAILED"
+          low_coverage = report[:low_coverage] || report[:failures]&.select { |f| f[:reason] == "low_coverage" } || []
+          if low_coverage.any?
+            lines << "Low coverage files:"
+            low_coverage.sort_by { |f| f[:coverage_pct] || f[:coverage] || 0 }.first(10).each do |failure|
+              file = (failure[:file] || "").to_s.sub(project_path, "").sub(%r{^/}, "")
+              pct = failure[:coverage_pct] || failure[:coverage] || 0
+              lines << "  #{file} (#{pct}%)"
+            end
+            if low_coverage.size > 10
+              lines << "  ... and #{low_coverage.size - 10} more"
             end
           end
-        else
-          lines << "--- NO FAILURES ---"
         end
-
-        lines << ""
-        status = report[:passed] ? "PASSED" : "FAILED"
-        lines << "RESULT: #{status}"
-        lines << "=" * 60
 
         lines.join("\n")
       end

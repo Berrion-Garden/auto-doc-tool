@@ -1,10 +1,5 @@
 # frozen_string_literal: true
 
-# NOTE: If a 36-file Rails app produces zero nodes, the root cause is likely
-# in SourceParser — Ripper.sexp may return nil for certain Ruby constructs or
-# the file encoding may not be UTF-8. GraphDataBuilder is now defensive against
-# nil analyses, string keys, and non-Hash entries.
-
 module AutoDoc
   module Transformer
     # Extracts graph nodes and edges from import analyses for diagram generation.

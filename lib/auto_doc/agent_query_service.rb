@@ -2,6 +2,7 @@
 
 require "json"
 require "pathname"
+require_relative "utils/markdown_helper"
 
 module AutoDoc
   # Intent-based query router for natural language documentation queries.
@@ -208,7 +209,7 @@ module AutoDoc
         next if line.strip =~ /\A\|[-| ]+\|\z/
         next if header_pattern && line =~ header_pattern
 
-        cols = parse_pipe_row(line)
+        cols = AutoDoc::Utils::MarkdownHelper.parse_pipe_row(line)
         next if cols.size < 3
 
         row = row_builder.call(cols)
@@ -276,20 +277,12 @@ module AutoDoc
       nil
     end
 
-    # Parses a pipe-delimited markdown row into column values.
-    def self.parse_pipe_row(line)
-      line.strip
-          .gsub(/\A\||\|\z/, "")
-          .split("|")
-          .map(&:strip)
-    end
-
     private_class_method :resolve_intent, :find_reverse_deps, :find_forward_deps,
                          :list_all_symbols, :describe_symbol_by_name, :read_architecture,
                          :lookup_diagram, :lookup_schema,
                          :parse_markdown_section_table, :parse_dependencies_table,
                          :parse_symbols_table,
-                         :load_vectors_json, :parse_pipe_row,
+                         :load_vectors_json,
                          :fallback_search, :relative_path
   end
 end

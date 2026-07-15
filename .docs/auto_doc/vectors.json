@@ -6,7 +6,7 @@
       "type": "module",
       "scope": "public",
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/agent_query_service.rb",
-      "line": 6,
+      "line": 7,
       "summary": "",
       "signature": "AutoDoc",
       "visibility": "public",
@@ -474,7 +474,7 @@
       "type": "module",
       "scope": "public",
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/search_service.rb",
-      "line": 5,
+      "line": 6,
       "summary": "",
       "signature": "AutoDoc",
       "visibility": "public",
@@ -653,6 +653,24 @@
       "symbol": "AutoDoc",
       "type": "module",
       "scope": "public",
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/utils/markdown_helper.rb",
+      "line": 3,
+      "summary": "",
+      "signature": "AutoDoc",
+      "visibility": "public",
+      "keywords": [
+        "auto",
+        "doc"
+      ],
+      "dependencies": [],
+      "consumed_by": [],
+      "parent_module": null
+    },
+    {
+      "id": "module_AutoDoc",
+      "symbol": "AutoDoc",
+      "type": "module",
+      "scope": "public",
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/utils/output_formatter.rb",
       "line": 5,
       "summary": "",
@@ -721,5 +739,5 @@
       "parent_module": null
     }
   ],
-  "generated_at": "2026-07-15T14:13:45Z"
+  "generated_at": "2026-07-15T18:49:19Z"
 }
