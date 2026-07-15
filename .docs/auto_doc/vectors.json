@@ -455,6 +455,42 @@
       "symbol": "AutoDoc",
       "type": "module",
       "scope": "public",
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/llm/client.rb",
+      "line": 7,
+      "summary": "",
+      "signature": "AutoDoc",
+      "visibility": "public",
+      "keywords": [
+        "auto",
+        "doc"
+      ],
+      "dependencies": [],
+      "consumed_by": [],
+      "parent_module": null
+    },
+    {
+      "id": "module_AutoDoc",
+      "symbol": "AutoDoc",
+      "type": "module",
+      "scope": "public",
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/llm.rb",
+      "line": 3,
+      "summary": "",
+      "signature": "AutoDoc",
+      "visibility": "public",
+      "keywords": [
+        "auto",
+        "doc"
+      ],
+      "dependencies": [],
+      "consumed_by": [],
+      "parent_module": null
+    },
+    {
+      "id": "module_AutoDoc",
+      "symbol": "AutoDoc",
+      "type": "module",
+      "scope": "public",
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/orchestrator/agents_md_step.rb",
       "line": 3,
       "summary": "",
@@ -919,5 +955,5 @@
       "parent_module": null
     }
   ],
-  "generated_at": "2026-07-15T21:33:45Z"
+  "generated_at": "2026-07-15T22:54:05Z"
 }

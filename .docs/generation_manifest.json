@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-15T14:33:45-07:00",
+  "generated_at": "2026-07-15T22:54:05+00:00",
   "files": {
     "fixtures/partial_docs_project/lib/calculator.rb": 1784046145,
     "fixtures/rails_project/app/controllers/api/v1/users_controller.rb": 1784145229,
@@ -48,6 +48,8 @@
     "lib/auto_doc/generator/summary_generator.rb": 1784144302,
     "lib/auto_doc/generator/template_helper.rb": 1784085295,
     "lib/auto_doc/generator/vector_generator.rb": 1784080074,
+    "lib/auto_doc/llm/client.rb": 1784156041,
+    "lib/auto_doc/llm.rb": 1784156032,
     "lib/auto_doc/orchestrator/agents_md_step.rb": 1784144811,
     "lib/auto_doc/orchestrator/architecture_step.rb": 1784144840,
     "lib/auto_doc/orchestrator/base_step.rb": 1784144808,

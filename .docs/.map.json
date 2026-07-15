@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "generated_at": "2026-07-15T14:33:45-07:00",
+  "generated_at": "2026-07-15T22:54:05+00:00",
   "project": "auto-doc-tool",
   "artifacts": {
     "indexes": [
@@ -8,6 +8,7 @@
       "auto_doc/INDEX.md",
       "auto_doc/analyzer/INDEX.md",
       "auto_doc/generator/INDEX.md",
+      "auto_doc/llm/INDEX.md",
       "auto_doc/orchestrator/INDEX.md",
       "auto_doc/reporter/INDEX.md",
       "auto_doc/tester/INDEX.md",
@@ -20,6 +21,7 @@
       "auto_doc/SUMMARY.md",
       "auto_doc/analyzer/SUMMARY.md",
       "auto_doc/generator/SUMMARY.md",
+      "auto_doc/llm/SUMMARY.md",
       "auto_doc/orchestrator/SUMMARY.md",
       "auto_doc/reporter/SUMMARY.md",
       "auto_doc/tester/SUMMARY.md",
@@ -31,6 +33,7 @@
       "VECTORS.json",
       "auto_doc/analyzer/vectors.json",
       "auto_doc/generator/vectors.json",
+      "auto_doc/llm/vectors.json",
       "auto_doc/orchestrator/vectors.json",
       "auto_doc/reporter/vectors.json",
       "auto_doc/tester/vectors.json",
@@ -61,7 +64,7 @@
     "lib",
     "bin"
   ],
-  "coverage_pct": 23.8,
-  "total_symbols": 84,
-  "total_files": 110
+  "coverage_pct": 23.3,
+  "total_symbols": 86,
+  "total_files": 112
 }

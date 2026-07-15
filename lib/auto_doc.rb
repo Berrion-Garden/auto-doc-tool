@@ -29,6 +29,9 @@ module AutoDoc
   require_relative "auto_doc/analyzer/diff_service"
   require_relative "auto_doc/analyzer/orphans_service"
 
+  # Load LLM services
+  require_relative "auto_doc/llm"
+
   # Load generators
   require_relative "auto_doc/generator/template_helper"
   require_relative "auto_doc/generator/agents_md_generator"

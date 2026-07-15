@@ -6,3 +6,6 @@
 tmp/
 .agents/
 *.log
+node_modules/
+package.json
+package-lock.json
