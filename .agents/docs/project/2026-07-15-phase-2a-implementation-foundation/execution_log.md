@@ -8,11 +8,11 @@
 - Commit: e37bd17
 
 ## Milestone 2: INDEX.md + SUMMARY.md + VECTORS.json Generators
-- Status: PENDING
-- Attempt: 0
-- Summary: Pending
-- Test Results: Pending
-- Commit: N/A
+- Status: COMPLETE
+- Attempt: 1
+- Summary: Created three new generators (IndexGenerator, SummaryGenerator, VectorGenerator) with ERB templates. Wired into orchestrator for per-directory INDEX.md, SUMMARY.md, vectors.json and project-level INDEX.md, SUMMARY.md, VECTORS.json. Added 3 new spec files (index_generator_spec.rb, summary_generator_spec.rb, vector_generator_spec.rb) covering unit tests for rendering, empty states, keyword extraction, and file writing.
+- Test Results: PASS — 182 RSpec examples, 0 failures across 19 spec files
+- Commit: 855d631
 
 ## Milestone 3: OutputFormatter + --json/--agent CLI Flags
 - Status: PENDING

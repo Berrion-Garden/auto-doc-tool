@@ -14,7 +14,7 @@ module AutoDoc
     # Performs full documentation generation for the given path.
     # @param path [String] Project directory path
     # @param say [Proc] Callable for output messages (default: puts)
-    # @return [void]
+    # @return [Hash]
     def generate(path, say: method(:puts))
       target_dir = File.expand_path(path)
       config     = AutoDoc::Config.load(target_dir, cli_overrides(@options))
@@ -30,12 +30,18 @@ module AutoDoc
                      config.output_dir
                    end
 
-      say.call("Generating documentation for #{target_dir}...", :green)
+      created_files = []
+      wrapped_say = ->(msg, color = nil) {
+        created_files << msg.sub(/^  Created /, "") if msg.is_a?(String) && msg.start_with?("  Created ")
+        say.call(msg, color)
+      }
+
+      wrapped_say.call("Generating documentation for #{target_dir}...", :green)
 
       module_roots = resolve_module_roots(target_dir, config)
       analyses     = if @options[:incremental]
                         stale = AutoDoc::Utils::TimestampTracker.stale_files(target_dir, output_dir).map { |f| File.join(target_dir, f) }
-                        say.call("Incremental mode: #{stale.size} file(s) changed", :yellow)
+                        wrapped_say.call("Incremental mode: #{stale.size} file(s) changed", :yellow)
                        analyze_project(target_dir, config, stale)
                      else
                        analyze_project(target_dir, config)
@@ -53,12 +59,12 @@ module AutoDoc
         output_path = File.join(target_dir, output_dir, dir_name, "AGENTS.md")
         AutoDoc::Generator::AgentsMdGenerator.generate(dir_name, tree_text, files_data, output_path: output_path)
 
-        say.call("  Created #{output_path}", :green)
+        wrapped_say.call("  Created #{output_path}", :green)
       end
 
       # Walk all subdirectories under each module root for INDEX.md, SUMMARY.md, vectors.json
       module_roots.each do |root|
-        walk_subdirectories(root, analyses, target_dir, output_dir, config, say)
+        walk_subdirectories(root, analyses, target_dir, output_dir, config, wrapped_say)
       end
 
       # Generate README.md at project level
@@ -92,7 +98,7 @@ module AutoDoc
         project_name = File.basename(target_dir)
 
         AutoDoc::Generator::ReadmeGenerator.generate(project_name, structure, summary, output_path: readme_path)
-        say.call("  Created #{readme_path}", :green)
+        wrapped_say.call("  Created #{readme_path}", :green)
       end
 
       # Generate dependency DAG if enabled in config
@@ -104,7 +110,7 @@ module AutoDoc
         project_name = File.basename(target_dir)
 
         AutoDoc::Generator::DiagramGenerator.generate(project_name, nodes, edges, output_path: dag_path)
-        say.call("  Created #{dag_path}", :green)
+        wrapped_say.call("  Created #{dag_path}", :green)
       end
 
       # Generate project-level INDEX.md, SUMMARY.md, VECTORS.json
@@ -113,18 +119,18 @@ module AutoDoc
       # Project-level INDEX.md using all analyses
       project_index_path = File.join(target_dir, output_dir, "INDEX.md")
       AutoDoc::Generator::IndexGenerator.generate(project_name, analyses, config, output_path: project_index_path)
-      say.call("  Created #{project_index_path}", :green)
+      wrapped_say.call("  Created #{project_index_path}", :green)
 
       # Project-level SUMMARY.md using all analyses
       project_summary_path = File.join(target_dir, output_dir, "SUMMARY.md")
       AutoDoc::Generator::SummaryGenerator.generate(project_name, analyses, config, output_path: project_summary_path)
-      say.call("  Created #{project_summary_path}", :green)
+      wrapped_say.call("  Created #{project_summary_path}", :green)
 
       # Project-level VECTORS.json using all analyses
       project_vectors_path = File.join(target_dir, output_dir, "VECTORS.json")
       vectors_data = AutoDoc::Generator::VectorGenerator.generate_project(analyses, config)
       AutoDoc::Generator::VectorGenerator.write(project_vectors_path, vectors_data)
-      say.call("  Created #{project_vectors_path}", :green)
+      wrapped_say.call("  Created #{project_vectors_path}", :green)
 
       # Save manifest for incremental tracking
       ruby_files_list = Dir.glob(File.join(target_dir, "**", "*.rb")).reject do |f|
@@ -133,7 +139,17 @@ module AutoDoc
       end.map { |f| f.sub("#{target_dir}/", "") }
       AutoDoc::Utils::TimestampTracker.save_manifest(target_dir, ruby_files_list, output_dir)
 
-      say.call("\nDocumentation generation complete.", :green)
+      wrapped_say.call("\nDocumentation generation complete.", :green)
+
+      # Return structured result for formatters
+      {
+        project: File.basename(target_dir),
+        output_dir: output_dir,
+        module_roots: module_roots.map { |r| File.basename(r) },
+        created_files: created_files,
+        analyses_count: analyses.size,
+        generated_at: Time.now.iso8601
+      }
     end
 
     # Runs audit analysis and returns the report hash (does NOT call exit).
@@ -150,7 +166,7 @@ module AutoDoc
       analyses = analyze_project(target_dir, config)
       report   = AutoDoc::Reporter::AuditReporter.generate(target_dir, config, analyses)
 
-      puts AutoDoc::Reporter::AuditReporter.format_text(report)
+      say.call(AutoDoc::Reporter::AuditReporter.format_text(report))
 
       # Write JSON report for CI pipelines
       json_path = File.join(target_dir, config.output_dir, "report.json")

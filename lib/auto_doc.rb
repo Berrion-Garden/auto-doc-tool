@@ -14,6 +14,7 @@ module AutoDoc
   require_relative "auto_doc/utils/yaml_config_loader"
   require_relative "auto_doc/utils/file_tree_builder"
   require_relative "auto_doc/utils/timestamp_tracker"
+  require_relative "auto_doc/utils/output_formatter"
 
   # Load analyzers
   require_relative "auto_doc/analyzer/source_parser"

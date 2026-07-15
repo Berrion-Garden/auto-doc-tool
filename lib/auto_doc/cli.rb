@@ -13,6 +13,8 @@ module AutoDoc
     end
 
     class_option :verbose, type: :boolean, aliases: "-v", default: false, desc: "Verbose output"
+    class_option :json, type: :boolean, default: false, desc: "Output as JSON"
+    class_option :agent, type: :boolean, default: false, desc: "Output compact agent-optimized JSON"
 
     desc "init [PATH]", "Initialize .autodoc.yml config file in directory"
     def init(path = ".")
@@ -40,7 +42,16 @@ module AutoDoc
     method_option :output_dir,  type: :string,
                                 desc: "Output directory (default: .docs)"
     def generate(path = ".")
-      orchestrator.generate(path, say: method(:say))
+      output_format = output_format_for(options)
+      # In json/agent mode, suppress text output and return structured data only
+      if output_format != :text
+        silent = ->(_msg, _color = nil) { }
+        result = orchestrator.generate(path, say: silent)
+        AutoDoc::Utils::OutputFormatter.format(result, format: output_format, say: method(:say))
+        result
+      else
+        orchestrator.generate(path, say: method(:say))
+      end
     end
 
     desc "diff SINCE", "Show documentation drift since a git ref or last generation"
@@ -51,16 +62,24 @@ module AutoDoc
       end
 
       current_dir = File.expand_path(".")
-      result = AutoDoc::Analyzer::DiffService.run(current_dir, since, say: method(:say))
+      output_format = output_format_for(options)
 
-      if result[:changed_files].empty?
-        say "No Ruby files changed since '#{since}'.", :green
-      elsif result[:undocumented_changes].empty?
-        say "All changed symbols have documentation.", :green
+      if output_format != :text
+        silent = ->(_msg, _color = nil) { }
+        result = AutoDoc::Analyzer::DiffService.run(current_dir, since, say: silent)
+        AutoDoc::Utils::OutputFormatter.format(result, format: output_format, say: method(:say))
       else
-        say "\nUndocumented changes since '#{since}':", :red
-        result[:undocumented_changes].each do |change|
-          say "  #{change[:type]} `#{change[:symbol]}` in #{change[:file]}", :yellow
+        result = AutoDoc::Analyzer::DiffService.run(current_dir, since, say: method(:say))
+
+        if result[:changed_files].empty?
+          say "No Ruby files changed since '#{since}'.", :green
+        elsif result[:undocumented_changes].empty?
+          say "All changed symbols have documentation.", :green
+        else
+          say "\nUndocumented changes since '#{since}':", :red
+          result[:undocumented_changes].each do |change|
+            say "  #{change[:type]} `#{change[:symbol]}` in #{change[:file]}", :yellow
+          end
         end
       end
     end
@@ -69,7 +88,14 @@ module AutoDoc
     method_option :threshold, type: :numeric, default: 80,
                               desc: "Minimum doc coverage percentage for passing CI gate"
     def audit(path = ".")
-      report = orchestrator.audit(path, options[:threshold], say: method(:say))
+      output_format = output_format_for(options)
+      if output_format != :text
+        silent = ->(_msg, _color = nil) { }
+        report = orchestrator.audit(path, options[:threshold], say: silent)
+        AutoDoc::Utils::OutputFormatter.format(report, format: output_format, say: method(:say))
+      else
+        report = orchestrator.audit(path, options[:threshold], say: method(:say))
+      end
       unless report[:passed]
         say "\nAudit FAILED: coverage #{report[:overall_coverage]}% < threshold #{report[:min_coverage]}%", :red
         exit(1)
@@ -83,13 +109,21 @@ module AutoDoc
 
     desc "orphans [PATH]", "Find Ruby files that are not documented, not imported, and not referenced by any other file"
     def orphans(path = ".")
-      result = AutoDoc::Analyzer::OrphansService.run(path, say: method(:say))
+      output_format = output_format_for(options)
 
-      if result[:orphans].empty?
-        say "No orphan files found.", :green
+      if output_format != :text
+        silent = ->(_msg, _color = nil) { }
+        result = AutoDoc::Analyzer::OrphansService.run(path, say: silent)
+        AutoDoc::Utils::OutputFormatter.format(result, format: output_format, say: method(:say))
       else
-        say "#{result[:orphans].size} orphan file(s) found:", :yellow
-        result[:orphans].each { |f| say "  #{f}", :yellow }
+        result = AutoDoc::Analyzer::OrphansService.run(path, say: method(:say))
+
+        if result[:orphans].empty?
+          say "No orphan files found.", :green
+        else
+          say "#{result[:orphans].size} orphan file(s) found:", :yellow
+          result[:orphans].each { |f| say "  #{f}", :yellow }
+        end
       end
     end
 
@@ -127,6 +161,16 @@ module AutoDoc
     end
 
     private
+
+    # Determines the output format from CLI options.
+    # Agent flag takes precedence over json flag.
+    # @param opts [Thor::CoreExt::HashWithIndifferentAccess] CLI options
+    # @return [Symbol] :text, :json, or :agent
+    def output_format_for(opts)
+      return :agent if opts[:agent]
+      return :json if opts[:json]
+      :text
+    end
 
     # Returns a configured Orchestrator instance.
     def orchestrator

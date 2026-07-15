@@ -177,6 +177,106 @@ RSpec.describe AutoDoc::CLI do
     end
   end
 
+  describe "--json flag" do
+    describe "generate --json" do
+      let(:tmpdir) { Dir.mktmpdir }
+      after { FileUtils.remove_entry(tmpdir) }
+
+      it "outputs JSON when --json flag is given" do
+        FileUtils.mkdir_p(File.join(tmpdir, "lib"))
+        File.write(File.join(tmpdir, "lib", "test.rb"), "class Test; end")
+
+        expect {
+          cli.start(["generate", "--json", tmpdir])
+        }.to output { |captured|
+          parsed = JSON.parse(captured)
+          expect(parsed).to be_a(Hash)
+          expect(parsed).to have_key("project")
+          expect(parsed).to have_key("created_files")
+          expect(parsed).to have_key("analyses_count")
+        }.to_stdout
+      end
+    end
+
+    describe "audit --json" do
+      it "outputs JSON when --json flag is given" do
+        fixture = fixture_path("sample_ruby_project")
+
+        expect {
+          cli.start(["audit", "--json", "--threshold", "0", fixture])
+        }.to output { |captured|
+          parsed = JSON.parse(captured)
+          expect(parsed).to be_a(Hash)
+          expect(parsed).to have_key("overall_coverage")
+          expect(parsed).to have_key("total_symbols")
+          expect(parsed).to have_key("passed")
+          expect(parsed).to have_key("project")
+        }.to_stdout
+      end
+    end
+
+    describe "diff --json" do
+      let(:tmpdir) { Dir.mktmpdir }
+      after { FileUtils.remove_entry(tmpdir) }
+
+      it "outputs JSON when --json flag is given" do
+        FileUtils.mkdir_p(File.join(tmpdir, "lib"))
+        File.write(File.join(tmpdir, "lib", "test.rb"), "class Test; end")
+
+        Dir.chdir(tmpdir) do
+          system("git init > /dev/null 2>&1 && git config user.email test@test.com && git config user.name test && git add -A && git commit -m 'initial' > /dev/null 2>&1")
+
+          expect {
+            cli.start(["diff", "--json", "HEAD"])
+          }.to output { |captured|
+            parsed = JSON.parse(captured)
+            expect(parsed).to be_a(Hash)
+            expect(parsed).to have_key("changed_files")
+            expect(parsed).to have_key("undocumented_changes")
+          }.to_stdout
+        end
+      end
+    end
+  end
+
+  describe "--agent flag" do
+    describe "orphans --agent" do
+      let(:tmpdir) { Dir.mktmpdir }
+      after { FileUtils.remove_entry(tmpdir) }
+
+      it "outputs compact JSON when --agent flag is given" do
+        FileUtils.mkdir_p(File.join(tmpdir, "lib"))
+        File.write(File.join(tmpdir, "lib", "test.rb"), "class Test; end")
+
+        expect {
+          cli.start(["orphans", "--agent", tmpdir])
+        }.to output { |captured|
+          expect(captured).not_to include("\n  ") # no pretty-printing
+          parsed = JSON.parse(captured)
+          expect(parsed).to be_a(Hash)
+          expect(parsed).to have_key("orphans")
+        }.to_stdout
+      end
+    end
+
+    describe "--agent takes precedence over --json" do
+      it "outputs compact JSON when both --agent and --json are given" do
+        fixture = fixture_path("sample_ruby_project")
+
+        expect {
+          cli.start(["audit", "--agent", "--json", "--threshold", "0", fixture])
+        }.to output { |captured|
+          # Compact JSON — no indentation newlines
+          expect(captured).not_to include("\n  ")
+          parsed = JSON.parse(captured)
+          expect(parsed).to be_a(Hash)
+          # Agent format strips generated_at timestamp
+          expect(parsed).not_to have_key("generated_at")
+        }.to_stdout
+      end
+    end
+  end
+
   describe "analyze_project" do
     it "accepts file_list parameter and only analyzes given files" do
       Dir.mktmpdir do |dir|
