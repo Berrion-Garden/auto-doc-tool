@@ -1,12 +1,15 @@
 {
   "project": "/home/kyle/Projects/auto-doc-tool",
-  "generated_at": "2026-07-15T02:35:00+00:00",
-  "overall_coverage": 18.8,
-  "total_symbols": 32,
+  "generated_at": "2026-07-15T07:13:45-07:00",
+  "overall_coverage": 11.3,
+  "total_symbols": 53,
   "documented_symbols": 4,
   "undocumented": [
     "module_Calculator",
     "class_Silo",
+    "class_Comment",
+    "class_Post",
+    "class_CreateUsers",
     "method_deep_merge"
   ],
   "modules": {
@@ -16,10 +19,34 @@
       "documented": 0,
       "coverage_pct": 0.0
     },
+    "comment": {
+      "file": "/home/kyle/Projects/auto-doc-tool/fixtures/rails_project/app/models/comment.rb",
+      "total": 1,
+      "documented": 0,
+      "coverage_pct": 0.0
+    },
+    "post": {
+      "file": "/home/kyle/Projects/auto-doc-tool/fixtures/rails_project/app/models/post.rb",
+      "total": 1,
+      "documented": 0,
+      "coverage_pct": 0.0
+    },
     "user": {
       "file": "/home/kyle/Projects/auto-doc-tool/test_fixtures/sample_ruby_project/app/models/user.rb",
       "total": 1,
       "documented": 1,
+      "coverage_pct": 100.0
+    },
+    "20240101000000_create_users": {
+      "file": "/home/kyle/Projects/auto-doc-tool/fixtures/rails_project/db/migrate/20240101000000_create_users.rb",
+      "total": 1,
+      "documented": 0,
+      "coverage_pct": 0.0
+    },
+    "schema": {
+      "file": "/home/kyle/Projects/auto-doc-tool/fixtures/rails_project/db/schema.rb",
+      "total": 0,
+      "documented": 0,
       "coverage_pct": 100.0
     },
     "math_utils": {
@@ -34,6 +61,18 @@
       "documented": 1,
       "coverage_pct": 100.0
     },
+    "agent_query_service": {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/agent_query_service.rb",
+      "total": 1,
+      "documented": 0,
+      "coverage_pct": 0.0
+    },
+    "analysis_pipeline": {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/analyzer/analysis_pipeline.rb",
+      "total": 1,
+      "documented": 0,
+      "coverage_pct": 0.0
+    },
     "diff_service": {
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/analyzer/diff_service.rb",
       "total": 1,
@@ -46,8 +85,20 @@
       "documented": 0,
       "coverage_pct": 0.0
     },
+    "model_association_parser": {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/analyzer/model_association_parser.rb",
+      "total": 1,
+      "documented": 0,
+      "coverage_pct": 0.0
+    },
     "orphans_service": {
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/analyzer/orphans_service.rb",
+      "total": 1,
+      "documented": 0,
+      "coverage_pct": 0.0
+    },
+    "schema_parser": {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/analyzer/schema_parser.rb",
       "total": 1,
       "documented": 0,
       "coverage_pct": 0.0
@@ -82,14 +133,44 @@
       "documented": 0,
       "coverage_pct": 0.0
     },
+    "architecture_generator": {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/generator/architecture_generator.rb",
+      "total": 1,
+      "documented": 0,
+      "coverage_pct": 0.0
+    },
+    "c4_diagram_generator": {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/generator/c4_diagram_generator.rb",
+      "total": 1,
+      "documented": 0,
+      "coverage_pct": 0.0
+    },
+    "class_diagram_generator": {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/generator/class_diagram_generator.rb",
+      "total": 1,
+      "documented": 0,
+      "coverage_pct": 0.0
+    },
     "diagram_generator": {
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/generator/diagram_generator.rb",
       "total": 1,
       "documented": 0,
       "coverage_pct": 0.0
     },
+    "erd_generator": {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/generator/erd_generator.rb",
+      "total": 1,
+      "documented": 0,
+      "coverage_pct": 0.0
+    },
     "index_generator": {
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/generator/index_generator.rb",
+      "total": 1,
+      "documented": 0,
+      "coverage_pct": 0.0
+    },
+    "map_generator": {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/generator/map_generator.rb",
       "total": 1,
       "documented": 0,
       "coverage_pct": 0.0
@@ -102,6 +183,12 @@
     },
     "summary_generator": {
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/generator/summary_generator.rb",
+      "total": 1,
+      "documented": 0,
+      "coverage_pct": 0.0
+    },
+    "template_helper": {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/generator/template_helper.rb",
       "total": 1,
       "documented": 0,
       "coverage_pct": 0.0
@@ -130,6 +217,12 @@
       "documented": 0,
       "coverage_pct": 0.0
     },
+    "search_service": {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/search_service.rb",
+      "total": 1,
+      "documented": 0,
+      "coverage_pct": 0.0
+    },
     "server": {
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/server.rb",
       "total": 1,
@@ -138,6 +231,42 @@
     },
     "e2e_runner": {
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/tester/e2e_runner.rb",
+      "total": 1,
+      "documented": 0,
+      "coverage_pct": 0.0
+    },
+    "class_hierarchy_builder": {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/transformer/class_hierarchy_builder.rb",
+      "total": 1,
+      "documented": 0,
+      "coverage_pct": 0.0
+    },
+    "container_data_flow_builder": {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/transformer/container_data_flow_builder.rb",
+      "total": 1,
+      "documented": 0,
+      "coverage_pct": 0.0
+    },
+    "erd_relationship_builder": {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/transformer/erd_relationship_builder.rb",
+      "total": 1,
+      "documented": 0,
+      "coverage_pct": 0.0
+    },
+    "files_data_builder": {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/transformer/files_data_builder.rb",
+      "total": 1,
+      "documented": 0,
+      "coverage_pct": 0.0
+    },
+    "graph_data_builder": {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/transformer/graph_data_builder.rb",
+      "total": 1,
+      "documented": 0,
+      "coverage_pct": 0.0
+    },
+    "transformer": {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/transformer.rb",
       "total": 1,
       "documented": 0,
       "coverage_pct": 0.0

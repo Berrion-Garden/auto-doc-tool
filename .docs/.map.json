@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "generated_at": "2026-07-15T13:47:03+00:00",
+  "generated_at": "2026-07-15T07:13:45-07:00",
   "project": "auto-doc-tool",
   "artifacts": {
     "indexes": [
@@ -33,8 +33,7 @@
       "auto_doc/tester/vectors.json",
       "auto_doc/transformer/vectors.json",
       "auto_doc/utils/vectors.json",
-      "auto_doc/vectors.json",
-      "vectors.json"
+      "auto_doc/vectors.json"
     ],
     "diagrams": [
       "diagrams/c4_container.mmd",
@@ -49,7 +48,10 @@
     "architecture": [
       "architecture.md"
     ],
-    "schema": []
+    "schema": [],
+    "readme": [
+      "README.md"
+    ]
   },
   "module_roots": [
     "app",
