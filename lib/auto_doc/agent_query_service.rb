@@ -109,14 +109,14 @@ module AutoDoc
     def self.lookup_reverse_dependency(docs_dir, term)
       rows = parse_dependencies_table(docs_dir)
       term_down = term.downcase
-      rows.select { |r| r[:to].downcase.include?(term_down) || r[:to].downcase == term_down }
+      rows.select { |r| r[:to].downcase.include?(term_down) }
     end
 
     # Finds rows in INDEX.md Dependencies table where "From" matches term.
     def self.lookup_forward_dependency(docs_dir, term)
       rows = parse_dependencies_table(docs_dir)
       term_down = term.downcase
-      rows.select { |r| r[:from].downcase.include?(term_down) || r[:from].downcase == term_down }
+      rows.select { |r| r[:from].downcase.include?(term_down) }
     end
 
     # Returns all rows from INDEX.md Symbols table.
@@ -180,14 +180,20 @@ module AutoDoc
       if schema.is_a?(Array)
         schema.find { |t| t["table"]&.downcase == term_down || t["name"]&.downcase == term_down }
       elsif schema.is_a?(Hash)
-        schema[term] || schema[term.downcase] || schema[term.capitalize] || nil
+        result = schema[term]
+        result ||= schema[term_down]
+        result ||= schema[term_down.sub(/s$/, "")] unless term_down.end_with?("s")
+        result ||= schema["#{term_down}s"]
+        result
       end
     end
 
     # ── data loading helpers ────────────────────────────────────────────
 
-    # Parses INDEX.md Dependencies table into array of {from:, type:, to:} hashes.
-    def self.parse_dependencies_table(docs_dir)
+    # Parses a named section table from INDEX.md, yielding parsed columns for each data row.
+    # Handles section tracking, pipe-row iteration, separator-row skipping, and header-row skipping.
+    # The block receives parsed column values and returns a result hash (or nil to skip the row).
+    def self.parse_markdown_section_table(docs_dir, section_name, header_pattern: nil, &row_builder)
       index_path = File.join(docs_dir, "INDEX.md")
       return [] unless File.exist?(index_path)
 
@@ -202,60 +208,45 @@ module AutoDoc
           next
         end
 
-        next unless current_section == "dependencies"
+        next unless current_section == section_name.downcase
         next unless line.start_with?("|")
 
         # Skip separator rows (|---|)
         next if line.strip =~ /\A\|[-| ]+\|\z/
 
         # Skip table header rows
-        next if line =~ /\A\|\s*From\s*\|/
-
-        # Skip "no dependencies" rows
-        next if line.include?("No dependencies") || line.include?("_No")
+        next if header_pattern && line =~ header_pattern
 
         cols = parse_pipe_row(line)
         next if cols.size < 3
 
-        results << {
-          from: cols[0].to_s.strip,
-          type: cols[1].to_s.strip,
-          to: cols[2].to_s.strip
-        }
+        row = row_builder.call(cols)
+        results << row if row
       end
 
       results
     end
 
+    # Parses INDEX.md Dependencies table into array of {from:, type:, to:} hashes.
+    def self.parse_dependencies_table(docs_dir)
+      parse_markdown_section_table(docs_dir, "dependencies",
+                                   header_pattern: /\A\|\s*From\s*\|/) do |cols|
+        # Skip placeholder rows (no dependencies, blank from column, em-dash)
+        next if cols[0].to_s.strip.empty? || cols[0].to_s.strip == "—" || cols[0].to_s.strip.match?(/\A_?No\b/)
+
+        {
+          from: cols[0].to_s.strip,
+          type: cols[1].to_s.strip,
+          to: cols[2].to_s.strip
+        }
+      end
+    end
+
     # Parses INDEX.md Symbols table into array of {symbol:, type:, file:, line:, documented:} hashes.
     def self.parse_symbols_table(docs_dir)
-      index_path = File.join(docs_dir, "INDEX.md")
-      return [] unless File.exist?(index_path)
-
-      lines = File.read(index_path, encoding: "UTF-8").split("\n")
-      current_section = nil
-      results = []
-
-      lines.each do |line|
-        # Track current section header
-        if line =~ /^##\s+(.+)/
-          current_section = Regexp.last_match(1).strip.downcase
-          next
-        end
-
-        next unless current_section == "symbols"
-        next unless line.start_with?("|")
-
-        # Skip separator rows (|---|)
-        next if line.strip =~ /\A\|[-| ]+\|\z/
-
-        # Skip table header rows
-        next if line =~ /\A\|\s*(#|Name|Symbol)\s*\|/
-
-        cols = parse_pipe_row(line)
-        next if cols.size < 3
-
-        results << {
+      parse_markdown_section_table(docs_dir, "symbols",
+                                   header_pattern: /\A\|\s*(#|Name|Symbol)\s*\|/) do |cols|
+        {
           symbol: cols[0].to_s.strip,
           type: cols[1].to_s.strip,
           file: cols[2].to_s.strip,
@@ -263,8 +254,6 @@ module AutoDoc
           documented: cols.size > 4 ? cols[4].to_s.strip : ""
         }
       end
-
-      results
     end
 
     # Loads VECTORS.json (case-insensitive filename lookup).
@@ -294,7 +283,8 @@ module AutoDoc
     private_class_method :lookup_reverse_dependency, :lookup_forward_dependency,
                          :list_all_symbols, :describe_symbol, :read_architecture,
                          :lookup_diagram, :lookup_schema,
-                         :parse_dependencies_table, :parse_symbols_table,
+                         :parse_markdown_section_table, :parse_dependencies_table,
+                         :parse_symbols_table,
                          :load_vectors_json, :parse_pipe_row
   end
 end

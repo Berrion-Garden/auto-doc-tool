@@ -229,7 +229,7 @@ RSpec.describe AutoDoc::AgentQueryService do
 
       expect(result[:intent]).to eq(:architecture)
       expect(result[:result][:content]).to be_a(String)
-      expect(result[:result][:content]).to include("partial_docs_project")
+      expect(result[:result][:content]).to include("System Overview")
       expect(result[:result][:diagrams]).to be_an(Array)
       expect(result[:result][:diagrams]).to include("diagrams/deps.mmd")
     end
@@ -265,6 +265,14 @@ RSpec.describe AutoDoc::AgentQueryService do
     it "returns nil when diagram not found" do
       result = service.query(fixture_path("partial_docs_project"), "diagram for nonexistent")
       expect(result[:result]).to be_nil
+    end
+
+    it "returns nil when diagrams/ directory does not exist" do
+      with_project_dir do |dir|
+        # .docs/ exists but no .docs/diagrams/ subdirectory
+        result = service.query(dir, "diagram for deps")
+        expect(result[:result]).to be_nil
+      end
     end
   end
 
@@ -330,6 +338,20 @@ RSpec.describe AutoDoc::AgentQueryService do
         expect(result[:intent]).to eq(:schema_lookup)
         expect(result[:result]).to be_a(Hash)
         expect(result[:result]["columns"]).to be_an(Array)
+      end
+    end
+
+    it "handles hash schema with empty value" do
+      with_project_dir do |dir|
+        schema_dir = File.join(dir, ".docs", "schema")
+        FileUtils.mkdir_p(schema_dir)
+        schema = { "empty_table" => [] }
+        File.write(File.join(schema_dir, "schema.json"), JSON.pretty_generate(schema))
+
+        result = service.query(dir, "schema for empty_table")
+
+        expect(result[:intent]).to eq(:schema_lookup)
+        expect(result[:result]).to eq([])  # Should return empty array, not nil or wrong key
       end
     end
   end
