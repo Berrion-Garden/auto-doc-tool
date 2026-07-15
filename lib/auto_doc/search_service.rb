@@ -21,27 +21,25 @@ module AutoDoc
     def self.search(project_dir, term, options: {})
       docs_dir = File.join(project_dir, ".docs")
 
-      unless Dir.exist?(docs_dir)
-        return { query: term, results: [], total: 0 }
-      end
-
       limit = options.fetch(:limit, 20)
       results = []
 
-      # Walk .docs/ directory recursively
-      Dir.glob(File.join(docs_dir, "**", "*")).each do |file_path|
-        next unless File.file?(file_path)
-        rel_path = file_path.sub("#{docs_dir}/", "")
+      # Walk .docs/ directory recursively (only if it exists)
+      if Dir.exist?(docs_dir)
+        Dir.glob(File.join(docs_dir, "**", "*")).each do |file_path|
+          next unless File.file?(file_path)
+          rel_path = file_path.sub("#{docs_dir}/", "")
 
-        case File.basename(file_path)
-        when "INDEX.md"
-          results.concat(search_index_md(file_path, term, rel_path))
-        when "vectors.json"
-          results.concat(search_vectors_json(file_path, term, rel_path))
-        when "SUMMARY.md"
-          results.concat(search_summary_md(file_path, term, rel_path))
-        when "AGENTS.md"
-          results.concat(search_agents_md(file_path, term, rel_path))
+          case File.basename(file_path)
+          when "INDEX.md"
+            results.concat(search_index_md(file_path, term, rel_path))
+          when "vectors.json"
+            results.concat(search_vectors_json(file_path, term, rel_path))
+          when "SUMMARY.md"
+            results.concat(search_summary_md(file_path, term, rel_path))
+          when "AGENTS.md"
+            results.concat(search_agents_md(file_path, term, rel_path))
+          end
         end
       end
 
@@ -146,7 +144,7 @@ module AutoDoc
       symbols = data["symbols"]
       return results unless symbols.is_a?(Array)
 
-      search_words = term.split(/\s+|_|(?<=[a-z])(?=[A-Z])/).map(&:downcase)
+      search_words = term.split(/\s+|_|(?<=[a-z])(?=[A-Z])/).reject(&:empty?).map(&:downcase)
 
       symbols.each do |entry|
         keywords = entry["keywords"]
