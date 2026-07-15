@@ -35,6 +35,113 @@
       "parent_module": null
     },
     {
+      "id": "module_Api",
+      "symbol": "Api",
+      "type": "module",
+      "scope": "public",
+      "file": "/home/kyle/Projects/auto-doc-tool/fixtures/rails_project/app/controllers/api/v1/users_controller.rb",
+      "line": 2,
+      "summary": "",
+      "signature": "Api",
+      "visibility": "public",
+      "keywords": [
+        "api"
+      ],
+      "dependencies": [],
+      "consumed_by": [],
+      "parent_module": null
+    },
+    {
+      "id": "class_ApplicationController",
+      "symbol": "ApplicationController",
+      "type": "class",
+      "scope": "public",
+      "file": "/home/kyle/Projects/auto-doc-tool/fixtures/rails_project/app/controllers/application_controller.rb",
+      "line": 2,
+      "summary": "",
+      "signature": "ApplicationController",
+      "visibility": "public",
+      "keywords": [
+        "application",
+        "controller"
+      ],
+      "dependencies": [],
+      "consumed_by": [],
+      "parent_module": null
+    },
+    {
+      "id": "module_Authenticatable",
+      "symbol": "Authenticatable",
+      "type": "module",
+      "scope": "public",
+      "file": "/home/kyle/Projects/auto-doc-tool/fixtures/rails_project/app/controllers/concerns/authenticatable.rb",
+      "line": 2,
+      "summary": "",
+      "signature": "Authenticatable",
+      "visibility": "public",
+      "keywords": [
+        "authenticatable"
+      ],
+      "dependencies": [],
+      "consumed_by": [],
+      "parent_module": null
+    },
+    {
+      "id": "module_ApplicationHelper",
+      "symbol": "ApplicationHelper",
+      "type": "module",
+      "scope": "public",
+      "file": "/home/kyle/Projects/auto-doc-tool/fixtures/rails_project/app/helpers/application_helper.rb",
+      "line": 2,
+      "summary": "",
+      "signature": "ApplicationHelper",
+      "visibility": "public",
+      "keywords": [
+        "application",
+        "helper"
+      ],
+      "dependencies": [],
+      "consumed_by": [],
+      "parent_module": null
+    },
+    {
+      "id": "class_ProcessDataJob",
+      "symbol": "ProcessDataJob",
+      "type": "class",
+      "scope": "public",
+      "file": "/home/kyle/Projects/auto-doc-tool/fixtures/rails_project/app/jobs/process_data_job.rb",
+      "line": 2,
+      "summary": "",
+      "signature": "ProcessDataJob",
+      "visibility": "public",
+      "keywords": [
+        "process",
+        "data",
+        "job"
+      ],
+      "dependencies": [],
+      "consumed_by": [],
+      "parent_module": null
+    },
+    {
+      "id": "class_UserMailer",
+      "symbol": "UserMailer",
+      "type": "class",
+      "scope": "public",
+      "file": "/home/kyle/Projects/auto-doc-tool/fixtures/rails_project/app/mailers/user_mailer.rb",
+      "line": 2,
+      "summary": "",
+      "signature": "UserMailer",
+      "visibility": "public",
+      "keywords": [
+        "user",
+        "mailer"
+      ],
+      "dependencies": [],
+      "consumed_by": [],
+      "parent_module": null
+    },
+    {
       "id": "class_Comment",
       "symbol": "Comment",
       "type": "class",
@@ -46,6 +153,24 @@
       "visibility": "public",
       "keywords": [
         "comment"
+      ],
+      "dependencies": [],
+      "consumed_by": [],
+      "parent_module": null
+    },
+    {
+      "id": "module_SoftDeletable",
+      "symbol": "SoftDeletable",
+      "type": "module",
+      "scope": "public",
+      "file": "/home/kyle/Projects/auto-doc-tool/fixtures/rails_project/app/models/concerns/soft_deletable.rb",
+      "line": 2,
+      "summary": "",
+      "signature": "SoftDeletable",
+      "visibility": "public",
+      "keywords": [
+        "soft",
+        "deletable"
       ],
       "dependencies": [],
       "consumed_by": [],
@@ -86,6 +211,60 @@
       "parent_module": null
     },
     {
+      "id": "class_UserSerializer",
+      "symbol": "UserSerializer",
+      "type": "class",
+      "scope": "public",
+      "file": "/home/kyle/Projects/auto-doc-tool/fixtures/rails_project/app/serializers/user_serializer.rb",
+      "line": 2,
+      "summary": "",
+      "signature": "UserSerializer",
+      "visibility": "public",
+      "keywords": [
+        "user",
+        "serializer"
+      ],
+      "dependencies": [],
+      "consumed_by": [],
+      "parent_module": null
+    },
+    {
+      "id": "class_UserCreator",
+      "symbol": "UserCreator",
+      "type": "class",
+      "scope": "public",
+      "file": "/home/kyle/Projects/auto-doc-tool/fixtures/rails_project/app/services/user_creator.rb",
+      "line": 2,
+      "summary": "",
+      "signature": "UserCreator",
+      "visibility": "public",
+      "keywords": [
+        "user",
+        "creator"
+      ],
+      "dependencies": [],
+      "consumed_by": [],
+      "parent_module": null
+    },
+    {
+      "id": "module_MyApp",
+      "symbol": "MyApp",
+      "type": "module",
+      "scope": "public",
+      "file": "/home/kyle/Projects/auto-doc-tool/fixtures/rails_project/config/application.rb",
+      "line": 3,
+      "summary": "",
+      "signature": "MyApp",
+      "visibility": "public",
+      "keywords": [
+        "my",
+        "app"
+      ],
+      "dependencies": [],
+      "consumed_by": [],
+      "parent_module": null
+    },
+    {
       "id": "class_CreateUsers",
       "symbol": "CreateUsers",
       "type": "class",
@@ -98,6 +277,24 @@
       "keywords": [
         "create",
         "users"
+      ],
+      "dependencies": [],
+      "consumed_by": [],
+      "parent_module": null
+    },
+    {
+      "id": "module_SomeHelper",
+      "symbol": "SomeHelper",
+      "type": "module",
+      "scope": "public",
+      "file": "/home/kyle/Projects/auto-doc-tool/fixtures/rails_project/lib/some_helper.rb",
+      "line": 3,
+      "summary": "",
+      "signature": "SomeHelper",
+      "visibility": "public",
+      "keywords": [
+        "some",
+        "helper"
       ],
       "dependencies": [],
       "consumed_by": [],
@@ -139,6 +336,24 @@
       "parent_module": null
     },
     {
+      "id": "module_UndocumentedHelper",
+      "symbol": "UndocumentedHelper",
+      "type": "module",
+      "scope": "public",
+      "file": "/home/kyle/Projects/auto-doc-tool/fixtures/sample_ruby_project/lib/undocumented_helper.rb",
+      "line": 3,
+      "summary": "",
+      "signature": "UndocumentedHelper",
+      "visibility": "public",
+      "keywords": [
+        "undocumented",
+        "helper"
+      ],
+      "dependencies": [],
+      "consumed_by": [],
+      "parent_module": null
+    },
+    {
       "id": "class_PaymentProcessor",
       "symbol": "PaymentProcessor",
       "type": "class",
@@ -163,6 +378,24 @@
       "scope": "public",
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/agent_query_service.rb",
       "line": 7,
+      "summary": "",
+      "signature": "AutoDoc",
+      "visibility": "public",
+      "keywords": [
+        "auto",
+        "doc"
+      ],
+      "dependencies": [],
+      "consumed_by": [],
+      "parent_module": null
+    },
+    {
+      "id": "module_AutoDoc",
+      "symbol": "AutoDoc",
+      "type": "module",
+      "scope": "public",
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/analyzer/analysis_cache.rb",
+      "line": 3,
       "summary": "",
       "signature": "AutoDoc",
       "visibility": "public",
@@ -343,6 +576,24 @@
       "scope": "public",
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/config.rb",
       "line": 10,
+      "summary": "",
+      "signature": "AutoDoc",
+      "visibility": "public",
+      "keywords": [
+        "auto",
+        "doc"
+      ],
+      "dependencies": [],
+      "consumed_by": [],
+      "parent_module": null
+    },
+    {
+      "id": "module_AutoDoc",
+      "symbol": "AutoDoc",
+      "type": "module",
+      "scope": "public",
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/documentation_index.rb",
+      "line": 6,
       "summary": "",
       "signature": "AutoDoc",
       "visibility": "public",
@@ -559,6 +810,150 @@
       "scope": "public",
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/generator/vector_generator.rb",
       "line": 6,
+      "summary": "",
+      "signature": "AutoDoc",
+      "visibility": "public",
+      "keywords": [
+        "auto",
+        "doc"
+      ],
+      "dependencies": [],
+      "consumed_by": [],
+      "parent_module": null
+    },
+    {
+      "id": "module_AutoDoc",
+      "symbol": "AutoDoc",
+      "type": "module",
+      "scope": "public",
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/orchestrator/agents_md_step.rb",
+      "line": 3,
+      "summary": "",
+      "signature": "AutoDoc",
+      "visibility": "public",
+      "keywords": [
+        "auto",
+        "doc"
+      ],
+      "dependencies": [],
+      "consumed_by": [],
+      "parent_module": null
+    },
+    {
+      "id": "module_AutoDoc",
+      "symbol": "AutoDoc",
+      "type": "module",
+      "scope": "public",
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/orchestrator/architecture_step.rb",
+      "line": 3,
+      "summary": "",
+      "signature": "AutoDoc",
+      "visibility": "public",
+      "keywords": [
+        "auto",
+        "doc"
+      ],
+      "dependencies": [],
+      "consumed_by": [],
+      "parent_module": null
+    },
+    {
+      "id": "module_AutoDoc",
+      "symbol": "AutoDoc",
+      "type": "module",
+      "scope": "public",
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/orchestrator/base_step.rb",
+      "line": 3,
+      "summary": "",
+      "signature": "AutoDoc",
+      "visibility": "public",
+      "keywords": [
+        "auto",
+        "doc"
+      ],
+      "dependencies": [],
+      "consumed_by": [],
+      "parent_module": null
+    },
+    {
+      "id": "module_AutoDoc",
+      "symbol": "AutoDoc",
+      "type": "module",
+      "scope": "public",
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/orchestrator/diagram_step.rb",
+      "line": 5,
+      "summary": "",
+      "signature": "AutoDoc",
+      "visibility": "public",
+      "keywords": [
+        "auto",
+        "doc"
+      ],
+      "dependencies": [],
+      "consumed_by": [],
+      "parent_module": null
+    },
+    {
+      "id": "module_AutoDoc",
+      "symbol": "AutoDoc",
+      "type": "module",
+      "scope": "public",
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/orchestrator/index_summary_vectors_step.rb",
+      "line": 5,
+      "summary": "",
+      "signature": "AutoDoc",
+      "visibility": "public",
+      "keywords": [
+        "auto",
+        "doc"
+      ],
+      "dependencies": [],
+      "consumed_by": [],
+      "parent_module": null
+    },
+    {
+      "id": "module_AutoDoc",
+      "symbol": "AutoDoc",
+      "type": "module",
+      "scope": "public",
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/orchestrator/manifest_step.rb",
+      "line": 3,
+      "summary": "",
+      "signature": "AutoDoc",
+      "visibility": "public",
+      "keywords": [
+        "auto",
+        "doc"
+      ],
+      "dependencies": [],
+      "consumed_by": [],
+      "parent_module": null
+    },
+    {
+      "id": "module_AutoDoc",
+      "symbol": "AutoDoc",
+      "type": "module",
+      "scope": "public",
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/orchestrator/pipeline.rb",
+      "line": 3,
+      "summary": "",
+      "signature": "AutoDoc",
+      "visibility": "public",
+      "keywords": [
+        "auto",
+        "doc"
+      ],
+      "dependencies": [],
+      "consumed_by": [],
+      "parent_module": null
+    },
+    {
+      "id": "module_AutoDoc",
+      "symbol": "AutoDoc",
+      "type": "module",
+      "scope": "public",
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/orchestrator/readme_step.rb",
+      "line": 3,
       "summary": "",
       "signature": "AutoDoc",
       "visibility": "public",
@@ -1113,5 +1508,5 @@
       "parent_module": null
     }
   ],
-  "generated_at": "2026-07-15T18:49:19Z"
+  "generated_at": "2026-07-15T21:33:45Z"
 }

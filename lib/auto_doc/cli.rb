@@ -134,18 +134,22 @@ module AutoDoc
     # ── ORPHANS ───────────────────────────────────────────────────────
 
     desc "orphans [PATH]", "Find Ruby files that are not documented, imported, or referenced"
+    method_option :rails, type: :boolean, default: false,
+                          desc: "Skip Rails autoloaded paths (app/models/, app/controllers/, etc.)"
     def orphans(path = ".")
       return help("orphans") if path == "--help" || path == "-h"
 
       output_format = output_format_for(options)
       target_dir = File.expand_path(path)
 
+      service_options = { rails: options[:rails] }
+
       if output_format != :text
         silent = ->(_msg, _color = nil) { }
-        result = AutoDoc::Analyzer::OrphansService.run(target_dir, say: silent)
+        result = AutoDoc::Analyzer::OrphansService.run(target_dir, say: silent, options: service_options)
         AutoDoc::Utils::OutputFormatter.format(result, format: output_format, say: method(:say))
       else
-        result = AutoDoc::Analyzer::OrphansService.run(target_dir, say: method(:say))
+        result = AutoDoc::Analyzer::OrphansService.run(target_dir, say: method(:say), options: service_options)
 
         if result[:orphans].empty?
           say "No orphan files found.", :green
@@ -154,6 +158,15 @@ module AutoDoc
           relative_orphans = result[:orphans].map { |f| f.sub("#{target_dir}/", "") }
           say "#{relative_orphans.size} orphan file(s) found:", :yellow
           relative_orphans.each { |f| say "  #{f}", :yellow }
+
+          # Show directory breakdown
+          by_directory = result[:by_directory]
+          if by_directory&.any?
+            say "\nBreakdown by directory:", :cyan
+            by_directory.sort_by { |_dir, count| -count }.each do |dir, count|
+              say "  #{dir}/: #{count}", :cyan
+            end
+          end
         end
       end
     end

@@ -14,17 +14,16 @@ module AutoDoc
       #   :documented - number of documented symbols
       #   :undocumented - array of undocumented symbol hashes {name:, type:, file:, line:}
       #   :coverage_pct - percentage rounded to one decimal place
-      def self.check(analyses, threshold = 80)
-        new(analyses).check(threshold)
+      def self.check(analyses)
+        new(analyses).check
       end
 
       def initialize(analyses)
         @analyses = analyses || {}
       end
 
-      # @param threshold [Integer] Minimum acceptable coverage percentage
       # @return [Hash] Coverage report hash
-      def check(threshold = 80)
+      def check
         total        = 0
         documented   = 0
         undocumented = []

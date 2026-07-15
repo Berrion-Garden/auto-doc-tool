@@ -3,3 +3,6 @@
 /.autodoc/
 /--help/
 .slim/deepwork/
+tmp/
+.agents/
+*.log

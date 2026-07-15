@@ -1,13 +1,15 @@
 {
   "project": "/home/kyle/Projects/auto-doc-tool/fixtures/sample_ruby_project",
   "project_path": "/home/kyle/Projects/auto-doc-tool/fixtures/sample_ruby_project",
-  "generated_at": "2026-07-15T19:15:44+00:00",
-  "overall_coverage": 100.0,
-  "total_symbols": 3,
+  "generated_at": "2026-07-15T14:32:41-07:00",
+  "overall_coverage": 75.0,
+  "total_symbols": 4,
   "documented_symbols": 3,
   "documented_count": 3,
-  "undocumented_count": 0,
-  "undocumented": [],
+  "undocumented_count": 1,
+  "undocumented": [
+    "module_UndocumentedHelper"
+  ],
   "low_coverage": [],
   "modules": {
     "user": {
@@ -21,6 +23,12 @@
       "total": 1,
       "documented": 1,
       "coverage_pct": 100.0
+    },
+    "undocumented_helper": {
+      "file": "/home/kyle/Projects/auto-doc-tool/fixtures/sample_ruby_project/lib/undocumented_helper.rb",
+      "total": 1,
+      "documented": 0,
+      "coverage_pct": 0.0
     },
     "yard_example": {
       "file": "/home/kyle/Projects/auto-doc-tool/fixtures/sample_ruby_project/lib/yard_example.rb",

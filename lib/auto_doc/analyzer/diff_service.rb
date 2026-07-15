@@ -28,7 +28,6 @@ module AutoDoc
         return { changed_files: [], undocumented_changes: [] } if changed_files.empty?
 
         # Build current documentation state for changed files
-        config     = AutoDoc::Config.load(@project_dir)
         analyses   = analyze_files(changed_files)
 
         undocumented = find_undocumented(analyses)

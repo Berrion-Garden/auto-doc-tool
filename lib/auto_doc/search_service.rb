@@ -25,23 +25,13 @@ module AutoDoc
       limit = options.fetch(:limit, 20)
       results = []
 
-      # Walk .docs/ directory recursively (only if it exists)
+      # Walk .docs/ directory using DocumentationIndex (only if it exists)
       if Dir.exist?(docs_dir)
-        Dir.glob(File.join(docs_dir, "**", "*")).each do |file_path|
-          next unless File.file?(file_path)
-          rel_path = file_path.sub("#{docs_dir}/", "")
-
-          case File.basename(file_path)
-          when "INDEX.md"
-            results.concat(search_index_md(file_path, term, rel_path))
-          when "vectors.json"
-            results.concat(search_vectors_json(file_path, term, rel_path))
-          when "SUMMARY.md"
-            results.concat(search_summary_md(file_path, term, rel_path))
-          when "AGENTS.md"
-            results.concat(search_agents_md(file_path, term, rel_path))
-          end
-        end
+        doc_index = DocumentationIndex.new(docs_dir)
+        results.concat(search_index_md(doc_index, term))
+        results.concat(search_vectors_json(doc_index, term))
+        results.concat(search_summary_md(doc_index, term))
+        results.concat(search_agents_md(doc_index, term))
       end
 
       # Source grep (only when source: true)
@@ -61,87 +51,50 @@ module AutoDoc
 
     # ── private helpers ──────────────────────────────────────────────
 
-    # Searches INDEX.md for symbol exact matches and dependency matches.
-    # @param file_path [String] Absolute path to INDEX.md
+    # Searches INDEX.md symbols/dependencies via DocumentationIndex.
+    # @param doc_index [DocumentationIndex] The unified data-access layer
     # @param term [String] Search term
-    # @param rel_path [String] Path relative to .docs/
     # @return [Array<Hash>] Result entries
-    def self.search_index_md(file_path, term, rel_path)
+    def self.search_index_md(doc_index, term)
       results = []
-      content = File.read(file_path, encoding: "UTF-8")
-      lines = content.split("\n")
-
-      current_section = nil
       term_down = term.downcase
 
-      lines.each_with_index do |line, idx|
-        # Track current section header
-        if line =~ /^##\s+(.+)/
-          current_section = Regexp.last_match(1).strip.downcase
+      # Symbol exact matches
+      doc_index.symbols.each do |sym|
+        if sym[:symbol].downcase == term_down
+          results << {
+            file: File.join(".docs", sym[:source_file]),
+            score: 100,
+            match_type: "symbol_exact",
+            line: 0,
+            context: sym[:symbol]
+          }
         end
+      end
 
-        # Only process pipe-delimited data rows under a known section
-        next unless line.start_with?("|")
-
-        # Skip separator rows (|---|)
-        next if line.strip =~ /\A\|[-| ]+\|\z/
-
-        # Skip table header rows
-        next if line =~ /\A\|\s*(#|Name|Symbol|From)\s*\|/
-
-        stripped = line.strip
-
-        case current_section
-        when "symbols"
-          cols = AutoDoc::Utils::MarkdownHelper.parse_pipe_row(line)
-          next if cols.size < 3
-
-          symbol_name = cols[0].to_s.strip
-
-          # Case-insensitive exact match
-          if symbol_name.downcase == term_down
-            results << {
-              file: File.join(".docs", rel_path),
-              score: 100,
-              match_type: "symbol_exact",
-              line: idx + 1,
-              context: stripped
-            }
-          end
-
-        when "dependencies"
-          cols = AutoDoc::Utils::MarkdownHelper.parse_pipe_row(line)
-          next if cols.size < 3
-
-          from_val = cols[0].to_s.strip
-          to_val   = cols[2].to_s.strip
-
-          # Case-insensitive partial match on From or To
-          if from_val.downcase.include?(term_down) || to_val.downcase.include?(term_down)
-            results << {
-              file: File.join(".docs", rel_path),
-              score: 80,
-              match_type: "dependency_match",
-              line: idx + 1,
-              context: stripped
-            }
-          end
+      # Dependency partial matches (From or To column)
+      doc_index.dependencies.each do |dep|
+        if dep[:from].downcase.include?(term_down) || dep[:to].downcase.include?(term_down)
+          results << {
+            file: File.join(".docs", dep[:source_file]),
+            score: 80,
+            match_type: "dependency_match",
+            line: 0,
+            context: "#{dep[:from]} -> #{dep[:to]}"
+          }
         end
       end
 
       results
     end
 
-    # Searches vectors.json for keyword overlap matches.
-    # @param file_path [String] Absolute path to vectors.json
+    # Searches vectors.json via DocumentationIndex for keyword overlap matches.
+    # @param doc_index [DocumentationIndex] The unified data-access layer
     # @param term [String] Search term
-    # @param rel_path [String] Path relative to .docs/
     # @return [Array<Hash>] Result entries
-    def self.search_vectors_json(file_path, term, rel_path)
+    def self.search_vectors_json(doc_index, term)
       results = []
-      content = File.read(file_path, encoding: "UTF-8")
-      data = JSON.parse(content)
-
+      data = doc_index.vectors
       symbols = data["symbols"]
       return results unless symbols.is_a?(Array)
 
@@ -160,7 +113,7 @@ module AutoDoc
         match_type = overlap >= 3 ? "vector_keyword_high" : "vector_keyword_low"
 
         results << {
-          file: File.join(".docs", rel_path),
+          file: ".docs/vectors.json",
           score: score,
           match_type: match_type,
           line: 0,
@@ -171,22 +124,60 @@ module AutoDoc
       results
     end
 
-    # Searches SUMMARY.md for full-text matches.
-    # @param file_path [String] Absolute path to SUMMARY.md
+    # Searches SUMMARY.md files via DocumentationIndex for full-text matches.
+    # @param doc_index [DocumentationIndex] The unified data-access layer
     # @param term [String] Search term
-    # @param rel_path [String] Path relative to .docs/
     # @return [Array<Hash>] Result entries
-    def self.search_summary_md(file_path, term, rel_path)
-      grep_md_file(file_path, term, rel_path, "summary_text", 20)
+    def self.search_summary_md(doc_index, term)
+      results = []
+      term_down = term.downcase
+
+      doc_index.all_md_files_content.each do |rel_path, content|
+        next unless rel_path.end_with?("SUMMARY.md")
+
+        content.split("\n").each_with_index do |line, idx|
+          next if line.strip.empty?
+          next unless line.downcase.include?(term_down)
+
+          results << {
+            file: File.join(".docs", rel_path),
+            score: 20,
+            match_type: "summary_text",
+            line: idx + 1,
+            context: line.strip
+          }
+        end
+      end
+
+      results
     end
 
-    # Searches AGENTS.md for full-text matches.
-    # @param file_path [String] Absolute path to AGENTS.md
+    # Searches AGENTS.md files via DocumentationIndex for full-text matches.
+    # @param doc_index [DocumentationIndex] The unified data-access layer
     # @param term [String] Search term
-    # @param rel_path [String] Path relative to .docs/
     # @return [Array<Hash>] Result entries
-    def self.search_agents_md(file_path, term, rel_path)
-      grep_md_file(file_path, term, rel_path, "summary_text", 20)
+    def self.search_agents_md(doc_index, term)
+      results = []
+      term_down = term.downcase
+
+      doc_index.all_md_files_content.each do |rel_path, content|
+        next unless rel_path.end_with?("AGENTS.md")
+
+        content.split("\n").each_with_index do |line, idx|
+          next if line.strip.empty?
+          next unless line.downcase.include?(term_down)
+
+          results << {
+            file: File.join(".docs", rel_path),
+            score: 20,
+            match_type: "summary_text",
+            line: idx + 1,
+            context: line.strip
+          }
+        end
+      end
+
+      results
     end
 
     # Greps a markdown file for term matches.

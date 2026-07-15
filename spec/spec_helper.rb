@@ -25,6 +25,11 @@ RSpec.configure do |config|
   end
 
   config.profile_examples = 10
+
+  # Clear in-process analysis cache between tests
+  config.before(:each) do
+    AutoDoc::Analyzer::AnalysisCache.clear!
+  end
 end
 
 # Path helpers for test fixtures

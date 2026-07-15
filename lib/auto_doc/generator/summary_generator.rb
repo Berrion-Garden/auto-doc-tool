@@ -156,7 +156,6 @@ module AutoDoc
           imports = analysis[:imports] || []
           imports.each do |imp|
             dep_name = imp[:path].to_s
-            dep_type = imp[:type].to_s
             next if dep_name.empty?
 
             # Group: stdlib gems vs local requires vs relative requires

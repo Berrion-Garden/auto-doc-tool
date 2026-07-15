@@ -17,7 +17,9 @@ module AutoDoc
   require_relative "auto_doc/utils/output_formatter"
   require_relative "auto_doc/utils/markdown_helper"
 
+  require_relative "auto_doc/documentation_index"
   # Load analyzers
+  require_relative "auto_doc/analyzer/analysis_cache"
   require_relative "auto_doc/analyzer/source_parser"
   require_relative "auto_doc/analyzer/schema_parser"
   require_relative "auto_doc/analyzer/model_association_parser"
@@ -54,6 +56,16 @@ module AutoDoc
 
   # Load orchestrator
   require_relative "auto_doc/orchestrator"
+
+  # Load orchestrator pipeline steps
+  require_relative "auto_doc/orchestrator/base_step"
+  require_relative "auto_doc/orchestrator/agents_md_step"
+  require_relative "auto_doc/orchestrator/readme_step"
+  require_relative "auto_doc/orchestrator/index_summary_vectors_step"
+  require_relative "auto_doc/orchestrator/diagram_step"
+  require_relative "auto_doc/orchestrator/architecture_step"
+  require_relative "auto_doc/orchestrator/manifest_step"
+  require_relative "auto_doc/orchestrator/pipeline"
 
   # Load CLI
   require_relative "auto_doc/cli"

@@ -36,14 +36,14 @@ module AutoDoc
         symbolize_keys(parsed)
       end
 
-      private
-
       def self.symbolize_keys(hash)
         hash.each_with_object({}) do |(key, value), result|
           new_key = key.is_a?(String) ? key.to_sym : key
           result[new_key] = value.is_a?(Hash) ? symbolize_keys(value) : value
         end
       end
+
+      private_class_method :symbolize_keys
     end
   end
 end

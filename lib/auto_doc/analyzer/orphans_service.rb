@@ -9,14 +9,17 @@ module AutoDoc
     class OrphansService
       # Runs the orphan detection analysis.
       # @param project_dir [String] Root directory of the project
+      # @param options [Hash] Options hash
+      # @option options [Boolean] :rails When true, skip Rails autoloaded paths if project is a Rails app
       # @param say [Proc] Callable for output messages (default: puts)
-      # @return [Hash] Result with :orphans array of relative file paths
-      def self.run(project_dir, say: method(:puts))
-        new(project_dir, say: say).run
+      # @return [Hash] Result with :orphans array and :by_directory breakdown
+      def self.run(project_dir, options: {}, say: method(:puts))
+        new(project_dir, options: options, say: say).run
       end
 
-      def initialize(project_dir, say: method(:puts))
+      def initialize(project_dir, options: {}, say: method(:puts))
         @project_dir = project_dir
+        @options     = options
         @say         = say
       end
 
@@ -26,10 +29,13 @@ module AutoDoc
         ruby_files = collect_ruby_files
         if ruby_files.empty?
           @say.call("No Ruby files found.", :yellow)
-          return { orphans: [] }
+          return { orphans: [], by_directory: {} }
         end
 
         @say.call("  Found #{ruby_files.size} Ruby file(s)", :green)
+
+        # Apply Rails autoload filtering if requested
+        ruby_files = filter_rails_autoloaded(ruby_files) if rails_mode?
 
         # Determine which files import which other files
         import_map = build_import_map(ruby_files)
@@ -43,7 +49,57 @@ module AutoDoc
         # Orphans: not referenced AND not documented
         orphans = ruby_files.reject { |f| referenced.include?(f) || documented.include?(f) }
 
-        { orphans: orphans.sort }
+        # Compute directory breakdown from orphans
+        by_directory = compute_directory_breakdown(orphans)
+
+        { orphans: orphans.sort, by_directory: by_directory }
+      end
+
+      # Detects whether the project is a Rails project by checking for
+      # config/application.rb containing 'Rails::Application'.
+      def rails_project?
+        app_path = File.join(@project_dir, "config", "application.rb")
+        File.exist?(app_path) && File.read(app_path).include?("Rails::Application")
+      end
+
+      # Returns true if Rails mode is active: the user opted in AND the project
+      # actually is a Rails project.
+      def rails_mode?
+        @options[:rails] && rails_project?
+      end
+
+      # Autoloaded paths that Zeitwerk manages in a typical Rails application.
+      RAILS_AUTOLOAD_PATHS = %w[
+        app/models
+        app/controllers
+        app/serializers
+        app/jobs
+        app/mailers
+        app/helpers
+        app/services
+        app/controllers/concerns
+        app/models/concerns
+      ].freeze
+
+      # Removes files under Rails autoloaded paths from the file list.
+      def filter_rails_autoloaded(files)
+        files.reject do |f|
+          relative = f.sub("#{@project_dir}/", "")
+          RAILS_AUTOLOAD_PATHS.any? { |dir| relative.start_with?("#{dir}/") }
+        end
+      end
+
+      # Groups a list of orphan files by their top-level directory
+      # (e.g. 'lib', 'bin') relative to the project root.
+      # @return [Hash] e.g. { "lib" => 2, "bin" => 1 }
+      def compute_directory_breakdown(orphans)
+        breakdown = Hash.new(0)
+        orphans.each do |f|
+          relative = f.sub("#{@project_dir}/", "")
+          top_dir = relative.split("/").first
+          breakdown[top_dir] += 1 if top_dir
+        end
+        breakdown
       end
 
       private

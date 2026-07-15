@@ -5,6 +5,24 @@
       "symbol": "AutoDoc",
       "type": "module",
       "scope": "public",
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/analyzer/analysis_cache.rb",
+      "line": 3,
+      "summary": "",
+      "signature": "AutoDoc",
+      "visibility": "public",
+      "keywords": [
+        "auto",
+        "doc"
+      ],
+      "dependencies": [],
+      "consumed_by": [],
+      "parent_module": null
+    },
+    {
+      "id": "module_AutoDoc",
+      "symbol": "AutoDoc",
+      "type": "module",
+      "scope": "public",
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/analyzer/analysis_pipeline.rb",
       "line": 3,
       "summary": "",
@@ -145,5 +163,5 @@
       "parent_module": null
     }
   ],
-  "generated_at": "2026-07-15T18:49:19Z"
+  "generated_at": "2026-07-15T21:33:45Z"
 }

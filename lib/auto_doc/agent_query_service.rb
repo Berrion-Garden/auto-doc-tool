@@ -99,23 +99,27 @@ module AutoDoc
     # Finds rows in INDEX.md Dependencies table where "To" matches term.
     def self.find_reverse_deps(docs_dir, term)
       term_down = term.downcase
-      parse_dependencies_table(docs_dir).select { |r| r[:to].downcase.include?(term_down) }
+      doc_index = DocumentationIndex.new(docs_dir)
+      doc_index.dependencies.select { |r| r[:to].downcase.include?(term_down) }
     end
 
     # Finds rows in INDEX.md Dependencies table where "From" matches term.
     def self.find_forward_deps(docs_dir, term)
       term_down = term.downcase
-      parse_dependencies_table(docs_dir).select { |r| r[:from].downcase.include?(term_down) }
+      doc_index = DocumentationIndex.new(docs_dir)
+      doc_index.dependencies.select { |r| r[:from].downcase.include?(term_down) }
     end
 
     # Returns all rows from INDEX.md Symbols table.
     def self.list_all_symbols(docs_dir)
-      parse_symbols_table(docs_dir)
+      doc_index = DocumentationIndex.new(docs_dir)
+      doc_index.symbols
     end
 
     # Looks up a symbol in VECTORS.json by exact name (case-insensitive).
     def self.describe_symbol_by_name(docs_dir, term)
-      vectors = load_vectors_json(docs_dir)
+      doc_index = DocumentationIndex.new(docs_dir)
+      vectors = doc_index.vectors
       return nil unless vectors
 
       term_down = term.downcase
@@ -187,102 +191,9 @@ module AutoDoc
       Pathname.new(path).relative_path_from(Pathname.new(base)).to_s
     end
 
-    # ── data loading helpers ──────────────────────────────────────────
-
-    # Parses a named section table from INDEX.md.
-    def self.parse_markdown_section_table(docs_dir, section_name, header_pattern: nil, &row_builder)
-      index_path = File.join(docs_dir, "INDEX.md")
-      return [] unless File.exist?(index_path)
-
-      lines = File.read(index_path, encoding: "UTF-8").split("\n")
-      current_section = nil
-      results = []
-
-      lines.each do |line|
-        if line =~ /^##\s+(.+)/
-          current_section = Regexp.last_match(1).strip.downcase
-          next
-        end
-
-        next unless current_section == section_name.downcase
-        next unless line.start_with?("|")
-        next if line.strip =~ /\A\|[-| ]+\|\z/
-        next if header_pattern && line =~ header_pattern
-
-        cols = AutoDoc::Utils::MarkdownHelper.parse_pipe_row(line)
-        next if cols.size < 3
-
-        row = row_builder.call(cols)
-        results << row if row
-      end
-
-      results
-    end
-
-    # Parses INDEX.md Dependencies table into array of {from:, type:, to:} hashes.
-    def self.parse_dependencies_table(docs_dir)
-      results = []
-      Dir.glob(File.join(docs_dir, "**", "INDEX.md")).each do |index_path|
-        dir = File.dirname(index_path)
-        doc_dir_for_rel = File.join(File.dirname(docs_dir), File.basename(docs_dir))
-        rel = relative_path(doc_dir_for_rel, dir)
-        section_results = parse_markdown_section_table(dir, "dependencies",
-                                                       header_pattern: /\A\|\s*From\s*\|/) do |cols|
-          next if cols[0].to_s.strip.empty? || cols[0].to_s.strip == "—" || cols[0].to_s.strip.match?(/\A_?No\b/)
-
-          {
-            from: cols[0].to_s.strip,
-            type: cols[1].to_s.strip,
-            to: cols[2].to_s.strip,
-            file: rel.start_with?("..") ? File.basename(index_path) : "#{rel}/INDEX.md"
-          }
-        end
-        results.concat(section_results)
-      end
-      results
-    end
-
-    # Parses INDEX.md Symbols table into array of {symbol:, type:, file:, line:, documented:} hashes.
-    def self.parse_symbols_table(docs_dir)
-      results = []
-      Dir.glob(File.join(docs_dir, "**", "INDEX.md")).each do |index_path|
-        dir = File.dirname(index_path)
-        section_results = parse_markdown_section_table(dir, "symbols",
-                                                       header_pattern: /\A\|\s*(#|Name|Symbol)\s*\|/) do |cols|
-          {
-            symbol: cols[0].to_s.strip,
-            type: cols[1].to_s.strip,
-            file: cols[2].to_s.strip,
-            line: cols.size > 3 ? cols[3].to_s.strip : "",
-            documented: cols.size > 4 ? cols[4].to_s.strip : ""
-          }
-        end
-        results.concat(section_results)
-      end
-      results
-    end
-
-    # Loads VECTORS.json (case-insensitive filename lookup).
-    def self.load_vectors_json(docs_dir)
-      vectors_path = File.join(docs_dir, "VECTORS.json")
-      unless File.exist?(vectors_path)
-        matches = Dir.glob(File.join(docs_dir, "vectors.json"))
-        return nil if matches.empty?
-
-        vectors_path = matches.first
-      end
-
-      JSON.parse(File.read(vectors_path, encoding: "UTF-8"))
-    rescue JSON::ParserError
-      nil
-    end
-
     private_class_method :resolve_intent, :find_reverse_deps, :find_forward_deps,
                          :list_all_symbols, :describe_symbol_by_name, :read_architecture,
                          :lookup_diagram, :lookup_schema,
-                         :parse_markdown_section_table, :parse_dependencies_table,
-                         :parse_symbols_table,
-                         :load_vectors_json,
                          :fallback_search, :relative_path
   end
 end

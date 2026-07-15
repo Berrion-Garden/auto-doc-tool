@@ -7,7 +7,7 @@ require "erb"
 module AutoDoc
   class Server < Sinatra::Base
     set :port, 4567
-    set :bind, "0.0.0.0"
+    set :bind, ENV.fetch("AUTO_DOC_BIND", "127.0.0.1")
     set :public_folder, nil
 
     # GET / — list all documented modules (directories in .docs/)
@@ -26,7 +26,7 @@ module AutoDoc
     # GET /README — view project README
     get "/README" do
       docs_dir = find_docs_dir
-      file_path = File.join(docs_dir, "README.md")
+      file_path = safe_path_join(docs_dir, "README.md")
       if File.exist?(file_path)
         content = File.read(file_path)
         "<html><body><pre>#{escape_html(content)}</pre></body></html>"
@@ -39,7 +39,7 @@ module AutoDoc
     # GET /:module — view AGENTS.md for a module
     get "/:module" do
       docs_dir = find_docs_dir
-      file_path = File.join(docs_dir, params[:module], "AGENTS.md")
+      file_path = safe_path_join(docs_dir, params[:module], "AGENTS.md")
       if File.exist?(file_path)
         content = File.read(file_path)
         "<html><body><pre>#{escape_html(content)}</pre></body></html>"
@@ -52,7 +52,7 @@ module AutoDoc
     # GET /diagrams/:name — view Mermaid diagram
     get "/diagrams/:name" do
       docs_dir = find_docs_dir
-      file_path = File.join(docs_dir, "diagrams", "#{params[:name]}.mmd")
+      file_path = safe_path_join(docs_dir, "diagrams", "#{params[:name]}.mmd")
       if File.exist?(file_path)
         content = File.read(file_path)
         "<html><body><pre>#{escape_html(content)}</pre></body></html>"
@@ -65,7 +65,7 @@ module AutoDoc
     # GET /api/stats — JSON coverage stats
     get "/api/stats" do
       docs_dir = find_docs_dir
-      json_path = File.join(docs_dir, "report.json")
+      json_path = safe_path_join(docs_dir, "report.json")
       content_type :json
       if File.exist?(json_path)
         File.read(json_path)
@@ -101,7 +101,7 @@ module AutoDoc
     get "/api/index" do
       docs_dir = find_docs_dir
       mod_path = (params[:path] || "").strip
-      file_path = File.join(docs_dir, mod_path, "INDEX.md")
+      file_path = safe_path_join(docs_dir, mod_path, "INDEX.md")
       content_type :html
       if File.exist?(file_path)
         "<html><body><h1>INDEX: #{escape_html(mod_path.empty? ? '(root)' : mod_path)}</h1><pre>#{escape_html(File.read(file_path))}</pre></body></html>"
@@ -115,7 +115,7 @@ module AutoDoc
     get "/api/summary" do
       docs_dir = find_docs_dir
       mod_path = (params[:path] || "").strip
-      file_path = File.join(docs_dir, mod_path, "SUMMARY.md")
+      file_path = safe_path_join(docs_dir, mod_path, "SUMMARY.md")
       content_type :html
       if File.exist?(file_path)
         "<html><body><h1>SUMMARY: #{escape_html(mod_path.empty? ? '(root)' : mod_path)}</h1><pre>#{escape_html(File.read(file_path))}</pre></body></html>"
@@ -132,10 +132,10 @@ module AutoDoc
       content_type :json
 
       # Try exact name first, then case-insensitive fallback
-      file_path = File.join(docs_dir, mod_path, "VECTORS.json")
+      file_path = safe_path_join(docs_dir, mod_path, "VECTORS.json")
       unless File.exist?(file_path)
         alt = Dir.glob(File.join(docs_dir, mod_path, "vectors.json")).first
-        file_path = alt if alt
+        file_path = alt if alt && alt.start_with?(docs_dir + "/")
       end
 
       if File.exist?(file_path)
@@ -170,7 +170,7 @@ module AutoDoc
     # GET /api/diagram/:name — return diagram Mermaid source as JSON
     get "/api/diagram/:name" do
       docs_dir = find_docs_dir
-      file_path = File.join(docs_dir, "diagrams", "#{params[:name]}.mmd")
+      file_path = safe_path_join(docs_dir, "diagrams", "#{params[:name]}.mmd")
       content_type :json
       if File.exist?(file_path)
         { name: params[:name], content: File.read(file_path, encoding: "UTF-8") }.to_json
@@ -183,7 +183,7 @@ module AutoDoc
     # GET /api/schema — return schema.json as JSON
     get "/api/schema" do
       docs_dir = find_docs_dir
-      file_path = File.join(docs_dir, "schema", "schema.json")
+      file_path = safe_path_join(docs_dir, "schema", "schema.json")
       content_type :json
       if File.exist?(file_path)
         File.read(file_path)
@@ -195,7 +195,7 @@ module AutoDoc
     # GET /api/architecture — return architecture.md as HTML
     get "/api/architecture" do
       docs_dir = find_docs_dir
-      file_path = File.join(docs_dir, "architecture.md")
+      file_path = safe_path_join(docs_dir, "architecture.md")
       content_type :html
       if File.exist?(file_path)
         "<html><body><h1>Architecture</h1><pre>#{escape_html(File.read(file_path))}</pre></body></html>"
@@ -221,6 +221,17 @@ module AutoDoc
     end
 
     private
+
+    # Safely joins path segments and validates the result stays within base_dir.
+    # Raises Sinatra::NotFound if the resolved path escapes base_dir.
+    def safe_path_join(base_dir, *segments)
+      resolved = File.expand_path(File.join(base_dir, *segments), base_dir)
+      base_expanded = File.expand_path(base_dir)
+      unless resolved.start_with?(base_expanded + "/") || resolved == base_expanded
+        raise Sinatra::NotFound, "Invalid path"
+      end
+      resolved
+    end
 
     def find_docs_dir
       # Find .docs/ directory starting from current dir and walking up,

@@ -17,7 +17,7 @@ module AutoDoc
       #   Array of ancestor module names
       # @!attribute [r] methods
       #   Array of method hashes defined inside this class/module
-      Definition = Struct.new(:name, :type, :line, :parent_modules, :methods) do
+      Definition = Struct.new(:name, :type, :line, :parent_modules, :methods) do # rubocop:disable Lint/StructNewOverride
         def to_h
           {
             name:           name,
@@ -90,7 +90,6 @@ module AutoDoc
         return unless name
 
         line    = extract_line(name_node)
-         methods = []
 
         scope   = Definition.new(nil, :class_body, 0, ancestor_modules.dup, [])
         body    = sexp[3]
@@ -105,7 +104,6 @@ module AutoDoc
 
         line    = extract_line(name_node)
         child_modules = ancestor_modules.dup + [name]
-        methods       = []
 
         scope   = Definition.new(nil, :module_body, 0, child_modules.dup, [])
         body    = sexp[3]
