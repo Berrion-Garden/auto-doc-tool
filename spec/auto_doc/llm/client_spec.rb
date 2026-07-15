@@ -159,6 +159,27 @@ RSpec.describe AutoDoc::LLM::Client do
         expect(result).to be_nil
       end
     end
+
+    context "on connection reset" do
+      before do
+        allow(http).to receive(:request).and_raise(Errno::ECONNRESET)
+      end
+
+      it "returns nil" do
+        result = client.chat(messages)
+        expect(result).to be_nil
+      end
+    end
+
+    context "when not configured" do
+      let(:config_hash) { {} }
+
+      it "returns nil without making any HTTP request" do
+        expect(Net::HTTP).not_to receive(:new)
+        result = client.chat(messages)
+        expect(result).to be_nil
+      end
+    end
   end
 
   describe "request body construction" do

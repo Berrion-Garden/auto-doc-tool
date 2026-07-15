@@ -6,14 +6,14 @@ require "json"
 require "tmpdir"
 
 RSpec.describe "E2E: auto-doc self-test" do
-  before(:all) do
+  before(:each) do
     @project_dir = File.expand_path("../../fixtures/sample_ruby_project", __dir__)
     @docs_dir = File.join(@project_dir, ".docs")
     @gem_lib = File.expand_path("../../lib", __dir__)
     @exe = File.expand_path("../../exe/auto-doc", __dir__)
   end
 
-  after(:all) do
+  after(:each) do
     FileUtils.rm_rf(@docs_dir) if File.directory?(@docs_dir)
   end
 

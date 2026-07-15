@@ -3,6 +3,8 @@
 module AutoDoc
   class Orchestrator
     class ManifestStep < BaseStep
+      include CountingHelper
+
       def run(context)
         target_dir = context[:target_dir]
         output_dir = context[:output_dir]
@@ -28,13 +30,6 @@ module AutoDoc
       end
 
       private
-
-      def calculate_coverage(analyses)
-        report = AutoDoc::Reporter::CompletenessChecker.check(analyses.map { |fp, a|
-          [fp, { symbols: (a[:definitions] || []).map(&:to_h) }]
-        }.to_h)
-        report[:coverage_pct].to_s
-      end
 
       def count_all_symbols(analyses)
         analyses.sum { |_, a| (a[:definitions] || []).size }

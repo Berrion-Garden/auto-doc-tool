@@ -33,10 +33,13 @@ module AutoDoc
       # @param options  [Hash]        Optional overrides merged into the request body
       # @return [String, nil] Response content on success, nil on any failure
       def chat(messages, options = {})
+        return nil unless configured?
+
         uri = URI.parse("#{@config[:endpoint]}/chat/completions")
         http = Net::HTTP.new(uri.host, uri.port)
-        http.open_timeout = @config.fetch(:timeout, 30)
-        http.read_timeout = @config.fetch(:timeout, 30)
+        timeout = @config.fetch(:timeout, 30)
+        http.open_timeout = timeout
+        http.read_timeout = timeout
         http.use_ssl = uri.scheme == "https"
 
         request = Net::HTTP::Post.new(uri.request_uri)
@@ -55,7 +58,7 @@ module AutoDoc
 
         parsed = JSON.parse(response.body)
         parsed.dig("choices", 0, "message", "content")
-      rescue Net::OpenTimeout, Net::ReadTimeout, Net::HTTPExceptions, JSON::ParserError, SocketError, Errno::ECONNREFUSED, Errno::ECONNRESET
+      rescue Net::OpenTimeout, Net::ReadTimeout, Net::HTTPError, JSON::ParserError, SocketError, Errno::ECONNREFUSED, Errno::ECONNRESET
         nil
       end
 

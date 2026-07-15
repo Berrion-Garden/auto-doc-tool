@@ -66,6 +66,32 @@ RSpec.describe AutoDoc::Config do
       expect(cfg.module_roots).to eq(%w[app lib bin])
     end
 
+    it "llm_config returns nil defaults when no YAML config" do
+      cfg = config.load(project_dir)
+      llm = cfg.llm_config
+      expect(llm[:provider]).to be_nil
+      expect(llm[:endpoint]).to be_nil
+      expect(llm[:api_key]).to be_nil
+      expect(llm[:model]).to be_nil
+    end
+
+    it "llm_config returns merged values from .autodoc.yml with llm section" do
+      File.write(File.join(project_dir, ".autodoc.yml"), <<~YAML)
+        llm:
+          provider: openai
+          endpoint: https://api.openai.com/v1
+          api_key: sk-test
+          model: gpt-4o
+      YAML
+
+      cfg = config.load(project_dir)
+      llm = cfg.llm_config
+      expect(llm[:provider]).to eq("openai")
+      expect(llm[:endpoint]).to eq("https://api.openai.com/v1")
+      expect(llm[:api_key]).to eq("sk-test")
+      expect(llm[:model]).to eq("gpt-4o")
+    end
+
     it "handles nested output config" do
       File.write(File.join(project_dir, ".autodoc.yml"), <<~YAML)
         output:

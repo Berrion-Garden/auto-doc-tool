@@ -15,7 +15,7 @@ module AutoDoc
         # @return [String, nil]     Summary text or nil on failure
         def summarize_module(dir_name, analyses, client)
           prompt = build_module_prompt(dir_name, analyses)
-          call_client(prompt, client)
+          client.chat([{ role: "user", content: prompt }])
         end
 
         # Summarizes overall project architecture.
@@ -26,7 +26,7 @@ module AutoDoc
         # @return [String, nil]         Summary text or nil on failure
         def summarize_architecture(project_name, analyses, client)
           prompt = build_architecture_prompt(project_name, analyses)
-          call_client(prompt, client)
+          client.chat([{ role: "user", content: prompt }])
         end
 
         # Summarizes component relationships across the project.
@@ -36,16 +36,10 @@ module AutoDoc
         # @return [String, nil]     Summary text or nil on failure
         def summarize_components(analyses, client)
           prompt = build_components_prompt(analyses)
-          call_client(prompt, client)
+          client.chat([{ role: "user", content: prompt }])
         end
 
         private
-
-        def call_client(prompt, client)
-          messages = [{ role: "user", content: prompt }]
-          result = client.chat(messages)
-          result
-        end
 
         # rubocop:disable Metrics/MethodLength
         def build_module_prompt(dir_name, analyses)
@@ -59,7 +53,7 @@ module AutoDoc
           lines << "## Module: #{dir_name}"
           lines << ""
 
-          filtered = analyses.select { |path, _| path.include?(dir_name) }
+          filtered = analyses.select { |path, _| path.include?("/#{dir_name}/") }
           extract_metadata_lines(filtered, lines)
 
           lines.join("\n")
@@ -102,7 +96,7 @@ module AutoDoc
           grouped = analyses.group_by { |path, _| path.split("/").first(2).join("/") }
           grouped.each do |component, comp_analyses|
             lines << "### #{component}"
-            extract_metadata_lines(comp_analyses.to_h, lines)
+            extract_metadata_lines(comp_analyses, lines)
           end
 
           lines.join("\n")

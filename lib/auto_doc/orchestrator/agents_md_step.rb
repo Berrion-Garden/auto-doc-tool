@@ -18,7 +18,7 @@ module AutoDoc
           files_data    = AutoDoc::Transformer::FilesDataBuilder.build(file_analyses)
 
           output_path = File.join(target_dir, output_dir, dir_name, "AGENTS.md")
-          AutoDoc::Generator::AgentsMdGenerator.generate(dir_name, tree_text, files_data, output_path: output_path)
+          AutoDoc::Generator::AgentsMdGenerator.generate(dir_name, tree_text, files_data, config: config, output_path: output_path)
 
           say(context, "  Created #{output_path}", :green)
         end

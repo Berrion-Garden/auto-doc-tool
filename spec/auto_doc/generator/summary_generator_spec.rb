@@ -114,4 +114,76 @@ RSpec.describe AutoDoc::Generator::SummaryGenerator do
       expect(result).to include("SUMMARY: lib")
     end
   end
+
+  describe "LLM integration" do
+    let(:llm_project_dir) { Dir.mktmpdir }
+    let(:llm_config) do
+      File.write(File.join(llm_project_dir, ".autodoc.yml"), <<~YAML)
+        llm:
+          provider: openai
+          endpoint: https://api.openai.com/v1
+          api_key: sk-test
+          model: gpt-4o
+      YAML
+      AutoDoc::Config.load(llm_project_dir)
+    end
+    let(:no_llm_project_dir) { Dir.mktmpdir }
+    let(:no_llm_config) { AutoDoc::Config.load(no_llm_project_dir) }
+    after do
+      FileUtils.remove_entry(llm_project_dir)
+      FileUtils.remove_entry(no_llm_project_dir)
+    end
+
+    let(:http) { double("Net::HTTP") }
+    let(:response) { double("Net::HTTPResponse") }
+
+    before do
+      allow(Net::HTTP).to receive(:new).and_return(http)
+      allow(http).to receive(:open_timeout=)
+      allow(http).to receive(:read_timeout=)
+      allow(http).to receive(:use_ssl=)
+    end
+
+    it "uses LLM when client is configured" do
+      allow(http).to receive(:request).and_return(response).exactly(3).times
+      allow(response).to receive(:value).and_return(nil).exactly(3).times
+      allow(response).to receive(:body).and_return(
+        '{"choices":[{"message":{"content":"LLM-powered purpose: core library"}}]}',
+        '{"choices":[{"message":{"content":"LLM-powered architecture: modular composition"}}]}',
+        '{"choices":[{"message":{"content":"- Foo (class): Main application class\n- Utils (module): Utility functions"}}]}'
+      )
+
+      result = described_class.generate(dir_name, analyses, llm_config)
+      expect(result).to include("LLM-powered purpose: core library")
+      expect(result).to include("LLM-powered architecture: modular composition")
+    end
+
+    it "falls back to static when client not configured" do
+      # no_llm_config has no llm section, so Client.configured? returns false
+      result = described_class.generate(dir_name, analyses, no_llm_config)
+      expect(result).to include("Core library code")
+      expect(result).to include("Modular library")
+    end
+
+    it "falls back to static when LLM call fails" do
+      allow(http).to receive(:request).and_raise(SocketError, "connection refused")
+
+      result = described_class.generate(dir_name, analyses, llm_config)
+      expect(result).to include("Core library code")
+      expect(result).to include("Modular library")
+      expect(result).to include("Foo")
+      expect(result).to include("Utils")
+    end
+
+    it "rescues StandardError from LLM code and falls back to static values" do
+      # Make Client.from_config itself raise to trigger the outer rescue StandardError
+      allow(AutoDoc::LLM::Client).to receive(:from_config).and_raise(StandardError, "Unexpected LLM error")
+
+      result = described_class.generate(dir_name, analyses, llm_config)
+      expect(result).to include("Core library code")
+      expect(result).to include("Modular library")
+      expect(result).to include("Foo")
+      expect(result).to include("Utils")
+    end
+  end
 end
