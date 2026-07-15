@@ -117,7 +117,7 @@ RSpec.describe AutoDoc::CLI do
       }.to output(/Incremental mode: \d+ file\(s\) changed/).to_stdout
 
       # Verify manifest was created
-      manifest = File.join(tmpdir, ".autodoc", "generation_manifest.json")
+      manifest = File.join(tmpdir, ".docs", "generation_manifest.json")
       expect(File).to exist(manifest)
     end
 
@@ -127,7 +127,7 @@ RSpec.describe AutoDoc::CLI do
 
       # First run creates manifest
       described_class.start(["generate", "--incremental", tmpdir])
-      manifest = File.join(tmpdir, ".autodoc", "generation_manifest.json")
+      manifest = File.join(tmpdir, ".docs", "generation_manifest.json")
       expect(File).to exist(manifest)
 
       # Second run shouldn't crash
@@ -141,13 +141,39 @@ RSpec.describe AutoDoc::CLI do
       File.write(File.join(tmpdir, "lib", "test.rb"), "class Test; end")
 
       described_class.start(["generate", "--incremental", tmpdir])
-      manifest = File.join(tmpdir, ".autodoc", "generation_manifest.json")
+      manifest = File.join(tmpdir, ".docs", "generation_manifest.json")
       expect(File).to exist(manifest)
 
       # Non-incremental run
       expect {
         described_class.start(["generate", tmpdir])
       }.to output(/Documentation generation complete/).to_stdout
+    end
+  end
+
+  describe "generate --format" do
+    let(:tmpdir) { Dir.mktmpdir }
+    after { FileUtils.remove_entry(tmpdir) }
+
+    it "generates docs in .docs/ with --format docs" do
+      FileUtils.mkdir_p(File.join(tmpdir, "lib"))
+      File.write(File.join(tmpdir, "lib", "test.rb"), "class Test; end")
+      described_class.start(["generate", "--format", "docs", tmpdir])
+      expect(File).to exist(File.join(tmpdir, ".docs", "README.md"))
+    end
+
+    it "generates docs in .autodoc/ with --format autodoc" do
+      FileUtils.mkdir_p(File.join(tmpdir, "lib"))
+      File.write(File.join(tmpdir, "lib", "test.rb"), "class Test; end")
+      described_class.start(["generate", "--format", "autodoc", tmpdir])
+      expect(File).to exist(File.join(tmpdir, ".autodoc", "README.md"))
+    end
+
+    it "generates docs in custom directory with --output-dir" do
+      FileUtils.mkdir_p(File.join(tmpdir, "lib"))
+      File.write(File.join(tmpdir, "lib", "test.rb"), "class Test; end")
+      described_class.start(["generate", "--output-dir", "my_docs", tmpdir])
+      expect(File).to exist(File.join(tmpdir, "my_docs", "README.md"))
     end
   end
 

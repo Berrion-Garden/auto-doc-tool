@@ -35,10 +35,10 @@ module AutoDoc
                                 desc: "Skip unchanged directories (full regeneration by default)"
     method_option :exclude,     type: :array,   default: %w[spec test vendor node_modules],
                                 desc: "Directories to exclude from analysis"
-    method_option :format,      type: :string,  default: "autodoc",
+    method_option :format,      type: :string,  default: "docs",
                                 desc: "Output format: autodoc (.autodoc/) or docs (.docs/)"
     method_option :output_dir,  type: :string,
-                                desc: "Output directory (default: .autodoc)"
+                                desc: "Output directory (default: .docs)"
     def generate(path = ".")
       orchestrator.generate(path, say: method(:say))
     end
@@ -150,7 +150,7 @@ module AutoDoc
           - spec/**/*
 
         output:
-          directory: .autodoc
+          directory: .docs
           format: markdown
 
         audit:

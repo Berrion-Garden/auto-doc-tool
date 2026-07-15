@@ -24,6 +24,8 @@ module AutoDoc
                      @options[:output_dir]
                    elsif @options[:format] == "docs"
                      ".docs"
+                   elsif @options[:format] == "autodoc"
+                     ".autodoc"
                    else
                      config.output_dir
                    end
@@ -32,8 +34,8 @@ module AutoDoc
 
       module_roots = resolve_module_roots(target_dir, config)
       analyses     = if @options[:incremental]
-                       stale = AutoDoc::Utils::TimestampTracker.stale_files(target_dir).map { |f| File.join(target_dir, f) }
-                       say.call("Incremental mode: #{stale.size} file(s) changed", :yellow)
+                        stale = AutoDoc::Utils::TimestampTracker.stale_files(target_dir, output_dir).map { |f| File.join(target_dir, f) }
+                        say.call("Incremental mode: #{stale.size} file(s) changed", :yellow)
                        analyze_project(target_dir, config, stale)
                      else
                        analyze_project(target_dir, config)
@@ -105,7 +107,7 @@ module AutoDoc
         relative = f.sub("#{target_dir}/", "")
         (config.exclude_patterns || []).any? { |pat| File.fnmatch?(pat, relative, File::FNM_PATHNAME) }
       end.map { |f| f.sub("#{target_dir}/", "") }
-      AutoDoc::Utils::TimestampTracker.save_manifest(target_dir, ruby_files_list)
+      AutoDoc::Utils::TimestampTracker.save_manifest(target_dir, ruby_files_list, output_dir)
 
       say.call("\nDocumentation generation complete.", :green)
     end
@@ -127,7 +129,7 @@ module AutoDoc
       puts AutoDoc::Reporter::AuditReporter.format_text(report)
 
       # Write JSON report for CI pipelines
-      json_path = File.join(target_dir, ".autodoc", "report.json")
+      json_path = File.join(target_dir, config.output_dir, "report.json")
       FileUtils.mkdir_p(File.dirname(json_path)) rescue nil
       File.write(json_path, AutoDoc::Reporter::AuditReporter.format_json(report)) if File.writable?(File.dirname(json_path))
 

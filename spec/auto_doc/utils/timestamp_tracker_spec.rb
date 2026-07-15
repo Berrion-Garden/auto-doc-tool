@@ -67,14 +67,14 @@ RSpec.describe AutoDoc::Utils::TimestampTracker do
   end
 
   describe ".save_manifest" do
-    it "creates .autodoc/ and writes correct JSON" do
+    it "creates .docs/ and writes correct JSON" do
       Dir.mktmpdir do |dir|
         File.write(File.join(dir, "a.rb"), "")
 
         result = tracker.save_manifest(dir, %w[a.rb])
         expect(result).to be true
 
-        manifest_path = File.join(dir, ".autodoc", "generation_manifest.json")
+        manifest_path = File.join(dir, ".docs", "generation_manifest.json")
         expect(File).to exist(manifest_path)
 
         manifest = JSON.parse(File.read(manifest_path))
@@ -92,7 +92,7 @@ RSpec.describe AutoDoc::Utils::TimestampTracker do
         File.write(a_path, "")
 
         tracker.save_manifest(dir, %w[a.rb])
-        manifest_path = File.join(dir, ".autodoc", "generation_manifest.json")
+        manifest_path = File.join(dir, ".docs", "generation_manifest.json")
         first_manifest = JSON.parse(File.read(manifest_path))
 
         # Add new file and advance its mtime without sleeping

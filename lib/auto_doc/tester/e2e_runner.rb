@@ -11,6 +11,7 @@ module AutoDoc
       PASS  = "PASS"
       FAIL  = "FAIL"
       WARN  = "WARN"
+      OUTPUT_DIR = ".docs"
 
       def self.run(project_dir = ".")
         new(project_dir).run
@@ -29,12 +30,12 @@ module AutoDoc
         puts "=" * 60
         puts
 
-        # Step 0: Clean up any existing .autodoc directory
-        autodoc_dir = File.join(@project_dir, ".autodoc")
-        step("Clean up existing .autodoc") do
-          if File.directory?(autodoc_dir)
-            FileUtils.rm_rf(autodoc_dir)
-            [true, "Removed #{autodoc_dir}"]
+        # Step 0: Clean up any existing output directory
+        output_dir = File.join(@project_dir, OUTPUT_DIR)
+        step("Clean up existing #{OUTPUT_DIR}") do
+          if File.directory?(output_dir)
+            FileUtils.rm_rf(output_dir)
+            [true, "Removed #{output_dir}"]
           else
             [true, "Nothing to clean"]
           end
@@ -47,19 +48,19 @@ module AutoDoc
         end
 
         # Step 2: Check output files exist
-        step("Check .autodoc/ directory exists") { [File.directory?(autodoc_dir), ""] }
+        step("Check #{OUTPUT_DIR}/ directory exists") { [File.directory?(output_dir), ""] }
 
         required_files = [
           "README.md",
           "diagrams/deps.mmd"
         ]
         required_files.each do |file|
-          full_path = File.join(autodoc_dir, file)
+          full_path = File.join(output_dir, file)
           step("Check #{file} exists") { [File.exist?(full_path), "Path: #{full_path}"] }
         end
 
         # Step 3: Check AGENTS.md for each module root
-        module_dirs = Dir.glob(File.join(autodoc_dir, "*")).select { |d| File.directory?(d) && File.basename(d) != "diagrams" }
+        module_dirs = Dir.glob(File.join(output_dir, "*")).select { |d| File.directory?(d) && File.basename(d) != "diagrams" }
         module_dirs.each do |mod_dir|
           mod_name = File.basename(mod_dir)
           agents_path = File.join(mod_dir, "AGENTS.md")
@@ -78,7 +79,7 @@ module AutoDoc
         end
 
         # Step 5: Check report.json
-        report_path = File.join(autodoc_dir, "report.json")
+        report_path = File.join(output_dir, "report.json")
         step("Check report.json exists") { [File.exist?(report_path), "Path: #{report_path}"] }
 
         if File.exist?(report_path)

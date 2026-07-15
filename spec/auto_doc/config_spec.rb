@@ -15,7 +15,7 @@ RSpec.describe AutoDoc::Config do
       cfg = config.load(project_dir)
       expect(cfg.module_roots).to eq(%w[app lib bin])
       expect(cfg.exclude_patterns).to eq(%w[vendor/**/* node_modules/**/* spec/**/*])
-      expect(cfg.output_dir).to eq(".autodoc")
+      expect(cfg.output_dir).to eq(".docs")
       expect(cfg.min_doc_coverage).to eq(80)
     end
 
@@ -74,6 +74,35 @@ RSpec.describe AutoDoc::Config do
 
       cfg = config.load(project_dir)
       expect(cfg.output_dir).to eq(".docs")
+    end
+
+    describe "backward-compatible output_dir" do
+      it "returns .docs by default when neither .docs/ nor .autodoc/ exist" do
+        cfg = config.load(project_dir)
+        expect(cfg.output_dir).to eq(".docs")
+      end
+
+      it "falls back to .autodoc when .docs/ doesn't exist but .autodoc/ does" do
+        FileUtils.mkdir_p(File.join(project_dir, ".autodoc"))
+        cfg = config.load(project_dir)
+        expect(cfg.output_dir).to eq(".autodoc")
+      end
+
+      it "uses .docs when .docs/ directory already exists" do
+        FileUtils.mkdir_p(File.join(project_dir, ".docs"))
+        cfg = config.load(project_dir)
+        expect(cfg.output_dir).to eq(".docs")
+      end
+
+      it "uses configured directory from YAML when it exists on disk" do
+        File.write(File.join(project_dir, ".autodoc.yml"), <<~YAML)
+          output:
+            directory: .custom_docs
+        YAML
+        FileUtils.mkdir_p(File.join(project_dir, ".custom_docs"))
+        cfg = config.load(project_dir)
+        expect(cfg.output_dir).to eq(".custom_docs")
+      end
     end
 
     it "handles nested diagram config" do

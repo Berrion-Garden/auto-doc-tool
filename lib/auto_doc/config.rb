@@ -15,7 +15,7 @@ module AutoDoc
       module_roots: %w[app lib bin],
       exclude_patterns: %w[vendor/**/* node_modules/**/* spec/**/*],
       output: {
-        directory: ".autodoc",
+        directory: ".docs",
         format: "markdown"
       },
       audit: {
@@ -54,7 +54,26 @@ module AutoDoc
     end
 
     def output_dir
-      (@config[:output] && @config[:output][:directory]) || DEFAULTS[:output][:directory]
+      configured = (@config[:output] && @config[:output][:directory]) || DEFAULTS[:output][:directory]
+
+      # Use the project root from @path (which is expanded in initialize)
+      project_root = File.directory?(@path) ? @path : File.dirname(@path)
+
+      # If the configured directory exists on disk, use it
+      configured_path = File.join(project_root, configured)
+      return configured if File.directory?(configured_path)
+
+      # If configured dir doesn't exist but .autodoc/ does, fall back (migration notice)
+      autodoc_path = File.join(project_root, ".autodoc")
+      if File.directory?(autodoc_path)
+        $stderr.puts "[auto-doc] Notice: Configuration specifies '#{configured}' but '#{File.basename(configured_path)}' not found. " \
+                     "Falling back to existing '.autodoc/' directory. " \
+                     "Run `auto-doc generate` to migrate to '#{configured}'."
+        return ".autodoc"
+      end
+
+      # Neither exists, return configured path (will default to .docs)
+      configured
     end
 
     def min_doc_coverage

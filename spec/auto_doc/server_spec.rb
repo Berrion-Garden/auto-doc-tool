@@ -14,18 +14,18 @@ RSpec.describe AutoDoc::Server do
   end
 
   let(:tmpdir) { Dir.mktmpdir }
-  let(:autodoc_dir) { File.join(tmpdir, ".autodoc") }
+  let(:docs_dir) { File.join(tmpdir, ".docs") }
 
   around do |example|
-    # Set up a minimal .autodoc directory structure
-    FileUtils.mkdir_p(autodoc_dir)
-    FileUtils.mkdir_p(File.join(autodoc_dir, "lib"))
-    FileUtils.mkdir_p(File.join(autodoc_dir, "diagrams"))
+    # Set up a minimal .docs directory structure
+    FileUtils.mkdir_p(docs_dir)
+    FileUtils.mkdir_p(File.join(docs_dir, "lib"))
+    FileUtils.mkdir_p(File.join(docs_dir, "diagrams"))
 
-    File.write(File.join(autodoc_dir, "README.md"), "# Test README\nThis is test content.")
-    File.write(File.join(autodoc_dir, "lib", "AGENTS.md"), "# AGENTS.md for lib\nClass Foo\n")
-    File.write(File.join(autodoc_dir, "diagrams", "deps.mmd"), "graph TD\n  A --> B")
-    File.write(File.join(autodoc_dir, "report.json"), '{"coverage": 85}')
+    File.write(File.join(docs_dir, "README.md"), "# Test README\nThis is test content.")
+    File.write(File.join(docs_dir, "lib", "AGENTS.md"), "# AGENTS.md for lib\nClass Foo\n")
+    File.write(File.join(docs_dir, "diagrams", "deps.mmd"), "graph TD\n  A --> B")
+    File.write(File.join(docs_dir, "report.json"), '{"coverage": 85}')
 
     old_pwd = Dir.pwd
     Dir.chdir(tmpdir)
@@ -67,7 +67,7 @@ RSpec.describe AutoDoc::Server do
     end
 
     it "escapes HTML in content" do
-      File.write(File.join(autodoc_dir, "README.md"), "<script>alert('xss')</script>")
+      File.write(File.join(docs_dir, "README.md"), "<script>alert('xss')</script>")
       get "/README"
       expect(last_response.body).not_to include("<script>")
       expect(last_response.body).to include("&lt;script&gt;")
@@ -114,11 +114,34 @@ RSpec.describe AutoDoc::Server do
     end
 
     it "returns error when report.json is missing" do
-      File.delete(File.join(autodoc_dir, "report.json"))
+      File.delete(File.join(docs_dir, "report.json"))
       get "/api/stats"
       expect(last_response.status).to eq(200)
       json = JSON.parse(last_response.body)
       expect(json["error"]).to include("report.json")
+    end
+  end
+
+  describe "fallback to .autodoc/" do
+    it "serves from .autodoc/ when .docs/ does not exist" do
+      # Remove .docs/ and create .autodoc/ instead
+      FileUtils.rm_rf(docs_dir)
+      autodoc_fallback = File.join(tmpdir, ".autodoc")
+      FileUtils.mkdir_p(File.join(autodoc_fallback, "lib"))
+      File.write(File.join(autodoc_fallback, "README.md"), "# Legacy README")
+      File.write(File.join(autodoc_fallback, "lib", "AGENTS.md"), "# Legacy AGENTS.md")
+
+      get "/"
+      expect(last_response.status).to eq(200)
+      expect(last_response.body).to include("auto-doc Server")
+
+      get "/README"
+      expect(last_response.status).to eq(200)
+      expect(last_response.body).to include("Legacy README")
+
+      get "/lib"
+      expect(last_response.status).to eq(200)
+      expect(last_response.body).to include("Legacy AGENTS.md")
     end
   end
 
