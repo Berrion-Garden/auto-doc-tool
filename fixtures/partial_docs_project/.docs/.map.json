@@ -1,6 +1,6 @@
 {
-  "schema_version": 1,
-  "generated_at": "2026-07-15T06:45:28Z",
+  "schema_version": "1.0",
+  "generated_at": "2026-07-15T12:30:59+00:00",
   "project": "partial_docs_project",
   "artifacts": {
     "indexes": [
@@ -8,9 +8,6 @@
     ],
     "summaries": [
       "SUMMARY.md"
-    ],
-    "readme": [
-      "README.md"
     ],
     "vectors": [
       "VECTORS.json",
@@ -28,14 +25,14 @@
     "architecture": [
       "architecture.md"
     ],
-    "schema": [],
-    "audit": [
-      "report.json"
-    ]
+    "schema": []
   },
   "module_roots": [
-    "lib"
+    "app",
+    "lib",
+    "bin"
   ],
   "coverage_pct": 0.0,
-  "total_symbols": 2
+  "total_symbols": 2,
+  "total_files": 1
 }
