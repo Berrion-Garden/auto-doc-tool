@@ -24,7 +24,8 @@ module AutoDoc
           diagrams: [],
           agents_docs: [],
           architecture: [],
-          schema: []
+          schema: [],
+          readme: []
         }
 
         # Walk the full output directory
@@ -34,6 +35,7 @@ module AutoDoc
             rel = Pathname.new(path).relative_path_from(Pathname.new(full_output)).to_s
             basename = File.basename(path)
             case basename
+            when "README.md" then artifacts[:readme] << rel
             when "INDEX.md" then artifacts[:indexes] << rel
             when "SUMMARY.md" then artifacts[:summaries] << rel
             when "VECTORS.json", "vectors.json" then artifacts[:vectors] << rel

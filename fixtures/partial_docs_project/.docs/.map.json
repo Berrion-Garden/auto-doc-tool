@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "generated_at": "2026-07-15T13:45:35+00:00",
+  "generated_at": "2026-07-15T13:59:32+00:00",
   "project": "partial_docs_project",
   "artifacts": {
     "indexes": [
@@ -27,7 +27,10 @@
     "architecture": [
       "architecture.md"
     ],
-    "schema": []
+    "schema": [],
+    "readme": [
+      "README.md"
+    ]
   },
   "module_roots": [
     "app",

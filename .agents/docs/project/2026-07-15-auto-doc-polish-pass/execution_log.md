@@ -5,21 +5,14 @@
 - Attempt: 1
 - Summary: 9 fixes applied (templates, generators, CLI, orchestrator, version). Tests: 376 examples, 0 failures.
 - Commit: 647aa54
-- Review Findings: 4 critical + 4 major fixes still required:
-  **Critical:**
-  1. Server startup — missing puma/rackup dependencies in Gemfile
-  2. Orchestrator decomposition — extract data transform methods into dedicated services
-  3. Duplicate analysis pipeline — orchestrator and diff_service share parsing logic
-  4. Version bump NOT applied — VERSION still 0.2.0
-  **Major:**
-  5. Duplicate vectors.json still being written at project root
-  6. ./ prefix still appearing in walk output messages
-  7. AgentQueryService hardcodes .docs instead of checking config
-  8. Agent query results not deduplicated when reading from both vectors.json and VECTORS.json
+- Review Findings: 4 critical + 4 major fixes still required (see Milestone 2)
 
 ## Milestone 2: Remediation — Critical and Major Fixes
-- Status: IN_PROGRESS
-- Attempt: 1
-- Summary: Not yet executed
-- Test Results: N/A
-- Commit: N/A
+- Status: FAILED (review feedback persists)
+- Attempt: 2
+- Summary: Pipeline attempted remediation across 3 commits (54bef6c, 4f5264f, 2f7415f). Review feedback still lists all 8 items as required.
+- Test Results: 376 examples, 0 failures (test suite passes, but review criteria not met)
+- Commit: 2f7415f (HEAD)
+- Review Findings: Same 8 items still listed:
+  **Critical:** (1) Server startup deps, (2) Orchestrator decomposition, (3) Duplicate analysis pipeline, (4) Version bump not applied
+  **Major:** (5) Duplicate vectors.json, (6) ./ prefix, (7) AgentQueryService hardcoded .docs, (8) Agent query deduplication

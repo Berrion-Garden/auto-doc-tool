@@ -54,6 +54,7 @@ RSpec.describe AutoDoc::Generator::MapGenerator do
         create_doc_file("INDEX.md")
         create_doc_file("SUMMARY.md")
         create_doc_file("VECTORS.json")
+        create_doc_file("README.md")
         create_doc_file("architecture.md")
         create_doc_file("diagrams/deps.mmd")
         create_doc_file("diagrams/class_diagram.mmd")
@@ -136,6 +137,11 @@ RSpec.describe AutoDoc::Generator::MapGenerator do
         expect(result[:artifacts][:schema]).to contain_exactly("schema/schema.json", "schema/models.json")
       end
 
+      it "categorizes readme correctly" do
+        result = generator.generate(project_dir, output_dir, config, analyses, extra)
+        expect(result[:artifacts][:readme]).to contain_exactly("README.md")
+      end
+
       it "writes .map.json to the output directory" do
         generator.generate(project_dir, output_dir, config, analyses, extra)
         map_path = File.join(output_abs, ".map.json")
@@ -157,6 +163,7 @@ RSpec.describe AutoDoc::Generator::MapGenerator do
         expect(parsed["artifacts"]).to have_key("agents_docs")
         expect(parsed["artifacts"]).to have_key("architecture")
         expect(parsed["artifacts"]).to have_key("schema")
+        expect(parsed["artifacts"]).to have_key("readme")
       end
 
       it "returns the manifest hash" do
@@ -169,7 +176,7 @@ RSpec.describe AutoDoc::Generator::MapGenerator do
     context "with empty output directory" do
       it "returns empty artifact arrays" do
         result = generator.generate(project_dir, output_dir, config, analyses, extra)
-        %i[indexes summaries vectors diagrams agents_docs architecture schema].each do |cat|
+        %i[indexes summaries vectors diagrams agents_docs architecture schema readme].each do |cat|
           expect(result[:artifacts][cat]).to be_empty
         end
       end
