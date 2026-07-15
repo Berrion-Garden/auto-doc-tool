@@ -1,0 +1,29 @@
+{
+  "project": "/home/kyle/Projects/auto-doc-tool/test_fixtures/sample_ruby_project",
+  "project_path": "/home/kyle/Projects/auto-doc-tool/test_fixtures/sample_ruby_project",
+  "generated_at": "2026-07-15T23:09:33+00:00",
+  "overall_coverage": 100.0,
+  "total_symbols": 2,
+  "documented_symbols": 2,
+  "documented_count": 2,
+  "undocumented_count": 0,
+  "undocumented": [],
+  "low_coverage": [],
+  "modules": {
+    "user": {
+      "file": "/home/kyle/Projects/auto-doc-tool/test_fixtures/sample_ruby_project/app/models/user.rb",
+      "total": 1,
+      "documented": 1,
+      "coverage_pct": 100.0
+    },
+    "math_utils": {
+      "file": "/home/kyle/Projects/auto-doc-tool/test_fixtures/sample_ruby_project/lib/math_utils.rb",
+      "total": 1,
+      "documented": 1,
+      "coverage_pct": 100.0
+    }
+  },
+  "failures": [],
+  "passed": true,
+  "min_coverage": 80
+}

@@ -1,0 +1,40 @@
+{
+  "symbols": [
+    {
+      "id": "class_User",
+      "symbol": "User",
+      "type": "class",
+      "scope": "public",
+      "file": "/home/kyle/Projects/auto-doc-tool/test_fixtures/sample_ruby_project/app/models/user.rb",
+      "line": 2,
+      "summary": "",
+      "signature": "User",
+      "visibility": "public",
+      "keywords": [
+        "user"
+      ],
+      "dependencies": [],
+      "consumed_by": [],
+      "parent_module": null
+    },
+    {
+      "id": "module_MathUtils",
+      "symbol": "MathUtils",
+      "type": "module",
+      "scope": "public",
+      "file": "/home/kyle/Projects/auto-doc-tool/test_fixtures/sample_ruby_project/lib/math_utils.rb",
+      "line": 2,
+      "summary": "",
+      "signature": "MathUtils",
+      "visibility": "public",
+      "keywords": [
+        "math",
+        "utils"
+      ],
+      "dependencies": [],
+      "consumed_by": [],
+      "parent_module": null
+    }
+  ],
+  "generated_at": "2026-07-15T23:09:32Z"
+}
