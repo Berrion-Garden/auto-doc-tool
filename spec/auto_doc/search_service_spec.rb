@@ -406,6 +406,79 @@ RSpec.describe AutoDoc::SearchService do
     end
   end
 
+  # ── Test: vector keyword splitting (underscore / CamelCase) ─────────
+
+  describe "vector keyword splitting" do
+    it "splits on underscore boundaries: pi_manager matches keywords [pi, manager]" do
+      with_project_dir do |dir|
+        vectors = {
+          "symbols" => [
+            { "symbol" => "PiManager", "keywords" => %w[pi manager] }
+          ]
+        }
+        File.write(File.join(dir, ".docs", "vectors.json"), JSON.pretty_generate(vectors))
+
+        result = service.search(dir, "pi_manager")
+
+        match = result[:results].find { |r| r[:match_type] == "vector_keyword_low" }
+        expect(match).not_to be_nil
+        expect(match[:score]).to eq(40)
+      end
+    end
+
+    it "splits on CamelCase boundaries: OrchestratorService matches keywords [orchestrator, service]" do
+      with_project_dir do |dir|
+        vectors = {
+          "symbols" => [
+            { "symbol" => "OrchestratorService", "keywords" => %w[orchestrator service] }
+          ]
+        }
+        File.write(File.join(dir, ".docs", "vectors.json"), JSON.pretty_generate(vectors))
+
+        result = service.search(dir, "OrchestratorService")
+
+        match = result[:results].find { |r| r[:match_type] == "vector_keyword_low" }
+        expect(match).not_to be_nil
+        expect(match[:score]).to eq(40)
+      end
+    end
+
+    it "splits mixed underscore: my_symbol overlaps keywords [my, symbol, extra]" do
+      with_project_dir do |dir|
+        vectors = {
+          "symbols" => [
+            { "symbol" => "MySymbol", "keywords" => %w[my symbol extra] }
+          ]
+        }
+        File.write(File.join(dir, ".docs", "vectors.json"), JSON.pretty_generate(vectors))
+
+        # "my_symbol" should split to ["my", "symbol"], overlapping 2 of 3 keywords
+        result = service.search(dir, "my_symbol")
+
+        match = result[:results].find { |r| r[:match_type] == "vector_keyword_low" }
+        expect(match).not_to be_nil
+        expect(match[:score]).to eq(40)
+      end
+    end
+
+    it "regression: single-word search still matches single keyword" do
+      with_project_dir do |dir|
+        vectors = {
+          "symbols" => [
+            { "symbol" => "Processor", "keywords" => %w[process] }
+          ]
+        }
+        File.write(File.join(dir, ".docs", "vectors.json"), JSON.pretty_generate(vectors))
+
+        result = service.search(dir, "process")
+
+        match = result[:results].find { |r| r[:match_type] == "vector_keyword_low" }
+        expect(match).not_to be_nil
+        expect(match[:score]).to eq(40)
+      end
+    end
+  end
+
   describe "AGENTS.md match" do
     it "finds matches in AGENTS.md files at any nesting level" do
       with_nested_project_dir do |dir|

@@ -146,7 +146,7 @@ module AutoDoc
       symbols = data["symbols"]
       return results unless symbols.is_a?(Array)
 
-      search_words = term.downcase.split
+      search_words = term.split(/\s+|_|(?<=[a-z])(?=[A-Z])/).map(&:downcase)
 
       symbols.each do |entry|
         keywords = entry["keywords"]
