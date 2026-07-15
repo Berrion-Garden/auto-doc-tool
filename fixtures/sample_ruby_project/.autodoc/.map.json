@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-07-15T05:07:02Z",
+  "project": "sample_ruby_project",
+  "artifacts": {
+    "indexes": [
+      "INDEX.md",
+      "models/INDEX.md"
+    ],
+    "summaries": [
+      "SUMMARY.md",
+      "models/SUMMARY.md"
+    ],
+    "readme": [
+      "README.md"
+    ],
+    "vectors": [
+      "VECTORS.json",
+      "models/vectors.json",
+      "vectors.json"
+    ],
+    "diagrams": [
+      "diagrams/c4_container.mmd",
+      "diagrams/c4_context.mmd",
+      "diagrams/class_diagram.mmd",
+      "diagrams/deps.mmd"
+    ],
+    "agents_docs": [
+      "app/AGENTS.md",
+      "lib/AGENTS.md"
+    ],
+    "architecture": [
+      "architecture.md"
+    ],
+    "schema": [],
+    "audit": [
+      "report.json"
+    ]
+  },
+  "module_roots": [
+    "app",
+    "lib"
+  ],
+  "coverage_pct": 100.0,
+  "total_symbols": 3
+}

@@ -222,6 +222,17 @@ module AutoDoc
       end.map { |f| f.sub("#{target_dir}/", "") }
       AutoDoc::Utils::TimestampTracker.save_manifest(target_dir, ruby_files_list, output_dir)
 
+      # Generate .map.json manifest as the final documentation artifact
+      coverage_pct   = calculate_coverage(analyses).to_f
+      total_symbols = analyses.sum do |_, analysis|
+        defs = analysis[:definitions] || []
+        defs.count { |d| d.is_a?(Hash) && [:class, :module, :method].include?(d[:type]) }
+      end
+      AutoDoc::Generator::MapGenerator.generate(target_dir, output_dir, File.basename(target_dir),
+                                                 coverage_pct: coverage_pct, total_symbols: total_symbols)
+      map_path = File.join(target_dir, output_dir, ".map.json")
+      wrapped_say.call("  Created #{map_path}", :green)
+
       wrapped_say.call("\nDocumentation generation complete.", :green)
 
       # Return structured result for formatters

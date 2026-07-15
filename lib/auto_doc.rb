@@ -37,13 +37,15 @@ module AutoDoc
   require_relative "auto_doc/generator/class_diagram_generator"
   require_relative "auto_doc/generator/erd_generator"
   require_relative "auto_doc/generator/architecture_generator"
+  require_relative "auto_doc/generator/map_generator"
 
   # Load reporters
   require_relative "auto_doc/reporter/completeness_checker"
   require_relative "auto_doc/reporter/audit_reporter"
 
-  # Load search service
+  # Load search services
   require_relative "auto_doc/search_service"
+  require_relative "auto_doc/agent_query_service"
 
   # Load orchestrator
   require_relative "auto_doc/orchestrator"
