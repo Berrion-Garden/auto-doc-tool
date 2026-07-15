@@ -1,6 +1,6 @@
 {
   "project": "/home/kyle/Projects/auto-doc-tool/fixtures/sample_ruby_project",
-  "generated_at": "2026-07-15T13:59:33+00:00",
+  "generated_at": "2026-07-15T14:01:33+00:00",
   "overall_coverage": 100.0,
   "total_symbols": 3,
   "documented_symbols": 3,
