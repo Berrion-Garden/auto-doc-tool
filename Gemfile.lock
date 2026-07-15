@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    auto-doc (0.2.0)
+    auto-doc (1.0.0)
       sinatra (~> 4.0)
       thor (~> 1.0)
 

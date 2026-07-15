@@ -22,6 +22,7 @@ module AutoDoc
   require_relative "auto_doc/analyzer/model_association_parser"
   require_relative "auto_doc/analyzer/import_extractor"
   require_relative "auto_doc/analyzer/yard_reader"
+  require_relative "auto_doc/analyzer/analysis_pipeline"
   require_relative "auto_doc/analyzer/diff_service"
   require_relative "auto_doc/analyzer/orphans_service"
 
@@ -46,6 +47,9 @@ module AutoDoc
   # Load search services
   require_relative "auto_doc/search_service"
   require_relative "auto_doc/agent_query_service"
+
+  # Load transformer services
+  require_relative "auto_doc/transformer"
 
   # Load orchestrator
   require_relative "auto_doc/orchestrator"

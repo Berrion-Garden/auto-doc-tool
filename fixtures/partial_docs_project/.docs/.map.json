@@ -1,13 +1,15 @@
 {
   "schema_version": "1.0",
-  "generated_at": "2026-07-15T12:30:59+00:00",
+  "generated_at": "2026-07-15T13:24:46+00:00",
   "project": "partial_docs_project",
   "artifacts": {
     "indexes": [
-      "INDEX.md"
+      "INDEX.md",
+      "lib/INDEX.md"
     ],
     "summaries": [
-      "SUMMARY.md"
+      "SUMMARY.md",
+      "lib/SUMMARY.md"
     ],
     "vectors": [
       "VECTORS.json",

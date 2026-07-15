@@ -12,16 +12,39 @@ module AutoDoc
   #   result = AutoDoc::AgentQueryService.query("/path/to/project", "what depends on User")
   #   # => { intent: :reverse_dependency, query: "User", result: [...] }
   class AgentQueryService
-    INTENT_PATTERNS = [
-      { pattern: /(?:what|who)\s+(?:depends on|uses|imports|references?)\s+(\S+)/i, intent: :reverse_dependency },
-      { pattern: /(\S+)\s+(?:dependents|consumers|usages?)/i, intent: :reverse_dependency },
-      { pattern: /(?:show me|list|get)\s+(\S+)(?:'s)?\s+(?:dependencies|deps|imports)/i, intent: :forward_dependency },
-      { pattern: /(\S+)\s+(?:depends on|uses|imports|references?)\s+/i, intent: :forward_dependency },
-      { pattern: /(?:list|show|get|find)\s+(?:all\s+)?(?:classes?|modules?|symbols?)\s+(?:in\s+)?(\S+)/i, intent: :list_symbols },
-      { pattern: /(?:what does|describe|explain|tell me about)\s+(\S+)/i, intent: :describe_symbol },
-      { pattern: /(?:architecture|arch|structure)\s+(?:of\s+)?(\S+)/i, intent: :architecture },
-      { pattern: /(?:show|get|view)\s+(?:the\s+)?(?:diagram|graph)\s+(?:for\s+)?(\S+)/i, intent: :diagram_lookup },
-      { pattern: /(?:schema|table|model)\s+(?:for\s+)?(?:the\s+)?(\S+)/i, intent: :schema_lookup },
+    # Pattern definitions: [regex, intent, term_capture_group_index]
+    # Sorted by priority — first match wins.
+    PATTERNS = [
+      # 1. Reverse dependency: "what depends on X", "dependents of X", "who uses X"
+      [/\A(?:what\s+)?depends\s+on\s+(.+)/i, :reverse_dependency, 1],
+      [/\Adependents\s+of\s+(.+)/i, :reverse_dependency, 1],
+      [/\Awho\s+uses\s+(.+)/i, :reverse_dependency, 1],
+
+      # 2. Forward dependency: "X depends on", "deps of X", "dependencies of X"
+      [/\A(.+?)\s+depends\s+on\b/i, :forward_dependency, 1],
+      [/\Adeps\s+of\s+(.+)/i, :forward_dependency, 1],
+      [/\Adependencies\s+of\s+(.+)/i, :forward_dependency, 1],
+
+      # 3. List symbols: "list all", "symbols in"
+      [/\Alist\s+all/i, :list_symbols, nil],
+      [/\Asymbols\s+in/i, :list_symbols, nil],
+
+      # 4. Describe symbol: "what does X do", "describe X", "what is X"
+      [/\Awhat\s+does\s+(.+?)\s+do\b/i, :describe_symbol, 1],
+      [/\Adescribe\s+(.+)/i, :describe_symbol, 1],
+      [/\Awhat\s+is\s+(.+)/i, :describe_symbol, 1],
+
+      # 5. Architecture: "architecture of", "arch of"
+      [/\Aarchitecture\s+of/i, :architecture, nil],
+      [/\Aarch\s+of/i, :architecture, nil],
+
+      # 6. Diagram lookup: "diagram for X", "show diagram X"
+      [/\Adiagram\s+for\s+(.+)/i, :diagram_lookup, 1],
+      [/\Ashow\s+diagram\s+(.+)/i, :diagram_lookup, 1],
+
+      # 7. Schema lookup: "schema for X", "table X"
+      [/\Aschema\s+for\s+(.+)/i, :schema_lookup, 1],
+      [/\Atable\s+(.+)/i, :schema_lookup, 1]
     ].freeze
 
     # Queries the documentation knowledge base using intent detection.
@@ -30,179 +53,131 @@ module AutoDoc
     # @return [Hash] Result with intent, query, and result data
     def self.query(project_dir, prompt)
       docs_dir = File.join(project_dir, ".docs")
-      return { intent: :error, query: prompt, result: "No .docs/ directory found. Run `auto-doc generate` first." } unless Dir.exist?(docs_dir)
+      return { intent: :error, query: prompt, result: { error: "No .docs/ directory found. Run `auto-doc generate` first." } } unless Dir.exist?(docs_dir)
 
-      detected_intent = nil
-      captured_query = nil
+      prompt_stripped = prompt.strip
 
-      INTENT_PATTERNS.each do |entry|
-        if (m = prompt.match(entry[:pattern]))
-          detected_intent = entry[:intent]
-          captured_query = m[1]
-          break
-        end
+      PATTERNS.each do |regex, intent, term_group|
+        match = prompt_stripped.match(regex)
+        next unless match
+
+        term = term_group ? match[term_group].strip : nil
+        result_data = resolve_intent(docs_dir, intent, term)
+        return { intent: intent, query: prompt_stripped, result: result_data }
       end
 
-      detected_intent ||= :fallback
-      captured_query ||= prompt
-
-      result_data = resolve_intent(docs_dir, detected_intent, captured_query)
-
-      {
-        intent: detected_intent,
-        query: captured_query,
-        result: result_data
-      }
+      # Fallback: delegate to SearchService
+      search_result = fallback_search(docs_dir, prompt_stripped)
+      { intent: :search, result: search_result, query: prompt_stripped }
     end
 
     private
 
     # Resolves the detected intent against documentation files.
-    def self.resolve_intent(docs_dir, intent, query)
-      query_lower = query.downcase
-
+    def self.resolve_intent(docs_dir, intent, term)
       case intent
       when :reverse_dependency
-        find_reverse_deps(docs_dir, query_lower)
+        find_reverse_deps(docs_dir, term)
       when :forward_dependency
-        find_forward_deps(docs_dir, query_lower)
+        find_forward_deps(docs_dir, term)
       when :list_symbols
-        find_symbols(docs_dir, query_lower)
+        list_all_symbols(docs_dir)
       when :describe_symbol
-        describe_symbol(docs_dir, query_lower)
+        describe_symbol_by_name(docs_dir, term)
       when :architecture
-        get_architecture(docs_dir)
+        read_architecture(docs_dir)
       when :diagram_lookup
-        find_diagram(docs_dir, query_lower)
+        lookup_diagram(docs_dir, term)
       when :schema_lookup
-        find_schema(docs_dir, query_lower)
+        lookup_schema(docs_dir, term)
       else
-        fallback_search(docs_dir, query)
+        { error: "Unknown intent: #{intent}" }
       end
     end
 
-    # Reads all INDEX.md files to find reverse dependencies (who depends on X)
-    def self.find_reverse_deps(docs_dir, target)
-      results = []
-      Dir.glob(File.join(docs_dir, "**", "INDEX.md")).each do |index_path|
-        content = File.read(index_path)
-        in_deps = false
-        content.each_line do |line|
-          in_deps = true if line =~ /^##\s*Dependencies/i
-          in_deps = false if line =~ /^##\s*(?!Dependencies)/ && line.start_with?("##")
-          next unless in_deps && line.start_with?("|")
-          next if line.strip =~ /\A\|[-| ]+\|\z/ || line =~ /\A\|\s*(From|#)\s*\|/
-          cols = line.split("|").map(&:strip).reject(&:empty?)
-          next if cols.size < 3
-          if cols[2].downcase.include?(target)
-            results << { from: cols[0], type: cols[1], to: cols[2], file: relative_path(docs_dir, index_path) }
-          end
-        end
-      end
-      results.empty? ? "No reverse dependencies found for '#{target}'." : results
+    # Finds rows in INDEX.md Dependencies table where "To" matches term.
+    def self.find_reverse_deps(docs_dir, term)
+      term_down = term.downcase
+      parse_dependencies_table(docs_dir).select { |r| r[:to].downcase.include?(term_down) }
     end
 
-    # Reads all INDEX.md files to find forward dependencies (what does X depend on)
-    def self.find_forward_deps(docs_dir, target)
-      results = []
-      Dir.glob(File.join(docs_dir, "**", "INDEX.md")).each do |index_path|
-        content = File.read(index_path)
-        in_deps = false
-        content.each_line do |line|
-          in_deps = true if line =~ /^##\s*Dependencies/i
-          in_deps = false if line =~ /^##\s*(?!Dependencies)/ && line.start_with?("##")
-          next unless in_deps && line.start_with?("|")
-          next if line.strip =~ /\A\|[-| ]+\|\z/ || line =~ /\A\|\s*(From|#)\s*\|/
-          cols = line.split("|").map(&:strip).reject(&:empty?)
-          next if cols.size < 3
-          if cols[0].downcase.include?(target)
-            results << { from: cols[0], type: cols[1], to: cols[2], file: relative_path(docs_dir, index_path) }
-          end
-        end
-      end
-      results.empty? ? "No dependencies found for '#{target}'." : results
+    # Finds rows in INDEX.md Dependencies table where "From" matches term.
+    def self.find_forward_deps(docs_dir, term)
+      term_down = term.downcase
+      parse_dependencies_table(docs_dir).select { |r| r[:from].downcase.include?(term_down) }
     end
 
-    # Reads INDEX.md Symbols tables to list symbols
-    def self.find_symbols(docs_dir, target)
-      results = []
-      Dir.glob(File.join(docs_dir, "**", "INDEX.md")).each do |index_path|
-        rel = relative_path(docs_dir, index_path)
-        next unless target == "all" || rel.downcase.include?(target) || File.basename(File.dirname(index_path)).downcase.include?(target)
-        content = File.read(index_path)
-        in_symbols = false
-        content.each_line do |line|
-          in_symbols = true if line =~ /^##\s*Symbols/i
-          in_symbols = false if line =~ /^##\s*(?!Symbols)/ && line.start_with?("##")
-          next unless in_symbols && line.start_with?("|")
-          next if line.strip =~ /\A\|[-| ]+\|\z/ || line =~ /\A\|\s*(Name|#|Symbol)\s*\|/
-          cols = line.split("|").map(&:strip).reject(&:empty?)
-          next if cols.size < 3
-          results << { symbol: cols[0], type: cols[1], file: rel }
-        end
-      end
-      results.empty? ? "No symbols found for '#{target}'." : results
+    # Returns all rows from INDEX.md Symbols table.
+    def self.list_all_symbols(docs_dir)
+      parse_symbols_table(docs_dir)
     end
 
-    # Looks up a symbol in VECTORS.json
-    def self.describe_symbol(docs_dir, target)
-      pattern = /#{Regexp.escape(target)}/i
-      Dir.glob(File.join(docs_dir, "**", "vectors.json")).each do |vec_path|
-        content = JSON.parse(File.read(vec_path))
-        symbols = content["symbols"] || []
-        match = symbols.find { |s| s["symbol"] =~ pattern || s["keywords"]&.any? { |k| k =~ pattern } }
-        return match if match
-      end
-      Dir.glob(File.join(docs_dir, "**", "VECTORS.json")).each do |vec_path|
-        content = JSON.parse(File.read(vec_path))
-        symbols = content["symbols"] || []
-        match = symbols.find { |s| s["symbol"] =~ pattern || s["keywords"]&.any? { |k| k =~ pattern } }
-        return match if match
-      end
-      "No description found for '#{target}'."
+    # Looks up a symbol in VECTORS.json by exact name (case-insensitive).
+    def self.describe_symbol_by_name(docs_dir, term)
+      vectors = load_vectors_json(docs_dir)
+      return nil unless vectors
+
+      term_down = term.downcase
+      vectors["symbols"]&.find { |entry| entry["symbol"].to_s.downcase == term_down }
     end
 
-    # Returns architecture.md content
-    def self.get_architecture(docs_dir)
+    # Reads architecture.md content and lists available diagram files.
+    def self.read_architecture(docs_dir)
       arch_path = File.join(docs_dir, "architecture.md")
-      if File.exist?(arch_path)
-        content = File.read(arch_path)
-        { architecture: content, diagrams: Dir.glob(File.join(docs_dir, "diagrams", "*.mmd")).map { |f| File.basename(f) } }
-      else
-        "No architecture.md found. Run `auto-doc generate` with Rails detection."
+      content = File.exist?(arch_path) ? File.read(arch_path, encoding: "UTF-8") : ""
+
+      diagrams_dir = File.join(docs_dir, "diagrams")
+      diagram_links = []
+      if Dir.exist?(diagrams_dir)
+        diagram_links = Dir.glob(File.join(diagrams_dir, "*.mmd"))
+                            .map { |f| relative_path(docs_dir, f) }
+                            .sort
       end
+
+      { content: content, diagrams: diagram_links }
     end
 
-    # Finds a diagram by name
-    def self.find_diagram(docs_dir, target)
-      pattern = /#{Regexp.escape(target)}/i
-      diagrams = Dir.glob(File.join(docs_dir, "diagrams", "*.mmd"))
-      match = diagrams.find { |f| File.basename(f, ".mmd") =~ pattern }
-      if match
-        { name: File.basename(match), path: relative_path(docs_dir, match), content: File.read(match) }
-      else
-        available = diagrams.map { |f| File.basename(f, ".mmd") }
-        "Diagram '#{target}' not found. Available diagrams: #{available.join(', ')}"
-      end
+    # Finds and reads a matching .mmd diagram file by name.
+    def self.lookup_diagram(docs_dir, term)
+      diagrams_dir = File.join(docs_dir, "diagrams")
+      return nil unless Dir.exist?(diagrams_dir)
+
+      pattern = term.downcase.gsub(/[^a-z0-9_-]/, "")
+      matches = Dir.glob(File.join(diagrams_dir, "*.mmd"))
+                   .select { |f| File.basename(f, ".mmd").downcase.include?(pattern) }
+
+      return nil if matches.empty?
+
+      file_path = matches.first
+      {
+        name: File.basename(file_path, ".mmd"),
+        content: File.read(file_path, encoding: "UTF-8"),
+        path: relative_path(docs_dir, file_path)
+      }
     end
 
-    # Looks up a table in schema.json
-    def self.find_schema(docs_dir, target)
+    # Looks up a table definition in schema.json.
+    def self.lookup_schema(docs_dir, term)
       schema_path = File.join(docs_dir, "schema", "schema.json")
-      if File.exist?(schema_path)
-        tables = JSON.parse(File.read(schema_path))
-        pattern = /#{Regexp.escape(target)}/i
-        match = tables.find { |t| t["table_name"] =~ pattern }
-        return match if match
-        "Table '#{target}' not found. Available tables: #{tables.map { |t| t['table_name'] }.join(', ')}"
-      else
-        "No schema.json found. Run `auto-doc generate` on a Rails project."
+      return nil unless File.exist?(schema_path)
+
+      schema = JSON.parse(File.read(schema_path, encoding: "UTF-8"))
+      term_down = term.downcase
+
+      # schema.json may be an array of table definitions or a hash with table names as keys
+      if schema.is_a?(Array)
+        schema.find { |t| t["table"]&.downcase == term_down || t["name"]&.downcase == term_down }
+      elsif schema.is_a?(Hash)
+        result = schema[term]
+        result ||= schema[term_down]
+        result ||= schema[term_down.sub(/s$/, "")] unless term_down.end_with?("s")
+        result ||= schema["#{term_down}s"]
+        result
       end
     end
 
     # Falls back to SearchService
     def self.fallback_search(docs_dir, query)
-      # docs_dir is project_dir/.docs, so project_dir is the parent of docs_dir
       project_dir = File.dirname(docs_dir)
       AutoDoc::SearchService.search(project_dir, query)
     end
@@ -211,8 +186,110 @@ module AutoDoc
       Pathname.new(path).relative_path_from(Pathname.new(base)).to_s
     end
 
+    # ── data loading helpers ──────────────────────────────────────────
+
+    # Parses a named section table from INDEX.md.
+    def self.parse_markdown_section_table(docs_dir, section_name, header_pattern: nil, &row_builder)
+      index_path = File.join(docs_dir, "INDEX.md")
+      return [] unless File.exist?(index_path)
+
+      lines = File.read(index_path, encoding: "UTF-8").split("\n")
+      current_section = nil
+      results = []
+
+      lines.each do |line|
+        if line =~ /^##\s+(.+)/
+          current_section = Regexp.last_match(1).strip.downcase
+          next
+        end
+
+        next unless current_section == section_name.downcase
+        next unless line.start_with?("|")
+        next if line.strip =~ /\A\|[-| ]+\|\z/
+        next if header_pattern && line =~ header_pattern
+
+        cols = parse_pipe_row(line)
+        next if cols.size < 3
+
+        row = row_builder.call(cols)
+        results << row if row
+      end
+
+      results
+    end
+
+    # Parses INDEX.md Dependencies table into array of {from:, type:, to:} hashes.
+    def self.parse_dependencies_table(docs_dir)
+      results = []
+      Dir.glob(File.join(docs_dir, "**", "INDEX.md")).each do |index_path|
+        dir = File.dirname(index_path)
+        doc_dir_for_rel = File.join(File.dirname(docs_dir), File.basename(docs_dir))
+        rel = relative_path(doc_dir_for_rel, dir)
+        section_results = parse_markdown_section_table(dir, "dependencies",
+                                                       header_pattern: /\A\|\s*From\s*\|/) do |cols|
+          next if cols[0].to_s.strip.empty? || cols[0].to_s.strip == "—" || cols[0].to_s.strip.match?(/\A_?No\b/)
+
+          {
+            from: cols[0].to_s.strip,
+            type: cols[1].to_s.strip,
+            to: cols[2].to_s.strip,
+            file: rel.start_with?("..") ? File.basename(index_path) : "#{rel}/INDEX.md"
+          }
+        end
+        results.concat(section_results)
+      end
+      results
+    end
+
+    # Parses INDEX.md Symbols table into array of {symbol:, type:, file:, line:, documented:} hashes.
+    def self.parse_symbols_table(docs_dir)
+      results = []
+      Dir.glob(File.join(docs_dir, "**", "INDEX.md")).each do |index_path|
+        dir = File.dirname(index_path)
+        section_results = parse_markdown_section_table(dir, "symbols",
+                                                       header_pattern: /\A\|\s*(#|Name|Symbol)\s*\|/) do |cols|
+          {
+            symbol: cols[0].to_s.strip,
+            type: cols[1].to_s.strip,
+            file: cols[2].to_s.strip,
+            line: cols.size > 3 ? cols[3].to_s.strip : "",
+            documented: cols.size > 4 ? cols[4].to_s.strip : ""
+          }
+        end
+        results.concat(section_results)
+      end
+      results
+    end
+
+    # Loads VECTORS.json (case-insensitive filename lookup).
+    def self.load_vectors_json(docs_dir)
+      vectors_path = File.join(docs_dir, "VECTORS.json")
+      unless File.exist?(vectors_path)
+        matches = Dir.glob(File.join(docs_dir, "vectors.json"))
+        return nil if matches.empty?
+
+        vectors_path = matches.first
+      end
+
+      JSON.parse(File.read(vectors_path, encoding: "UTF-8"))
+    rescue JSON::ParserError
+      nil
+    end
+
+    # Parses a pipe-delimited markdown row into column values.
+    def self.parse_pipe_row(line)
+      line.strip
+          .gsub(/\A\||\|\z/, "")
+          .split("|")
+          .map(&:strip)
+    end
+
     private_class_method :resolve_intent, :find_reverse_deps, :find_forward_deps,
-                         :find_symbols, :describe_symbol, :get_architecture,
-                         :find_diagram, :find_schema, :fallback_search, :relative_path
+                         :list_all_symbols, :describe_symbol_by_name, :read_architecture,
+                         :lookup_diagram, :lookup_schema,
+                         :parse_markdown_section_table, :parse_dependencies_table,
+                         :parse_symbols_table,
+                         :load_vectors_json, :parse_pipe_row,
+                         :fallback_search, :relative_path
   end
 end

@@ -2,6 +2,7 @@
 
 require "fileutils"
 require "pathname"
+require_relative "transformer"
 
 module AutoDoc
   # Extracted orchestration logic from CLI. Accepts explicit parameters and returns results.
@@ -287,7 +288,6 @@ module AutoDoc
 
     # Analyzes all Ruby files in the project and returns structured analysis data.
     def analyze_project(base_dir, config, file_list = nil)
-      analyses = {}
       excludes = config.exclude_patterns || []
 
       ruby_files = if file_list
@@ -302,26 +302,12 @@ module AutoDoc
                      end
                    end
 
-      ruby_files.each do |file_path|
-        definitions = AutoDoc::Analyzer::SourceParser.parse_file(file_path)
-        imports     = AutoDoc::Analyzer::ImportExtractor.extract(file_path)
-        docs        = AutoDoc::Analyzer::YardReader.extract(file_path)
+      analyses = AutoDoc::Analyzer::AnalysisPipeline.run(ruby_files)
 
-        # Build lookup index: key = :"class_Foo" / :"module_Bar" / :"method_baz"
-        doc_index = docs.each_with_object({}) do |d, h|
-          key_name = d[:target_name].to_s.gsub("::", "_")
-          h[:"#{d[:target_type]}_#{key_name}"] = d
-        end
-
-        # Merge documentation presence into each definition.
-        definitions.each do |defn|
-          def_name = defn[:name].to_s.gsub("::", "_")
-          key      = :"#{defn[:type]}_#{def_name}"
-          doc_rec  = doc_index[key]
-          defn[:has_doc?] = doc_rec && doc_rec[:has_summary?] == true
-        end
-
-        analyses[file_path] = { definitions: definitions, imports: imports, docs: docs }
+      # Add import data (orchestrator-only — DiffService does not need it)
+      analyses.each_key do |file_path|
+        imports = AutoDoc::Analyzer::ImportExtractor.extract(file_path)
+        analyses[file_path][:imports] = imports
       end
 
       analyses
@@ -329,17 +315,7 @@ module AutoDoc
 
     # Converts raw file analyses into the structure expected by AgentsMdGenerator.
     def build_files_data(analyses)
-      files = []
-      analyses.each do |file_path, analysis|
-        files << {
-          name:    File.basename(file_path),
-          path:    file_path,
-          classes: analysis[:definitions] || [],
-          imports: analysis[:imports] || []
-        }
-      end
-      files.sort_by! { |f| f[:name].downcase }
-      files
+      AutoDoc::Transformer::FilesDataBuilder.build(analyses)
     end
 
     # Helper to count classes and methods across analyses.
@@ -377,107 +353,31 @@ module AutoDoc
     end
 
     # Builds class hierarchy from analysis data for the class diagram.
-    # Extracts class names, parent classes, includes, and methods.
     # @param analyses [Hash<String, Hash>] Full analysis data
     # @return [Array<Hash>] Class hierarchy records
     def build_class_hierarchy(analyses)
-      hierarchy = []
-      analyses.each_value do |analysis|
-        defs = analysis[:definitions] || []
-        defs.each do |defn|
-          next unless defn.is_a?(Hash) && defn[:type] == :class
-
-          hierarchy << {
-            name: defn[:name],
-            parent: defn[:parent],
-            includes: defn[:includes] || [],
-            extends: defn[:extends] || [],
-            methods: defn[:methods] || []
-          }
-        end
-      end
-      hierarchy
+      AutoDoc::Transformer::ClassHierarchyBuilder.build(analyses)
     end
 
     # Builds ERD relationship records from model associations and schema tables.
-    # Derives cardinality from association types (has_many -> one-to-many).
     # @param models [Array<Hash>, nil] Model association data
     # @param _schema_tables [Array<Hash>, nil] Schema table data (unused, kept for API consistency)
     # @return [Array<Hash>] Relationship records
     def build_erd_relationships(models, _schema_tables = nil)
-      return [] unless models
-
-      models.flat_map do |m|
-        (m[:associations] || []).map do |a|
-          cardinality_from = a[:type] == "belongs_to" ? "many" : "one"
-          cardinality_to   = a[:type] == "belongs_to" ? "one" : "many"
-          {
-            from: m[:table],
-            to: a[:target_table] || a[:target].to_s.downcase,
-            cardinality_from: cardinality_from,
-            cardinality_to: cardinality_to,
-            label: a[:type]
-          }
-        end
-      end
+      AutoDoc::Transformer::ERDRelationshipBuilder.build(models, _schema_tables)
     end
 
     # Builds data flow records between module roots for the C4 container diagram.
-    # Derives flows from cross-module import/require dependencies.
     # @param analyses [Hash<String, Hash>] Full analysis data
     # @param module_roots [Array<String>] Module root directory paths
     # @return [Array<Hash>] Data flow records
     def build_container_data_flows(analyses, module_roots)
-      flows = []
-      return flows if module_roots.size < 2
-
-      # Map files to their module root
-      file_to_module = {}
-      analyses.each_key do |file_path|
-        mod = module_roots.find { |root| file_path.start_with?("#{root}/") }
-        file_to_module[file_path] = File.basename(mod) if mod
-      end
-
-      # Find cross-module imports
-      analyses.each do |file_path, analysis|
-        from_mod = file_to_module[file_path]
-        next unless from_mod
-
-        imports = analysis[:imports] || []
-        imports.each do |imp|
-          target_mod = module_roots.find { |root| imp[:path].to_s.include?(File.basename(root)) }
-          next unless target_mod
-
-          to_mod = File.basename(target_mod)
-          next if from_mod == to_mod
-
-          flow_key = [from_mod, to_mod].sort.join("->")
-          next if flows.any? { |f| [f[:from], f[:to]].sort.join("->") == flow_key }
-
-          flows << { from: from_mod, to: to_mod, label: "imports" }
-        end
-      end
-
-      flows
+      AutoDoc::Transformer::ContainerDataFlowBuilder.build(analyses, module_roots)
     end
 
     # Extracts graph nodes and edges from import analyses for diagram generation.
     def build_graph_data(analyses)
-      nodes = []
-      edges = []
-
-      analyses.each do |file_path, analysis|
-        rel_file = file_path.sub(%r{^.*/}, "")
-        defs = (analysis[:definitions] || []).select { |d| d.is_a?(Hash) && (d[:type] == :class || d[:type] == :module) }
-        defs.each { |d| nodes << d[:name] if d[:name] }
-
-        imports = analysis[:imports] || []
-        imports.each do |imp|
-          edges << { from: rel_file, to: imp[:path], type: imp[:type].to_s }
-        end
-      end
-
-      [nodes.uniq.sort, edges]
+      AutoDoc::Transformer::GraphDataBuilder.build(analyses)
     end
 
     # Walks all subdirectories under a root and generates INDEX.md, SUMMARY.md,
@@ -506,6 +406,14 @@ module AutoDoc
 
         display_name  = File.basename(dir)
         output_rel    = Pathname.new(dir).relative_path_from(Pathname.new(root)).to_s
+
+        # Fix 6: When processing root itself, output_rel is ".". Use basename for
+        # display and treat as root-level output (no subdirectory nesting).
+        if output_rel == "."
+          display_name = File.basename(root)
+          output_rel   = display_name
+        end
+
         dir_analyses  = analyses.select { |fp, _| fp.start_with?("#{dir}/") }
         next if dir_analyses.empty?
 
@@ -518,6 +426,10 @@ module AutoDoc
         summary_path = File.join(target_dir, output_dir, output_rel, "SUMMARY.md")
         AutoDoc::Generator::SummaryGenerator.generate(display_name, dir_analyses, config, output_path: summary_path)
         say.call("  Created #{summary_path}", :green)
+
+        # Fix 5: Skip vectors.json for the root directory itself — project-level
+        # VECTORS.json is already generated separately and covers all analyses.
+        next if dir == root
 
         # Generate vectors.json
         vectors_data = AutoDoc::Generator::VectorGenerator.generate_directory(display_name, dir_analyses, config)

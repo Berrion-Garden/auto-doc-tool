@@ -51,37 +51,15 @@ module AutoDoc
       end
 
       def analyze_files(file_list)
-        analyses = {}
         excludes = config.exclude_patterns || []
 
-        file_list.each do |relative_path|
+        filtered = file_list.select do |relative_path|
           file_path = File.join(@project_dir, relative_path)
-          next unless File.exist?(file_path)
-
-          # Skip excluded patterns
-          next if excludes.any? { |pat| File.fnmatch?(pat, relative_path, File::FNM_PATHNAME) }
-
-          definitions = AutoDoc::Analyzer::SourceParser.parse_file(file_path)
-          docs        = AutoDoc::Analyzer::YardReader.extract(file_path)
-
-          # Build doc lookup index
-          doc_index = docs.each_with_object({}) do |d, h|
-            key_name = d[:target_name].to_s.gsub("::", "_")
-            h[:"#{d[:target_type]}_#{key_name}"] = d
-          end
-
-          # Merge doc presence into definitions
-          definitions.each do |defn|
-            def_name = defn[:name].to_s.gsub("::", "_")
-            key      = :"#{defn[:type]}_#{def_name}"
-            doc_rec  = doc_index[key]
-            defn[:has_doc?] = doc_rec && doc_rec[:has_summary?] == true
-          end
-
-          analyses[file_path] = { definitions: definitions, docs: docs }
+          File.exist?(file_path) && !excludes.any? { |pat| File.fnmatch?(pat, relative_path, File::FNM_PATHNAME) }
         end
 
-        analyses
+        absolute_paths = filtered.map { |rel| File.join(@project_dir, rel) }
+        AutoDoc::Analyzer::AnalysisPipeline.run(absolute_paths)
       end
 
       def find_undocumented(analyses)
