@@ -231,7 +231,8 @@ module AutoDoc
 
         rel_path = file_path.sub("#{project_dir}/", "")
 
-        File.read(file_path, encoding: "UTF-8").split("\n").each_with_index do |line, idx|
+        content = File.read(file_path, encoding: "UTF-8") rescue next
+        content.split("\n").each_with_index do |line, idx|
           next if line.strip.empty?
 
           if line.downcase.include?(term_down)
