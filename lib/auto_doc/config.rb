@@ -78,12 +78,20 @@ module AutoDoc
 
     def min_doc_coverage
       audit_config = @config[:audit]
-      (audit_config && audit_config[:min_doc_coverage]) || DEFAULTS[:audit][:min_doc_coverage]
+      if audit_config && audit_config.key?(:min_doc_coverage)
+        audit_config[:min_doc_coverage]
+      else
+        DEFAULTS[:audit][:min_doc_coverage]
+      end
     end
 
     def max_module_size
       audit_config = @config[:audit]
-      (audit_config && audit_config[:max_module_size]) || DEFAULTS[:audit][:max_module_size]
+      if audit_config && audit_config.key?(:max_module_size)
+        audit_config[:max_module_size]
+      else
+        DEFAULTS[:audit][:max_module_size]
+      end
     end
 
     def generate_dag?

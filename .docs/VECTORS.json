@@ -1,0 +1,577 @@
+{
+  "symbols": [
+    {
+      "id": "module_Calculator",
+      "symbol": "Calculator",
+      "type": "module",
+      "scope": "public",
+      "file": "/home/kyle/Projects/auto-doc-tool/fixtures/partial_docs_project/lib/calculator.rb",
+      "line": 3,
+      "summary": "",
+      "signature": "Calculator",
+      "visibility": "public",
+      "keywords": [
+        "calculator"
+      ],
+      "dependencies": [],
+      "consumed_by": [],
+      "parent_module": null
+    },
+    {
+      "id": "class_Silo",
+      "symbol": "Silo",
+      "type": "class",
+      "scope": "public",
+      "file": "/home/kyle/Projects/auto-doc-tool/fixtures/partial_docs_project/lib/calculator.rb",
+      "line": 19,
+      "summary": "",
+      "signature": "Silo",
+      "visibility": "public",
+      "keywords": [
+        "silo"
+      ],
+      "dependencies": [],
+      "consumed_by": [],
+      "parent_module": null
+    },
+    {
+      "id": "class_User",
+      "symbol": "User",
+      "type": "class",
+      "scope": "public",
+      "file": "/home/kyle/Projects/auto-doc-tool/fixtures/sample_ruby_project/app/models/user.rb",
+      "line": 6,
+      "summary": "",
+      "signature": "User",
+      "visibility": "public",
+      "keywords": [
+        "user"
+      ],
+      "dependencies": [],
+      "consumed_by": [],
+      "parent_module": null
+    },
+    {
+      "id": "module_MathUtils",
+      "symbol": "MathUtils",
+      "type": "module",
+      "scope": "public",
+      "file": "/home/kyle/Projects/auto-doc-tool/fixtures/sample_ruby_project/lib/math_utils.rb",
+      "line": 6,
+      "summary": "",
+      "signature": "MathUtils",
+      "visibility": "public",
+      "keywords": [
+        "math",
+        "utils"
+      ],
+      "dependencies": [],
+      "consumed_by": [],
+      "parent_module": null
+    },
+    {
+      "id": "class_PaymentProcessor",
+      "symbol": "PaymentProcessor",
+      "type": "class",
+      "scope": "public",
+      "file": "/home/kyle/Projects/auto-doc-tool/fixtures/sample_ruby_project/lib/yard_example.rb",
+      "line": 6,
+      "summary": "",
+      "signature": "PaymentProcessor",
+      "visibility": "public",
+      "keywords": [
+        "payment",
+        "processor"
+      ],
+      "dependencies": [],
+      "consumed_by": [],
+      "parent_module": null
+    },
+    {
+      "id": "module_AutoDoc",
+      "symbol": "AutoDoc",
+      "type": "module",
+      "scope": "public",
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/analyzer/diff_service.rb",
+      "line": 3,
+      "summary": "",
+      "signature": "AutoDoc",
+      "visibility": "public",
+      "keywords": [
+        "auto",
+        "doc"
+      ],
+      "dependencies": [],
+      "consumed_by": [],
+      "parent_module": null
+    },
+    {
+      "id": "module_AutoDoc",
+      "symbol": "AutoDoc",
+      "type": "module",
+      "scope": "public",
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/analyzer/import_extractor.rb",
+      "line": 3,
+      "summary": "",
+      "signature": "AutoDoc",
+      "visibility": "public",
+      "keywords": [
+        "auto",
+        "doc"
+      ],
+      "dependencies": [],
+      "consumed_by": [],
+      "parent_module": null
+    },
+    {
+      "id": "module_AutoDoc",
+      "symbol": "AutoDoc",
+      "type": "module",
+      "scope": "public",
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/analyzer/orphans_service.rb",
+      "line": 5,
+      "summary": "",
+      "signature": "AutoDoc",
+      "visibility": "public",
+      "keywords": [
+        "auto",
+        "doc"
+      ],
+      "dependencies": [],
+      "consumed_by": [],
+      "parent_module": null
+    },
+    {
+      "id": "module_AutoDoc",
+      "symbol": "AutoDoc",
+      "type": "module",
+      "scope": "public",
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/analyzer/source_parser.rb",
+      "line": 5,
+      "summary": "",
+      "signature": "AutoDoc",
+      "visibility": "public",
+      "keywords": [
+        "auto",
+        "doc"
+      ],
+      "dependencies": [],
+      "consumed_by": [],
+      "parent_module": null
+    },
+    {
+      "id": "module_AutoDoc",
+      "symbol": "AutoDoc",
+      "type": "module",
+      "scope": "public",
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/analyzer/yard_reader.rb",
+      "line": 9,
+      "summary": "",
+      "signature": "AutoDoc",
+      "visibility": "public",
+      "keywords": [
+        "auto",
+        "doc"
+      ],
+      "dependencies": [],
+      "consumed_by": [],
+      "parent_module": null
+    },
+    {
+      "id": "module_AutoDoc",
+      "symbol": "AutoDoc",
+      "type": "module",
+      "scope": "public",
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/cli.rb",
+      "line": 8,
+      "summary": "",
+      "signature": "AutoDoc",
+      "visibility": "public",
+      "keywords": [
+        "auto",
+        "doc"
+      ],
+      "dependencies": [],
+      "consumed_by": [],
+      "parent_module": null
+    },
+    {
+      "id": "module_AutoDoc",
+      "symbol": "AutoDoc",
+      "type": "module",
+      "scope": "public",
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/config.rb",
+      "line": 10,
+      "summary": "",
+      "signature": "AutoDoc",
+      "visibility": "public",
+      "keywords": [
+        "auto",
+        "doc"
+      ],
+      "dependencies": [],
+      "consumed_by": [],
+      "parent_module": null
+    },
+    {
+      "id": "module_AutoDoc",
+      "symbol": "AutoDoc",
+      "type": "module",
+      "scope": "public",
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/generator/agents_md_generator.rb",
+      "line": 6,
+      "summary": "",
+      "signature": "AutoDoc",
+      "visibility": "public",
+      "keywords": [
+        "auto",
+        "doc"
+      ],
+      "dependencies": [],
+      "consumed_by": [],
+      "parent_module": null
+    },
+    {
+      "id": "module_AutoDoc",
+      "symbol": "AutoDoc",
+      "type": "module",
+      "scope": "public",
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/generator/diagram_generator.rb",
+      "line": 6,
+      "summary": "",
+      "signature": "AutoDoc",
+      "visibility": "public",
+      "keywords": [
+        "auto",
+        "doc"
+      ],
+      "dependencies": [],
+      "consumed_by": [],
+      "parent_module": null
+    },
+    {
+      "id": "module_AutoDoc",
+      "symbol": "AutoDoc",
+      "type": "module",
+      "scope": "public",
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/generator/index_generator.rb",
+      "line": 6,
+      "summary": "",
+      "signature": "AutoDoc",
+      "visibility": "public",
+      "keywords": [
+        "auto",
+        "doc"
+      ],
+      "dependencies": [],
+      "consumed_by": [],
+      "parent_module": null
+    },
+    {
+      "id": "module_AutoDoc",
+      "symbol": "AutoDoc",
+      "type": "module",
+      "scope": "public",
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/generator/readme_generator.rb",
+      "line": 6,
+      "summary": "",
+      "signature": "AutoDoc",
+      "visibility": "public",
+      "keywords": [
+        "auto",
+        "doc"
+      ],
+      "dependencies": [],
+      "consumed_by": [],
+      "parent_module": null
+    },
+    {
+      "id": "module_AutoDoc",
+      "symbol": "AutoDoc",
+      "type": "module",
+      "scope": "public",
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/generator/summary_generator.rb",
+      "line": 6,
+      "summary": "",
+      "signature": "AutoDoc",
+      "visibility": "public",
+      "keywords": [
+        "auto",
+        "doc"
+      ],
+      "dependencies": [],
+      "consumed_by": [],
+      "parent_module": null
+    },
+    {
+      "id": "module_AutoDoc",
+      "symbol": "AutoDoc",
+      "type": "module",
+      "scope": "public",
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/generator/vector_generator.rb",
+      "line": 6,
+      "summary": "",
+      "signature": "AutoDoc",
+      "visibility": "public",
+      "keywords": [
+        "auto",
+        "doc"
+      ],
+      "dependencies": [],
+      "consumed_by": [],
+      "parent_module": null
+    },
+    {
+      "id": "module_AutoDoc",
+      "symbol": "AutoDoc",
+      "type": "module",
+      "scope": "public",
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/orchestrator.rb",
+      "line": 6,
+      "summary": "",
+      "signature": "AutoDoc",
+      "visibility": "public",
+      "keywords": [
+        "auto",
+        "doc"
+      ],
+      "dependencies": [],
+      "consumed_by": [],
+      "parent_module": null
+    },
+    {
+      "id": "module_AutoDoc",
+      "symbol": "AutoDoc",
+      "type": "module",
+      "scope": "public",
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/reporter/audit_reporter.rb",
+      "line": 7,
+      "summary": "",
+      "signature": "AutoDoc",
+      "visibility": "public",
+      "keywords": [
+        "auto",
+        "doc"
+      ],
+      "dependencies": [],
+      "consumed_by": [],
+      "parent_module": null
+    },
+    {
+      "id": "module_AutoDoc",
+      "symbol": "AutoDoc",
+      "type": "module",
+      "scope": "public",
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/reporter/completeness_checker.rb",
+      "line": 3,
+      "summary": "",
+      "signature": "AutoDoc",
+      "visibility": "public",
+      "keywords": [
+        "auto",
+        "doc"
+      ],
+      "dependencies": [],
+      "consumed_by": [],
+      "parent_module": null
+    },
+    {
+      "id": "module_AutoDoc",
+      "symbol": "AutoDoc",
+      "type": "module",
+      "scope": "public",
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/server.rb",
+      "line": 6,
+      "summary": "",
+      "signature": "AutoDoc",
+      "visibility": "public",
+      "keywords": [
+        "auto",
+        "doc"
+      ],
+      "dependencies": [],
+      "consumed_by": [],
+      "parent_module": null
+    },
+    {
+      "id": "module_AutoDoc",
+      "symbol": "AutoDoc",
+      "type": "module",
+      "scope": "public",
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/tester/e2e_runner.rb",
+      "line": 6,
+      "summary": "",
+      "signature": "AutoDoc",
+      "visibility": "public",
+      "keywords": [
+        "auto",
+        "doc"
+      ],
+      "dependencies": [],
+      "consumed_by": [],
+      "parent_module": null
+    },
+    {
+      "id": "module_AutoDoc",
+      "symbol": "AutoDoc",
+      "type": "module",
+      "scope": "public",
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/utils/file_tree_builder.rb",
+      "line": 3,
+      "summary": "",
+      "signature": "AutoDoc",
+      "visibility": "public",
+      "keywords": [
+        "auto",
+        "doc"
+      ],
+      "dependencies": [],
+      "consumed_by": [],
+      "parent_module": null
+    },
+    {
+      "id": "module_AutoDoc",
+      "symbol": "AutoDoc",
+      "type": "module",
+      "scope": "public",
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/utils/output_formatter.rb",
+      "line": 5,
+      "summary": "",
+      "signature": "AutoDoc",
+      "visibility": "public",
+      "keywords": [
+        "auto",
+        "doc"
+      ],
+      "dependencies": [],
+      "consumed_by": [],
+      "parent_module": null
+    },
+    {
+      "id": "module_AutoDoc",
+      "symbol": "AutoDoc",
+      "type": "module",
+      "scope": "public",
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/utils/timestamp_tracker.rb",
+      "line": 6,
+      "summary": "",
+      "signature": "AutoDoc",
+      "visibility": "public",
+      "keywords": [
+        "auto",
+        "doc"
+      ],
+      "dependencies": [],
+      "consumed_by": [],
+      "parent_module": null
+    },
+    {
+      "id": "module_AutoDoc",
+      "symbol": "AutoDoc",
+      "type": "module",
+      "scope": "public",
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/utils/yaml_config_loader.rb",
+      "line": 10,
+      "summary": "",
+      "signature": "AutoDoc",
+      "visibility": "public",
+      "keywords": [
+        "auto",
+        "doc"
+      ],
+      "dependencies": [],
+      "consumed_by": [],
+      "parent_module": null
+    },
+    {
+      "id": "module_AutoDoc",
+      "symbol": "AutoDoc",
+      "type": "module",
+      "scope": "public",
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/version.rb",
+      "line": 3,
+      "summary": "",
+      "signature": "AutoDoc",
+      "visibility": "public",
+      "keywords": [
+        "auto",
+        "doc"
+      ],
+      "dependencies": [],
+      "consumed_by": [],
+      "parent_module": null
+    },
+    {
+      "id": "module_AutoDoc",
+      "symbol": "AutoDoc",
+      "type": "module",
+      "scope": "public",
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc.rb",
+      "line": 11,
+      "summary": "",
+      "signature": "AutoDoc",
+      "visibility": "public",
+      "keywords": [
+        "auto",
+        "doc"
+      ],
+      "dependencies": [],
+      "consumed_by": [],
+      "parent_module": null
+    },
+    {
+      "id": "class_User",
+      "symbol": "User",
+      "type": "class",
+      "scope": "public",
+      "file": "/home/kyle/Projects/auto-doc-tool/test_fixtures/sample_ruby_project/app/models/user.rb",
+      "line": 2,
+      "summary": "",
+      "signature": "User",
+      "visibility": "public",
+      "keywords": [
+        "user"
+      ],
+      "dependencies": [],
+      "consumed_by": [],
+      "parent_module": null
+    },
+    {
+      "id": "module_MathUtils",
+      "symbol": "MathUtils",
+      "type": "module",
+      "scope": "public",
+      "file": "/home/kyle/Projects/auto-doc-tool/test_fixtures/sample_ruby_project/lib/math_utils.rb",
+      "line": 2,
+      "summary": "",
+      "signature": "MathUtils",
+      "visibility": "public",
+      "keywords": [
+        "math",
+        "utils"
+      ],
+      "dependencies": [],
+      "consumed_by": [],
+      "parent_module": null
+    },
+    {
+      "id": "method_deep_merge",
+      "symbol": "deep_merge",
+      "type": "method",
+      "scope": "public",
+      "file": "/home/kyle/Projects/auto-doc-tool/test_fnmatch.rb",
+      "line": 0,
+      "summary": "",
+      "signature": "deep_merge",
+      "visibility": "public",
+      "keywords": [
+        "deep",
+        "merge"
+      ],
+      "dependencies": [],
+      "consumed_by": [],
+      "parent_module": null
+    }
+  ],
+  "generated_at": "2026-07-15T02:35:00Z"
+}

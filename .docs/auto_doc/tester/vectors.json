@@ -1,0 +1,23 @@
+{
+  "symbols": [
+    {
+      "id": "module_AutoDoc",
+      "symbol": "AutoDoc",
+      "type": "module",
+      "scope": "public",
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/tester/e2e_runner.rb",
+      "line": 6,
+      "summary": "",
+      "signature": "AutoDoc",
+      "visibility": "public",
+      "keywords": [
+        "auto",
+        "doc"
+      ],
+      "dependencies": [],
+      "consumed_by": [],
+      "parent_module": null
+    }
+  ],
+  "generated_at": "2026-07-15T02:35:00Z"
+}

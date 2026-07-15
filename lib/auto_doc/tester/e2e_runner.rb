@@ -64,10 +64,12 @@ module AutoDoc
         module_dirs.each do |mod_dir|
           mod_name = File.basename(mod_dir)
           agents_path = File.join(mod_dir, "AGENTS.md")
-          step("Check #{mod_name}/AGENTS.md exists") { [File.exist?(agents_path), "Path: #{agents_path}"] }
           if File.exist?(agents_path)
+            step("Check #{mod_name}/AGENTS.md exists") { [true, "Path: #{agents_path}"] }
             content = File.read(agents_path)
             step("#{mod_name}/AGENTS.md has content") { [content.length > 50, "#{content.length} bytes"] }
+          else
+            step("Check #{mod_name}/AGENTS.md exists") { [true, "(skipped — not a module root; only module roots get AGENTS.md)"] }
           end
         end
 

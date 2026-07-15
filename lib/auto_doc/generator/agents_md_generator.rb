@@ -8,6 +8,8 @@ module AutoDoc
     # Generates AGENTS.md documentation for a Ruby module directory.
     # Renders templates/agents_md_template.erb with analysis data.
     class AgentsMdGenerator
+      include TemplateHelper
+
       TEMPLATES_DIR = File.expand_path("../../../templates", __dir__).freeze
 
       DEFAULT_TEMPLATE = File.join(TEMPLATES_DIR, "agents_md_template.erb").freeze
@@ -81,13 +83,6 @@ module AutoDoc
         symbols.sort_by! { |s| s[:name].to_s.downcase }
       end
 
-      def read_template(path)
-        raise "Template not found: #{path}" unless File.exist?(path)
-        content = File.read(path)
-        content.force_encoding("UTF-8")
-      rescue Errno::ENOENT
-        raise
-      end
     end
   end
 end

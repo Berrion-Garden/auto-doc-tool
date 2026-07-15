@@ -22,12 +22,18 @@ module AutoDoc
 
         case format_sym
         when :json
-          say.call(JSON.pretty_generate(data))
+          formatted = JSON.pretty_generate(data)
+          say.call(formatted)
+          formatted
         when :agent
           compact = compact_for_agent(data)
-          say.call(JSON.generate(compact))
+          formatted = JSON.generate(compact)
+          say.call(formatted)
+          formatted
         else
-          say.call(data)
+          formatted = data.to_s
+          say.call(formatted)
+          formatted
         end
       end
 

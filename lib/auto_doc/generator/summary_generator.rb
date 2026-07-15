@@ -9,6 +9,8 @@ module AutoDoc
     # Renders templates/summary_template.erb with inferred purpose,
     # key components, architecture pattern, and dependencies overview.
     class SummaryGenerator
+      include TemplateHelper
+
       TEMPLATES_DIR = File.expand_path("../../../templates", __dir__).freeze
 
       DEFAULT_TEMPLATE = File.join(TEMPLATES_DIR, "summary_template.erb").freeze
@@ -173,13 +175,6 @@ module AutoDoc
         deps_map.values.sort_by { |d| d[:name].downcase }
       end
 
-      def read_template(path)
-        raise "Template not found: #{path}" unless File.exist?(path)
-        content = File.read(path)
-        content.force_encoding("UTF-8")
-      rescue Errno::ENOENT
-        raise
-      end
     end
   end
 end

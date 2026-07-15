@@ -224,7 +224,8 @@ RSpec.describe AutoDoc::CLI do
         File.write(File.join(tmpdir, "lib", "test.rb"), "class Test; end")
 
         Dir.chdir(tmpdir) do
-          system("git init > /dev/null 2>&1 && git config user.email test@test.com && git config user.name test && git add -A && git commit -m 'initial' > /dev/null 2>&1")
+          result = system("git init > /dev/null 2>&1 && git config user.email test@test.com && git config user.name test && git add -A && git commit -m 'initial' > /dev/null 2>&1")
+          expect(result).to be true
 
           expect {
             cli.start(["diff", "--json", "HEAD"])

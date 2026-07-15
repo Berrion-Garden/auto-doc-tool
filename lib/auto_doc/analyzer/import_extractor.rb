@@ -6,11 +6,11 @@ module AutoDoc
     # Supports require, require_relative, include, prepend, and extend keywords.
     class ImportExtractor
       IMPORT_PATTERNS = {
-        require:          /^(?:\s*)require\s+(['"])(.*?)\1/m,
-        require_relative: /^(?:\s*)require_relative\s+(['"])(.*?)\1/m,
-        include:          /^(?:\s*)include\s+(.+)$/m,
-        prepend:          /^(?:\s*)prepend\s+(.+)$/m,
-        extend:           /^(?:\s*)extend\s+(.+)$/m
+        require:          /^(?:\s*)require\s+(['"])(.*?)\1/,
+        require_relative: /^(?:\s*)require_relative\s+(['"])(.*?)\1/,
+        include:          /^(?:\s*)include\s+([^\n]+)$/,
+        prepend:          /^(?:\s*)prepend\s+([^\n]+)$/,
+        extend:           /^(?:\s*)extend\s+([^\n]+)$/
       }.freeze
 
       # Extracts import statements from a Ruby source file.
@@ -34,7 +34,7 @@ module AutoDoc
 
         IMPORT_PATTERNS.each do |type, pattern|
           @content.scan(pattern) do |matches|
-            value = matches.flatten.compact.first.to_s.strip
+            value = matches.flatten.compact.last.to_s.strip
             next if value.empty?
 
             case type

@@ -9,6 +9,8 @@ module AutoDoc
     # Renders templates/index_template.erb with analysis data including
     # files table, symbols table, dependencies, and cross-references.
     class IndexGenerator
+      include TemplateHelper
+
       TEMPLATES_DIR = File.expand_path("../../../templates", __dir__).freeze
 
       DEFAULT_TEMPLATE = File.join(TEMPLATES_DIR, "index_template.erb").freeze
@@ -186,13 +188,6 @@ module AutoDoc
         ((covered.to_f / total) * 100).round
       end
 
-      def read_template(path)
-        raise "Template not found: #{path}" unless File.exist?(path)
-        content = File.read(path)
-        content.force_encoding("UTF-8")
-      rescue Errno::ENOENT
-        raise
-      end
     end
   end
 end

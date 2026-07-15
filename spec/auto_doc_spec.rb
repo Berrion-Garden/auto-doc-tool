@@ -20,6 +20,8 @@ RSpec.describe "AutoDoc module" do
 
   it "loads all analyzer modules" do
     expect(defined?(AutoDoc::Analyzer::SourceParser)).to eq("constant")
+    expect(defined?(AutoDoc::Analyzer::SchemaParser)).to eq("constant")
+    expect(defined?(AutoDoc::Analyzer::ModelAssociationParser)).to eq("constant")
     expect(defined?(AutoDoc::Analyzer::ImportExtractor)).to eq("constant")
     expect(defined?(AutoDoc::Analyzer::YardReader)).to eq("constant")
   end
@@ -28,6 +30,10 @@ RSpec.describe "AutoDoc module" do
     expect(defined?(AutoDoc::Generator::AgentsMdGenerator)).to eq("constant")
     expect(defined?(AutoDoc::Generator::ReadmeGenerator)).to eq("constant")
     expect(defined?(AutoDoc::Generator::DiagramGenerator)).to eq("constant")
+    expect(defined?(AutoDoc::Generator::C4DiagramGenerator)).to eq("constant")
+    expect(defined?(AutoDoc::Generator::ClassDiagramGenerator)).to eq("constant")
+    expect(defined?(AutoDoc::Generator::ERDGenerator)).to eq("constant")
+    expect(defined?(AutoDoc::Generator::ArchitectureGenerator)).to eq("constant")
   end
 
   it "loads all reporter modules" do

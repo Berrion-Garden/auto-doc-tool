@@ -1,0 +1,41 @@
+{
+  "symbols": [
+    {
+      "id": "module_AutoDoc",
+      "symbol": "AutoDoc",
+      "type": "module",
+      "scope": "public",
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/reporter/audit_reporter.rb",
+      "line": 7,
+      "summary": "",
+      "signature": "AutoDoc",
+      "visibility": "public",
+      "keywords": [
+        "auto",
+        "doc"
+      ],
+      "dependencies": [],
+      "consumed_by": [],
+      "parent_module": null
+    },
+    {
+      "id": "module_AutoDoc",
+      "symbol": "AutoDoc",
+      "type": "module",
+      "scope": "public",
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/reporter/completeness_checker.rb",
+      "line": 3,
+      "summary": "",
+      "signature": "AutoDoc",
+      "visibility": "public",
+      "keywords": [
+        "auto",
+        "doc"
+      ],
+      "dependencies": [],
+      "consumed_by": [],
+      "parent_module": null
+    }
+  ],
+  "generated_at": "2026-07-15T02:35:00Z"
+}

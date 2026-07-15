@@ -8,6 +8,8 @@ module AutoDoc
     # Generates README.md documentation for a Ruby project or module root directory.
     # Renders templates/readme_template.erb with analysis and summary data.
     class ReadmeGenerator
+      include TemplateHelper
+
       TEMPLATES_DIR = File.expand_path("../../../templates", __dir__).freeze
       DEFAULT_TEMPLATE = File.join(TEMPLATES_DIR, "readme_template.erb").freeze
 
@@ -65,13 +67,6 @@ module AutoDoc
         ERB.new(template_text).result(binding)
       end
 
-      def read_template(path)
-        raise "Template not found: #{path}" unless File.exist?(path)
-        content = File.read(path)
-        content.force_encoding("UTF-8")
-      rescue Errno::ENOENT
-        raise
-      end
     end
   end
 end

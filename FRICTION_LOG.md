@@ -36,10 +36,10 @@ All three ERB templates had variable names not matching generators' `binding()` 
 New `chat` executions consistently stall at 0 outputs for 30-60+ seconds.
 **Workaround:** Wait at least 60-90 seconds before cancelling. Use `research`/`debug` as alternatives.
 
-### F7: No Staleness Detection (MEDIUM)
+### F7: No Staleness Detection (MEDIUM) — RESOLVED
 **Date:** 2026-07-13
 `generate` always regenerates all docs — no incremental/timestamp comparison.
-**Planned fix:** Phase 2.
+**Fix:** TimestampTracker + `--incremental` flag added in Milestone 1 (commit 85cbe52).
 
 ### F8: Dynamic Ruby Patterns Not Parsed (LOW)
 **Date:** 2026-07-13

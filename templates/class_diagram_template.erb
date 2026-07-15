@@ -22,6 +22,8 @@ classDiagram
 <% end %>
 <% end %>
 <% if cls[:extends] %>
-    <%= cls[:name] %> --|> <%= cls[:extends] %>
+<% cls[:extends].each do |ext| %>
+    <%= cls[:name] %> --|> <%= ext %>
+<% end %>
 <% end %>
 <% end %>

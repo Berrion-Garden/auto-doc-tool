@@ -18,22 +18,32 @@ module AutoDoc
 
   # Load analyzers
   require_relative "auto_doc/analyzer/source_parser"
+  require_relative "auto_doc/analyzer/schema_parser"
+  require_relative "auto_doc/analyzer/model_association_parser"
   require_relative "auto_doc/analyzer/import_extractor"
   require_relative "auto_doc/analyzer/yard_reader"
   require_relative "auto_doc/analyzer/diff_service"
   require_relative "auto_doc/analyzer/orphans_service"
 
   # Load generators
+  require_relative "auto_doc/generator/template_helper"
   require_relative "auto_doc/generator/agents_md_generator"
   require_relative "auto_doc/generator/readme_generator"
   require_relative "auto_doc/generator/diagram_generator"
   require_relative "auto_doc/generator/index_generator"
   require_relative "auto_doc/generator/summary_generator"
   require_relative "auto_doc/generator/vector_generator"
+  require_relative "auto_doc/generator/c4_diagram_generator"
+  require_relative "auto_doc/generator/class_diagram_generator"
+  require_relative "auto_doc/generator/erd_generator"
+  require_relative "auto_doc/generator/architecture_generator"
 
   # Load reporters
   require_relative "auto_doc/reporter/completeness_checker"
   require_relative "auto_doc/reporter/audit_reporter"
+
+  # Load search service
+  require_relative "auto_doc/search_service"
 
   # Load orchestrator
   require_relative "auto_doc/orchestrator"

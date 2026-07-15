@@ -2,6 +2,7 @@
 
 require "sinatra/base"
 require "json"
+require "erb"
 
 module AutoDoc
   class Server < Sinatra::Base
@@ -116,7 +117,7 @@ module AutoDoc
     end
 
     def escape_html(text)
-      text.gsub("&", "&amp;").gsub("<", "&lt;").gsub(">", "&gt;")
+      ERB::Util.html_escape(text)
     end
 
     run! if app_file == $0 && !defined?(Rack::Test)

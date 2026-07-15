@@ -103,18 +103,101 @@ module AutoDoc
 
       # Generate dependency DAG if enabled in config
       generate_dag = config.generate_dag?
+      project_name = File.basename(target_dir)
 
       if generate_dag && !module_roots.empty?
         nodes, edges = build_graph_data(analyses)
         dag_path     = File.join(target_dir, output_dir, "diagrams", "deps.mmd")
-        project_name = File.basename(target_dir)
 
         AutoDoc::Generator::DiagramGenerator.generate(project_name, nodes, edges, output_path: dag_path)
         wrapped_say.call("  Created #{dag_path}", :green)
       end
 
+      # --- Smart Architecture Generation (Phase 2b) ---
+
+      diagrams_dir = File.join(target_dir, output_dir, "diagrams")
+
+      # Detect Rails project
+      is_rails = File.exist?(File.join(target_dir, "db/schema.rb"))
+
+      # Parse schema and models (Rails only)
+      schema_tables = nil
+      models = nil
+      if is_rails
+        schema_tables = AutoDoc::Analyzer::SchemaParser.parse(target_dir)
+        models = AutoDoc::Analyzer::ModelAssociationParser.parse(target_dir)
+
+        # Save schema.json
+        schema_dir = File.join(target_dir, output_dir, "schema")
+        FileUtils.mkdir_p(schema_dir)
+        schema_path = File.join(schema_dir, "schema.json")
+        File.write(schema_path, JSON.pretty_generate(schema_tables))
+        wrapped_say.call("  Created #{schema_path}", :green)
+
+        # Save models.json
+        models_path = File.join(schema_dir, "models.json")
+        File.write(models_path, JSON.pretty_generate(models))
+        wrapped_say.call("  Created #{models_path}", :green)
+      end
+
+      # Build class hierarchy from source analyses (always)
+      class_hierarchy = build_class_hierarchy(analyses)
+
+      # Generate class_diagram.mmd (always)
+      class_diagram_path = File.join(diagrams_dir, "class_diagram.mmd")
+      AutoDoc::Generator::ClassDiagramGenerator.generate(project_name, class_hierarchy, output_path: class_diagram_path)
+      wrapped_say.call("  Created #{class_diagram_path}", :green)
+
+      # Generate erd.mmd (if schema tables found)
+      erd_path = File.join(diagrams_dir, "erd.mmd")
+      if schema_tables && !schema_tables.empty?
+        relationships = build_erd_relationships(models, schema_tables)
+        AutoDoc::Generator::ERDGenerator.generate(project_name, schema_tables, relationships, output_path: erd_path)
+        wrapped_say.call("  Created #{erd_path}", :green)
+      end
+
+      # Build module info for C4 container diagram
+      module_info = module_roots.map do |root|
+        { name: File.basename(root), description: "#{File.basename(root)} module" }
+      end
+
+      # Determine data flows from analyses for C4 container
+      container_data_flows = build_container_data_flows(analyses, module_roots)
+
+      # Generate c4_context.mmd (always)
+      c4_context_path = File.join(diagrams_dir, "c4_context.mmd")
+      external_systems = [
+        { name: "Developer", interaction: "Writes code and runs documentation commands" },
+        { name: "File System", interaction: "Reads/writes documentation files" },
+        { name: "Git", interaction: "Version control integration for diff and orphans" }
+      ]
+      internal_system = { name: project_name }
+      AutoDoc::Generator::C4DiagramGenerator.generate_context(project_name, external_systems, internal_system, output_path: c4_context_path)
+      wrapped_say.call("  Created #{c4_context_path}", :green)
+
+      # Generate c4_container.mmd (always)
+      c4_container_path = File.join(diagrams_dir, "c4_container.mmd")
+      AutoDoc::Generator::C4DiagramGenerator.generate_container(project_name, module_info, container_data_flows, output_path: c4_container_path)
+      wrapped_say.call("  Created #{c4_container_path}", :green)
+
+      # Generate architecture.md (always)
+      architecture_config = {
+        overview: "Auto-generated architecture documentation for #{project_name}.",
+        design_decisions: [],
+        diagram_links: [
+          { name: "C4 Context Diagram", path: "diagrams/c4_context.mmd" },
+          { name: "C4 Container Diagram", path: "diagrams/c4_container.mmd" },
+          { name: "Class Diagram", path: "diagrams/class_diagram.mmd" }
+        ]
+      }
+      if schema_tables && !schema_tables.empty?
+        architecture_config[:diagram_links] << { name: "ERD", path: "diagrams/erd.mmd" }
+      end
+      architecture_path = File.join(target_dir, output_dir, "architecture.md")
+      AutoDoc::Generator::ArchitectureGenerator.generate(project_name, schema_tables || [], models || [], class_hierarchy, architecture_config, output_path: architecture_path)
+      wrapped_say.call("  Created #{architecture_path}", :green)
+
       # Generate project-level INDEX.md, SUMMARY.md, VECTORS.json
-      project_name = File.basename(target_dir)
 
       # Project-level INDEX.md using all analyses
       project_index_path = File.join(target_dir, output_dir, "INDEX.md")
@@ -148,7 +231,9 @@ module AutoDoc
         module_roots: module_roots.map { |r| File.basename(r) },
         created_files: created_files,
         analyses_count: analyses.size,
-        generated_at: Time.now.iso8601
+        generated_at: Time.now.iso8601,
+        schema_tables: schema_tables,
+        models: models
       }
     end
 
@@ -279,6 +364,91 @@ module AutoDoc
       report[:coverage_pct].to_s
     end
 
+    # Builds class hierarchy from analysis data for the class diagram.
+    # Extracts class names, parent classes, includes, and methods.
+    # @param analyses [Hash<String, Hash>] Full analysis data
+    # @return [Array<Hash>] Class hierarchy records
+    def build_class_hierarchy(analyses)
+      hierarchy = []
+      analyses.each_value do |analysis|
+        defs = analysis[:definitions] || []
+        defs.each do |defn|
+          next unless defn.is_a?(Hash) && defn[:type] == :class
+
+          hierarchy << {
+            name: defn[:name],
+            parent: defn[:parent],
+            includes: defn[:includes] || [],
+            extends: defn[:extends] || [],
+            methods: defn[:methods] || []
+          }
+        end
+      end
+      hierarchy
+    end
+
+    # Builds ERD relationship records from model associations and schema tables.
+    # Derives cardinality from association types (has_many -> one-to-many).
+    # @param models [Array<Hash>, nil] Model association data
+    # @param _schema_tables [Array<Hash>, nil] Schema table data (unused, kept for API consistency)
+    # @return [Array<Hash>] Relationship records
+    def build_erd_relationships(models, _schema_tables = nil)
+      return [] unless models
+
+      models.flat_map do |m|
+        (m[:associations] || []).map do |a|
+          cardinality_from = a[:type] == "belongs_to" ? "many" : "one"
+          cardinality_to   = a[:type] == "belongs_to" ? "one" : "many"
+          {
+            from: m[:table],
+            to: a[:target_table] || a[:target].to_s.downcase,
+            cardinality_from: cardinality_from,
+            cardinality_to: cardinality_to,
+            label: a[:type]
+          }
+        end
+      end
+    end
+
+    # Builds data flow records between module roots for the C4 container diagram.
+    # Derives flows from cross-module import/require dependencies.
+    # @param analyses [Hash<String, Hash>] Full analysis data
+    # @param module_roots [Array<String>] Module root directory paths
+    # @return [Array<Hash>] Data flow records
+    def build_container_data_flows(analyses, module_roots)
+      flows = []
+      return flows if module_roots.size < 2
+
+      # Map files to their module root
+      file_to_module = {}
+      analyses.each_key do |file_path|
+        mod = module_roots.find { |root| file_path.start_with?("#{root}/") }
+        file_to_module[file_path] = File.basename(mod) if mod
+      end
+
+      # Find cross-module imports
+      analyses.each do |file_path, analysis|
+        from_mod = file_to_module[file_path]
+        next unless from_mod
+
+        imports = analysis[:imports] || []
+        imports.each do |imp|
+          target_mod = module_roots.find { |root| imp[:path].to_s.include?(File.basename(root)) }
+          next unless target_mod
+
+          to_mod = File.basename(target_mod)
+          next if from_mod == to_mod
+
+          flow_key = [from_mod, to_mod].sort.join("->")
+          next if flows.any? { |f| [f[:from], f[:to]].sort.join("->") == flow_key }
+
+          flows << { from: from_mod, to: to_mod, label: "imports" }
+        end
+      end
+
+      flows
+    end
+
     # Extracts graph nodes and edges from import analyses for diagram generation.
     def build_graph_data(analyses)
       nodes = []
@@ -308,8 +478,11 @@ module AutoDoc
     # @param say [Proc] Callable for output messages
     # @return [void]
     def walk_subdirectories(root, analyses, target_dir, output_dir, config, say)
-      # Collect all subdirectories including the root itself
+      # Collect all subdirectories including the root itself.
+      # Skip the root if it equals target_dir to avoid duplicate project-level files
+      # (project-level INDEX.md, SUMMARY.md, VECTORS.json are generated separately).
       dirs_to_process = [root]
+      dirs_to_process.reject! { |d| d == target_dir }
       Dir.glob(File.join(root, "**", "*")).select { |e| File.directory?(e) }.each do |subdir|
         dirs_to_process << subdir
       end
