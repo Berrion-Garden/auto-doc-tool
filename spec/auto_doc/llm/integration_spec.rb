@@ -152,7 +152,8 @@ RSpec.describe "LLM Integration: Client → Summarizer → Generator Output", :i
         "component relationships" => "- Foo (class): Main component"
       })
 
-      result = AutoDoc::Generator::SummaryGenerator.generate(dir_name, analyses, config)
+      primary_config = AutoDoc::Config.load(project_dir, { llm: { primary: true } })
+      result = AutoDoc::Generator::SummaryGenerator.generate(dir_name, analyses, primary_config)
       expect(result).to include("LLM-powered purpose for lib")
       expect(result).to include("LLM-powered architecture")
     end
@@ -203,8 +204,9 @@ RSpec.describe "LLM Integration: Client → Summarizer → Generator Output", :i
         "summary of what this module does" => "The lib module contains core classes."
       })
 
+      primary_config = AutoDoc::Config.load(project_dir, { llm: { primary: true } })
       result = AutoDoc::Generator::AgentsMdGenerator.generate(
-        module_name, tree_text, files, config: config
+        module_name, tree_text, files, config: primary_config
       )
       expect(result).to include("The lib module contains core classes.")
     end

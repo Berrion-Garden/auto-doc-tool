@@ -55,18 +55,18 @@ module AutoDoc
         purpose              = if llm_primary?
                                  llm_purpose || (warn_llm_fallback("purpose"); infer_purpose)
                                else
-                                 llm_purpose || infer_purpose
+                                 infer_purpose
                                end
         key_components       = if llm_primary?
-                                 llm_components || (warn_llm_fallback("components"); extract_key_components)
-                               else
-                                 llm_components || extract_key_components
-                               end
+                                  llm_components || (warn_llm_fallback("components"); extract_key_components)
+                                else
+                                  extract_key_components
+                                end
         architecture_pattern = if llm_primary?
-                                 llm_architecture || (warn_llm_fallback("architecture pattern"); infer_architecture_pattern)
-                               else
-                                 llm_architecture || infer_architecture_pattern
-                               end
+                                  llm_architecture || (warn_llm_fallback("architecture pattern"); infer_architecture_pattern)
+                                else
+                                  infer_architecture_pattern
+                                end
         dependencies_overview = build_dependencies_overview
         generated_at         = Time.now.strftime("%Y-%m-%d %H:%M:%S %Z")
 

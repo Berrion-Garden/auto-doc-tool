@@ -70,10 +70,10 @@ module AutoDoc
 
         # LLM-generated overview text (only used in LLM primary mode)
         overview_text = if llm_primary?
-                          llm_module_overview || (warn_llm_fallback("overview"); "Developer to fill in")
-                        else
-                          llm_module_overview || "Developer to fill in"
-                        end
+                           llm_module_overview || (warn_llm_fallback("overview"); "Developer to fill in")
+                         else
+                           "Developer to fill in"
+                         end
 
         ERB.new(template_text).result(binding)
       end

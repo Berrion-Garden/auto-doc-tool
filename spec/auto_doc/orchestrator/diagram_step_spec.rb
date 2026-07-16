@@ -146,6 +146,10 @@ RSpec.describe AutoDoc::Orchestrator::DiagramStep do
     end
 
     context "when LLM is configured and returns valid data" do
+      before do
+        allow(config).to receive(:llm_primary?).and_return(true)
+      end
+
       it "uses LLM-generated external systems for context diagram" do
         mock_llm_client({
           "List the external systems, services, or libraries" => '[{"name": "Database", "interaction": "Stores documentation data"}, {"name": "CI Pipeline", "interaction": "Triggers doc generation on push"}]',

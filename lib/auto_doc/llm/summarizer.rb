@@ -71,6 +71,24 @@ module AutoDoc
           ResponseParser.parse_system_context(response)
         end
 
+        # Delegates to ResponseParser.parse_llm_modules, passing summary[:modules].
+        # Extracted from ArchitectureGenerator to centralize key-coupling in Summarizer.
+        #
+        # @param summary [Hash] Hash with :modules key (raw module text from LLM)
+        # @return [Array<Hash>] Parsed module entries
+        def parse_architecture_modules(summary)
+          ResponseParser.parse_llm_modules(summary[:modules])
+        end
+
+        # Delegates to ResponseParser.parse_llm_data_flows, passing summary[:data_flow].
+        # Extracted from ArchitectureGenerator to centralize key-coupling in Summarizer.
+        #
+        # @param summary [Hash] Hash with :data_flow key (raw data flow text from LLM)
+        # @return [Array<Hash>] Parsed data flow entries
+        def parse_architecture_data_flows(summary)
+          ResponseParser.parse_llm_data_flows(summary[:data_flow])
+        end
+
         # Returns container/module descriptions keyed by module root name.
         # Filters analyses to only include files within the given module roots,
         # then includes metadata grouped by root.

@@ -64,10 +64,10 @@ module AutoDoc
         dependencies      = []
 
         purpose_summary = if llm_primary?
-                            llm_purpose_summary || (warn_llm_fallback("purpose summary"); "⚠ LLM unavailable — static summary")
-                          else
-                            llm_purpose_summary
-                          end
+                             llm_purpose_summary || (warn_llm_fallback("purpose summary"); "⚠ LLM unavailable — static summary")
+                           else
+                             "developer to fill in"
+                           end
 
         ERB.new(template_text).result(binding)
       end

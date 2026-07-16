@@ -70,12 +70,15 @@ RSpec.describe AutoDoc::Generator::AgentsMdGenerator do
     end
     let(:no_llm_config) { AutoDoc::Config.load(tmpdir) }
 
-    it "uses LLM for purpose_summary when configured" do
+    it "uses LLM for purpose_summary when configured with primary mode" do
       mock_llm_client({
         "summary of what this module does" => "The lib module contains core application classes."
       })
 
-      result = generator.generate(module_name, tree_text, files, config: llm_config)
+      primary_cfg = AutoDoc::Config.load(tmpdir, llm: {
+        endpoint: "https://test", api_key: "test", model: "gpt-4o", primary: true
+      })
+      result = generator.generate(module_name, tree_text, files, config: primary_cfg)
       expect(result).to include("The lib module contains core application classes.")
       expect(result).not_to include("developer to fill in")
     end

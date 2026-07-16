@@ -124,14 +124,17 @@ RSpec.describe AutoDoc::Generator::SummaryGenerator do
     end
     let(:no_llm_config) { AutoDoc::Config.load(tmpdir) }
 
-    it "uses LLM when client is configured" do
+    it "uses LLM when client is configured with primary mode" do
       mock_llm_client({
         "what this module does" => "LLM-powered purpose: core library",
         "overall architecture" => "LLM-powered architecture: modular composition",
         "component relationships" => "- Foo (class): Main application class\n- Utils (module): Utility functions"
       })
 
-      result = described_class.generate(dir_name, analyses, llm_config)
+      primary_cfg = AutoDoc::Config.load(tmpdir, llm: {
+        endpoint: "https://test", api_key: "test", model: "gpt-4o", primary: true
+      })
+      result = described_class.generate(dir_name, analyses, primary_cfg)
       expect(result).to include("LLM-powered purpose: core library")
       expect(result).to include("LLM-powered architecture: modular composition")
     end

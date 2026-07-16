@@ -174,7 +174,12 @@ RSpec.describe AutoDoc::Generator::ArchitectureGenerator do
         AutoDoc::Config.load(tmpdir, llm: { endpoint: "https://test", api_key: "test", model: "test-model" })
       end
 
-      context "when LLM returns structured data" do
+      context "when LLM returns structured data with primary mode" do
+        let(:auto_doc_config_obj) do
+          AutoDoc::Config.load(tmpdir, llm: {
+            endpoint: "https://test", api_key: "test", model: "test-model", primary: true
+          })
+        end
         let(:mock_client) { instance_double(AutoDoc::LLM::Client) }
         let(:llm_summary) do
           {

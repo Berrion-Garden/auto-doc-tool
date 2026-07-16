@@ -70,16 +70,20 @@ module AutoDoc
         llm_modules = nil
         llm_data_flows = nil
 
-        if @auto_doc_config && @analyses && !@analyses.empty?
-          client = AutoDoc::LLM::Client.build_if_configured(@auto_doc_config)
-          if client
-            summary = AutoDoc::LLM::Summarizer.summarize_architecture_full(@project_name, @analyses, client)
-            if summary.is_a?(Hash)
-              llm_overview = summary[:purpose] if summary[:purpose] && !summary[:purpose].empty?
-              llm_style    = summary[:style] if summary[:style] && !summary[:style].empty?
-              llm_modules  = AutoDoc::LLM::ResponseParser.parse_llm_modules(summary[:modules])
-              llm_data_flows = AutoDoc::LLM::ResponseParser.parse_llm_data_flows(summary[:data_flow])
+        if llm_primary? && @auto_doc_config && @analyses && !@analyses.empty?
+          begin
+            client = AutoDoc::LLM::Client.build_if_configured(@auto_doc_config)
+            if client
+              summary = AutoDoc::LLM::Summarizer.summarize_architecture_full(@project_name, @analyses, client)
+              if summary.is_a?(Hash)
+                llm_overview = summary[:purpose] if summary[:purpose] && !summary[:purpose].empty?
+                llm_style    = summary[:style] if summary[:style] && !summary[:style].empty?
+                llm_modules  = AutoDoc::LLM::Summarizer.parse_architecture_modules(summary)
+                llm_data_flows = AutoDoc::LLM::Summarizer.parse_architecture_data_flows(summary)
+              end
             end
+          rescue StandardError => e
+            warn "LLM unavailable for #{@project_name}: #{e.message}"
           end
         end
 

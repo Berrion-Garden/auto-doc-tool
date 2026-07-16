@@ -66,7 +66,11 @@ module AutoDoc
 
         # C4 context diagram (always)
         c4_context_path = File.join(diagrams_dir, "c4_context.mmd")
-        client = AutoDoc::LLM::Client.build_if_configured(config)
+        client = if config.respond_to?(:llm_primary?) && config.llm_primary?
+                    AutoDoc::LLM::Client.build_if_configured(config)
+                  else
+                    nil
+                  end
         external_systems = nil
         if client
           llm_systems = AutoDoc::LLM::Summarizer.summarize_system_context(project_name, analyses, client)
