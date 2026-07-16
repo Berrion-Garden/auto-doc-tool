@@ -121,6 +121,23 @@ module AutoDoc
         }
       end
 
+      # Second pass: summary full-text match (independent of keyword overlap)
+      symbols.each do |entry|
+        summary = entry["summary"]
+        if summary.is_a?(String) && !summary.empty?
+          summary_down = summary.downcase
+          if search_words.any? { |w| summary_down.include?(w) }
+            results << {
+              file: ".docs/vectors.json",
+              score: 15,
+              match_type: "vector_summary_match",
+              line: 0,
+              context: entry["symbol"].to_s
+            }
+          end
+        end
+      end
+
       results
     end
 

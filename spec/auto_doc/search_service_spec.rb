@@ -571,4 +571,93 @@ RSpec.describe AutoDoc::SearchService do
       end
     end
   end
+
+  describe "vector summary match" do
+    it "returns score 15 and match_type 'vector_summary_match' when search term appears in entry summary" do
+      with_project_dir do |dir|
+        vectors = {
+          "symbols" => [
+            { "symbol" => "DataTransformer", "keywords" => %w[data transformer], "summary" => "Transforms raw data into structured objects" }
+          ]
+        }
+        File.write(File.join(dir, ".docs", "vectors.json"), JSON.pretty_generate(vectors))
+
+        result = service.search(dir, "transforms data")
+
+        summary_match = result[:results].find { |r| r[:match_type] == "vector_summary_match" }
+        expect(summary_match).not_to be_nil
+        expect(summary_match[:score]).to eq(15)
+      end
+    end
+
+    it "returns both keyword and summary matches when both apply; keyword has higher score" do
+      with_project_dir do |dir|
+        vectors = {
+          "symbols" => [
+            { "symbol" => "DataTransformer", "keywords" => %w[data transformer], "summary" => "Transforms raw data into structured objects" }
+          ]
+        }
+        File.write(File.join(dir, ".docs", "vectors.json"), JSON.pretty_generate(vectors))
+
+        # "data transformer" overlaps 2 keywords → keyword_low (score 40)
+        # "transforms raw" appears in summary → summary_match (score 15)
+        result = service.search(dir, "data transformer transforms raw")
+
+        keyword_match = result[:results].find { |r| r[:match_type] == "vector_keyword_low" }
+        summary_match = result[:results].find { |r| r[:match_type] == "vector_summary_match" }
+        expect(keyword_match).not_to be_nil
+        expect(summary_match).not_to be_nil
+        expect(keyword_match[:score]).to be > summary_match[:score]
+      end
+    end
+
+    it "does NOT produce a summary match when entry summary is empty string" do
+      with_project_dir do |dir|
+        vectors = {
+          "symbols" => [
+            { "symbol" => "EmptySummary", "keywords" => %w[empty], "summary" => "" }
+          ]
+        }
+        File.write(File.join(dir, ".docs", "vectors.json"), JSON.pretty_generate(vectors))
+
+        result = service.search(dir, "empty")
+
+        summary_matches = result[:results].select { |r| r[:match_type] == "vector_summary_match" }
+        expect(summary_matches).to be_empty
+      end
+    end
+
+    it "does NOT crash when entry lacks a summary field" do
+      with_project_dir do |dir|
+        vectors = {
+          "symbols" => [
+            { "symbol" => "NoSummary", "keywords" => %w[no summary] }
+          ]
+        }
+        File.write(File.join(dir, ".docs", "vectors.json"), JSON.pretty_generate(vectors))
+
+        result = service.search(dir, "summary")
+
+        summary_matches = result[:results].select { |r| r[:match_type] == "vector_summary_match" }
+        expect(summary_matches).to be_empty
+      end
+    end
+
+    it "matches case-insensitively in summary" do
+      with_project_dir do |dir|
+        vectors = {
+          "symbols" => [
+            { "symbol" => "Processor", "keywords" => %w[process], "summary" => "Handles HTTP Request Routing" }
+          ]
+        }
+        File.write(File.join(dir, ".docs", "vectors.json"), JSON.pretty_generate(vectors))
+
+        result = service.search(dir, "http request")
+
+        summary_match = result[:results].find { |r| r[:match_type] == "vector_summary_match" }
+        expect(summary_match).not_to be_nil
+        expect(summary_match[:score]).to eq(15)
+      end
+    end
+  end
 end
