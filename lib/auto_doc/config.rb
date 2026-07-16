@@ -29,7 +29,7 @@ module AutoDoc
       llm: {
         provider: "openai",
         endpoint: "https://llms.berrion.garden/v1",
-        api_key: "__PLACEHOLDER__",
+        api_key: "autodoc",
         model: "summarizer",
         timeout: 120
       }

@@ -1,7 +1,7 @@
 {
   "project": "/home/kyle/Projects/auto-doc-tool",
   "project_path": "/home/kyle/Projects/auto-doc-tool",
-  "generated_at": "2026-07-16T04:37:36+00:00",
+  "generated_at": "2026-07-16T05:13:37+00:00",
   "overall_coverage": 18.8,
   "total_symbols": 80,
   "documented_symbols": 13,
@@ -18,7 +18,392 @@
     "module_UndocumentedHelper",
     "method_deep_merge"
   ],
-  "low_coverage": [],
+  "low_coverage": [
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/fixtures/partial_docs_project/lib/calculator.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/fixtures/rails_project/app/models/comment.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/fixtures/rails_project/app/models/post.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/fixtures/rails_project/app/models/user.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/fixtures/rails_project/config/application.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/fixtures/rails_project/db/migrate/20240101000000_create_users.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/fixtures/rails_project/lib/some_helper.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/fixtures/sample_ruby_project/lib/undocumented_helper.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/agent_query_service.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/analyzer/analysis_cache.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/analyzer/analysis_pipeline.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/analyzer/diff_service.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/analyzer/import_extractor.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/analyzer/model_association_parser.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/analyzer/orphans_service.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/analyzer/schema_parser.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/analyzer/source_parser.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/analyzer/yard_reader.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/cli.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/config.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/documentation_index.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/generator/agents_md_generator.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/generator/architecture_generator.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/generator/c4_diagram_generator.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/generator/class_diagram_generator.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/generator/diagram_generator.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/generator/erd_generator.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/generator/index_generator.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/generator/map_generator.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/generator/readme_generator.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/generator/summary_generator.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/generator/template_helper.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/generator/vector_generator.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/llm/client.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/llm/summarizer.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/llm.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/orchestrator/agents_md_step.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/orchestrator/architecture_step.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/orchestrator/base_step.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/orchestrator/diagram_step.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/orchestrator/index_summary_vectors_step.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/orchestrator/manifest_step.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/orchestrator/metrics_helper.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/orchestrator/pipeline.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/orchestrator/readme_step.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/orchestrator.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/reporter/audit_reporter.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/reporter/completeness_checker.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/search_service.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/server.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/tester/e2e_runner.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/transformer/class_hierarchy_builder.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/transformer/container_data_flow_builder.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/transformer/erd_relationship_builder.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/transformer/files_data_builder.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/transformer/graph_data_builder.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/transformer.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/utils/file_tree_builder.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/utils/markdown_helper.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/utils/output_formatter.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/utils/timestamp_tracker.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/utils/yaml_config_loader.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/version.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/test_fnmatch.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    }
+  ],
   "modules": {
     "calculator": {
       "file": "/home/kyle/Projects/auto-doc-tool/fixtures/partial_docs_project/lib/calculator.rb",
@@ -489,7 +874,392 @@
       "coverage_pct": 0.0
     }
   },
-  "failures": [],
-  "passed": true,
-  "min_coverage": 0
+  "failures": [
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/fixtures/partial_docs_project/lib/calculator.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/fixtures/rails_project/app/models/comment.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/fixtures/rails_project/app/models/post.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/fixtures/rails_project/app/models/user.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/fixtures/rails_project/config/application.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/fixtures/rails_project/db/migrate/20240101000000_create_users.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/fixtures/rails_project/lib/some_helper.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/fixtures/sample_ruby_project/lib/undocumented_helper.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/agent_query_service.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/analyzer/analysis_cache.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/analyzer/analysis_pipeline.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/analyzer/diff_service.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/analyzer/import_extractor.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/analyzer/model_association_parser.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/analyzer/orphans_service.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/analyzer/schema_parser.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/analyzer/source_parser.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/analyzer/yard_reader.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/cli.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/config.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/documentation_index.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/generator/agents_md_generator.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/generator/architecture_generator.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/generator/c4_diagram_generator.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/generator/class_diagram_generator.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/generator/diagram_generator.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/generator/erd_generator.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/generator/index_generator.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/generator/map_generator.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/generator/readme_generator.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/generator/summary_generator.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/generator/template_helper.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/generator/vector_generator.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/llm/client.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/llm/summarizer.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/llm.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/orchestrator/agents_md_step.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/orchestrator/architecture_step.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/orchestrator/base_step.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/orchestrator/diagram_step.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/orchestrator/index_summary_vectors_step.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/orchestrator/manifest_step.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/orchestrator/metrics_helper.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/orchestrator/pipeline.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/orchestrator/readme_step.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/orchestrator.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/reporter/audit_reporter.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/reporter/completeness_checker.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/search_service.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/server.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/tester/e2e_runner.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/transformer/class_hierarchy_builder.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/transformer/container_data_flow_builder.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/transformer/erd_relationship_builder.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/transformer/files_data_builder.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/transformer/graph_data_builder.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/transformer.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/utils/file_tree_builder.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/utils/markdown_helper.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/utils/output_formatter.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/utils/timestamp_tracker.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/utils/yaml_config_loader.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/version.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    },
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/test_fnmatch.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    }
+  ],
+  "passed": false,
+  "min_coverage": 80
 }
