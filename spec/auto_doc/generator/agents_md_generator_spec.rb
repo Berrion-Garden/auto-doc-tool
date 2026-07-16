@@ -123,6 +123,28 @@ RSpec.describe AutoDoc::Generator::AgentsMdGenerator do
       result = generator.generate(module_name, tree_text, files, config: llm_config)
       expect(result).to include("developer to fill in")
     end
+
+    it "skips LLM entirely when AUTO_DOC_DISABLE_LLM is set" do
+      original_enabled = ENV.delete("AUTO_DOC_DISABLE_LLM")
+      ENV["AUTO_DOC_DISABLE_LLM"] = "true"
+
+      allow(http).to receive(:request).and_return(response)
+      allow(response).to receive(:value).and_return(nil)
+      allow(response).to receive(:body).and_return(
+        '{"choices":[{"message":{"content":"Should never be called."}}]}'
+      )
+
+      result = generator.generate(module_name, tree_text, files, config: llm_config)
+      expect(result).to include("developer to fill in")
+      expect(result).not_to include("Should never be called.")
+
+    ensure
+      if original_enabled
+        ENV["AUTO_DOC_DISABLE_LLM"] = original_enabled
+      else
+        ENV.delete("AUTO_DOC_DISABLE_LLM")
+      end
+    end
   end
 
   describe "#generate" do
