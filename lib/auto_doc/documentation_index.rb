@@ -118,7 +118,7 @@ module AutoDoc
         when "dependencies"
           from_val = cols[0].to_s.strip
           # Skip "No dependencies detected" rows
-          next if from_val.empty? || from_val == "\u2014" || from_val.match?(/\A_?No\b/i)
+          next if from_val.empty? || from_val == "\u2014" || from_val.match?(/\A_?(?:No\b|None)/i)
 
           @_dependencies << {
             from: from_val,

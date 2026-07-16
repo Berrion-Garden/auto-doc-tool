@@ -1436,6 +1436,24 @@
       "parent_module": null
     },
     {
+      "id": "method_write_doc",
+      "symbol": "write_doc",
+      "type": "method",
+      "scope": "public",
+      "file": "/home/kyle/Projects/auto-doc-tool/spec/auto_doc/documentation_index_spec.rb",
+      "line": 0,
+      "summary": "",
+      "signature": "write_doc",
+      "visibility": "public",
+      "keywords": [
+        "write",
+        "doc"
+      ],
+      "dependencies": [],
+      "consumed_by": [],
+      "parent_module": null
+    },
+    {
       "id": "method_create_doc_file",
       "symbol": "create_doc_file",
       "type": "method",
@@ -1449,6 +1467,46 @@
         "create",
         "doc",
         "file"
+      ],
+      "dependencies": [],
+      "consumed_by": [],
+      "parent_module": null
+    },
+    {
+      "id": "class_TemplateHelperTestClass",
+      "symbol": "TemplateHelperTestClass",
+      "type": "class",
+      "scope": "public",
+      "file": "/home/kyle/Projects/auto-doc-tool/spec/auto_doc/generator/template_helper_spec.rb",
+      "line": 8,
+      "summary": "",
+      "signature": "TemplateHelperTestClass",
+      "visibility": "public",
+      "keywords": [
+        "template",
+        "helper",
+        "test",
+        "class"
+      ],
+      "dependencies": [],
+      "consumed_by": [],
+      "parent_module": null
+    },
+    {
+      "id": "class_MetricsHelperTestClass",
+      "symbol": "MetricsHelperTestClass",
+      "type": "class",
+      "scope": "public",
+      "file": "/home/kyle/Projects/auto-doc-tool/spec/auto_doc/orchestrator/metrics_helper_spec.rb",
+      "line": 6,
+      "summary": "",
+      "signature": "MetricsHelperTestClass",
+      "visibility": "public",
+      "keywords": [
+        "metrics",
+        "helper",
+        "test",
+        "class"
       ],
       "dependencies": [],
       "consumed_by": [],
@@ -1580,5 +1638,5 @@
       "parent_module": null
     }
   ],
-  "generated_at": "2026-07-16T01:28:04Z"
+  "generated_at": "2026-07-16T02:20:59Z"
 }
