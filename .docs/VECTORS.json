@@ -1567,6 +1567,40 @@
       "parent_module": null
     },
     {
+      "id": "method_assert",
+      "symbol": "assert",
+      "type": "method",
+      "scope": "public",
+      "file": "/home/kyle/Projects/auto-doc-tool/spec/scripts/real_integration_check.rb",
+      "line": 0,
+      "summary": "",
+      "signature": "assert",
+      "visibility": "public",
+      "keywords": [
+        "assert"
+      ],
+      "dependencies": [],
+      "consumed_by": [],
+      "parent_module": null
+    },
+    {
+      "id": "method_section",
+      "symbol": "section",
+      "type": "method",
+      "scope": "public",
+      "file": "/home/kyle/Projects/auto-doc-tool/spec/scripts/real_integration_check.rb",
+      "line": 0,
+      "summary": "",
+      "signature": "section",
+      "visibility": "public",
+      "keywords": [
+        "section"
+      ],
+      "dependencies": [],
+      "consumed_by": [],
+      "parent_module": null
+    },
+    {
       "id": "method_fixture_path",
       "symbol": "fixture_path",
       "type": "method",
@@ -1638,5 +1672,5 @@
       "parent_module": null
     }
   ],
-  "generated_at": "2026-07-16T02:47:07Z"
+  "generated_at": "2026-07-16T04:37:35Z"
 }
