@@ -3,6 +3,8 @@
 module AutoDoc
   class Orchestrator
     class Pipeline
+      include MetricsHelper
+
       STEPS = [
         AgentsMdStep.new,
         ReadmeStep.new,
@@ -66,23 +68,6 @@ module AutoDoc
         }
       end
 
-      private
-
-      def count_classes_and_methods(analyses)
-        cls_count    = 0
-        method_count = 0
-
-        analyses.each_value do |analysis|
-          defs = analysis[:definitions] || []
-          cls_count += defs.count { |d| d.is_a?(Hash) && (d[:type] == :class || d[:type] == :module) }
-          defs.each do |defn|
-            methods_list = defn.is_a?(Hash) ? (defn[:methods] || []) : []
-            method_count += methods_list.size
-          end
-        end
-
-        [cls_count, method_count]
-      end
     end
   end
 end

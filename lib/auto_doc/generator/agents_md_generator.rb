@@ -18,16 +18,18 @@ module AutoDoc
       # @param module_name [String] Name of the module
       # @param tree_text [String] Directory tree output string
       # @param files [Array<Hash>] Array of file analysis records: {name:, path:, classes:[], imports:[]}
+      # @param config [AutoDoc::Config, nil] Configuration object (optional; enables LLM summaries)
       # @param output_path [String] Where to write AGENTS.md (default: ".autodoc/AGENTS.md")
       # @return [String] Generated markdown content
-      def self.generate(module_name, tree_text, files, output_path: nil)
-        new(module_name, tree_text, files).generate(output_path)
+      def self.generate(module_name, tree_text, files, config: nil, output_path: nil)
+        new(module_name, tree_text, files, config).generate(output_path)
       end
 
-      def initialize(module_name, tree_text, files)
+      def initialize(module_name, tree_text, files, config = nil)
         @module_name = module_name
         @tree_text   = tree_text
         @files       = files
+        @config      = config
       end
 
       # Generates markdown and optionally writes to disk.
@@ -59,10 +61,36 @@ module AutoDoc
         source_file_count = files.size
         public_symbols    = build_public_symbols(files)
         public_symbol_count = public_symbols.size
-        purpose_summary   = nil
+        purpose_summary   = llm_purpose_summary
         dependencies      = []
 
         ERB.new(template_text).result(binding)
+      end
+
+      # Attempts LLM-generated module purpose summary. Falls back to nil on any failure.
+      def llm_purpose_summary
+        return nil if @config.nil?
+        return nil unless @config.respond_to?(:llm_config)
+        cfg = @config.llm_config
+        return nil unless cfg
+        client = AutoDoc::LLM::Client.new(cfg)
+        return nil unless client.configured?
+        AutoDoc::LLM::Summarizer.summarize_module(@module_name, build_analyses, client)
+      rescue => e
+        nil
+      end
+
+      # Builds a simplified analyses hash from files data for the LLM summarizer.
+      def build_analyses
+        analyses = {}
+        @files.each do |file_info|
+          path = file_info[:path] || "#{@module_name}/#{file_info[:name]}"
+          defs = (file_info[:classes] || []).map do |c|
+            { name: c[:name], type: c[:type], has_doc?: c[:has_doc?] }
+          end
+          analyses[path] = { definitions: defs, docs: [], imports: file_info[:imports] || [] }
+        end
+        analyses
       end
 
       def build_public_symbols(files)

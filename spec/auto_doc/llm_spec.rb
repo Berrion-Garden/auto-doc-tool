@@ -3,18 +3,12 @@
 require "spec_helper"
 
 RSpec.describe "AutoDoc::LLM module" do
-  it "defines AutoDoc::LLM" do
-    expect(defined?(AutoDoc::LLM)).to eq("constant")
-    expect(AutoDoc::LLM).to be_a(Module)
-  end
-
-  it "defines AutoDoc::LLM::Client" do
-    expect(defined?(AutoDoc::LLM::Client)).to eq("constant")
+  it "loads the Client class" do
     expect(AutoDoc::LLM::Client).to be_a(Class)
+    expect(AutoDoc::LLM::Client.instance_methods).to include(:chat, :configured?)
   end
 
-  it "defines AutoDoc::LLM::Summarizer" do
-    expect(defined?(AutoDoc::LLM::Summarizer)).to eq("constant")
+  it "loads the Summarizer class" do
     expect(AutoDoc::LLM::Summarizer).to be_a(Class)
   end
 end

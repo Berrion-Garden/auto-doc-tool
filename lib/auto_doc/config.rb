@@ -25,6 +25,12 @@ module AutoDoc
       diagrams: {
         generate_dag: true,
         diagram_directory: "diagrams"
+      },
+      llm: {
+        provider: "openai",
+        endpoint: "https://llms.berrion.garden/v1",
+        api_key: "autodoc",
+        model: "summarizer"
       }
     }.freeze
 
@@ -103,6 +109,10 @@ module AutoDoc
     def diagram_directory
       diagrams = @config[:diagrams]
       (diagrams && diagrams[:diagram_directory]) || DEFAULTS[:diagrams][:diagram_directory]
+    end
+
+    def llm_config
+      @config[:llm] || DEFAULTS[:llm]
     end
 
     private
