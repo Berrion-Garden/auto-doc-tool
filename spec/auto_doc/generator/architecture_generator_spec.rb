@@ -282,6 +282,48 @@ RSpec.describe AutoDoc::Generator::ArchitectureGenerator do
           expect(result).to include("Monolithic")
         end
       end
+
+      context "when fail_fast is enabled" do
+        let(:fail_fast_config) do
+          AutoDoc::Config.load(tmpdir, llm: {
+            endpoint: "https://test", api_key: "test", model: "test-model", primary: true, fail_fast: true
+          })
+        end
+
+        context "when auto_doc_config is nil" do
+          it "does not raise LLMError" do
+            expect {
+              described_class.generate(project_name, schema_tables, models, class_hierarchy, config,
+                analyses: analyses_hash, auto_doc_config: nil)
+            }.not_to raise_error
+          end
+        end
+
+        context "when analyses is empty" do
+          it "does not raise LLMError" do
+            expect {
+              described_class.generate(project_name, schema_tables, models, class_hierarchy, config,
+                analyses: {}, auto_doc_config: fail_fast_config)
+            }.not_to raise_error
+          end
+        end
+
+        context "when LLM call raises" do
+          let(:mock_client) { instance_double(AutoDoc::LLM::Client) }
+
+          before do
+            allow(AutoDoc::LLM::Client).to receive(:build_if_configured).and_return(mock_client)
+            allow(AutoDoc::LLM::Summarizer).to receive(:summarize_architecture_full).and_raise(StandardError, "API timeout")
+          end
+
+          it "raises LLMError" do
+            expect {
+              described_class.generate(project_name, schema_tables, models, class_hierarchy, config,
+                analyses: analyses_hash, auto_doc_config: fail_fast_config)
+            }.to raise_error(AutoDoc::LLMError, /LLM unavailable/)
+          end
+        end
+      end
     end
   end
 

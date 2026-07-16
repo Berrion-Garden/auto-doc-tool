@@ -10,7 +10,9 @@ module AutoDoc
         # Builds prompt messages for a given generator type.
         #
         # @param generator_type [Symbol] One of :agents_md, :summary, :architecture,
-        #   :components, :architecture_full, :system_context, :containers, :readme
+        #   :components, :architecture_full, :system_context, :containers, :readme,
+        #   :agents_overview_overview, :agents_overview_tech_stack,
+        #   :agents_overview_architecture, :agents_overview_conventions
         # @param name [String, nil] The name to use (dir name, project name, etc.)
         # @param analyses [Hash] Analysis data: { file_path => { definitions:, docs: } }
         # @param module_roots [Array<String>, nil] Module root dirs (for containers)
@@ -31,8 +33,18 @@ module AutoDoc
             build_system_context_messages(name, analyses)
           when :containers
             build_containers_messages(analyses, module_roots)
+          when :agents_overview_overview
+            build_agents_overview_overview_messages(name, analyses)
+          when :agents_overview_tech_stack
+            build_agents_overview_tech_stack_messages(name, analyses)
+          when :agents_overview_architecture
+            build_agents_overview_architecture_messages(name, analyses)
+          when :agents_overview_conventions
+            build_agents_overview_conventions_messages(name, analyses)
           when :readme
             build_readme_messages(name, analyses)
+          when :symbol_summaries
+            build_symbol_summaries_messages(name, analyses)
           else
             raise ArgumentError, "Unknown generator type: #{generator_type}"
           end
@@ -199,6 +211,97 @@ module AutoDoc
 
           [{ role: "user", content: lines.join("\n") }]
         end
+
+        # rubocop:disable Metrics/MethodLength
+        def build_agents_overview_overview_messages(project_name, analyses)
+          lines = []
+          lines << <<~PROMPT.strip
+            You are generating a project overview for the "#{project_name}" codebase.
+            Below is the metadata for the entire project.
+            Provide a concise, 2-3 paragraph overview describing what the project does, its main purpose, and its key modules.
+            Do NOT include any source code in your response.
+          PROMPT
+          lines << ""
+          lines << "## Project: #{project_name}"
+          lines << ""
+          extract_metadata_lines(analyses, lines)
+          [{ role: "user", content: lines.join("\n") }]
+        end
+        # rubocop:enable Metrics/MethodLength
+
+        # rubocop:disable Metrics/MethodLength
+        def build_agents_overview_tech_stack_messages(project_name, analyses)
+          lines = []
+          lines << <<~PROMPT.strip
+            You are analyzing the technology stack of the "#{project_name}" codebase.
+            Below is the metadata for the project.
+            List the programming languages, frameworks, libraries, and tools used by this project.
+            Format your response as a markdown bullet list.
+            Do NOT include any source code in your response.
+          PROMPT
+          lines << ""
+          lines << "## Project: #{project_name}"
+          lines << ""
+          extract_metadata_lines(analyses, lines)
+          [{ role: "user", content: lines.join("\n") }]
+        end
+        # rubocop:enable Metrics/MethodLength
+
+        # rubocop:disable Metrics/MethodLength
+        def build_agents_overview_architecture_messages(project_name, analyses)
+          lines = []
+          lines << <<~PROMPT.strip
+            You are analyzing the architecture of the "#{project_name}" codebase.
+            Below is the metadata for the project.
+            Describe the overall architecture, major components, how they relate, and any notable design patterns.
+            Format your response as 2-3 paragraphs with markdown headings.
+            Do NOT include any source code in your response.
+          PROMPT
+          lines << ""
+          lines << "## Project: #{project_name}"
+          lines << ""
+          extract_metadata_lines(analyses, lines)
+          [{ role: "user", content: lines.join("\n") }]
+        end
+        # rubocop:enable Metrics/MethodLength
+
+        # rubocop:disable Metrics/MethodLength
+        def build_agents_overview_conventions_messages(project_name, analyses)
+          lines = []
+          lines << <<~PROMPT.strip
+            You are analyzing the coding conventions of the "#{project_name}" codebase.
+            Below is the metadata for the project.
+            Based on the file names, module structure, and class/module naming, describe the likely coding conventions used.
+            Include naming conventions, file organization, documentation style, and any other patterns you observe.
+            Format your response as a markdown bullet list.
+            Do NOT include any source code in your response.
+          PROMPT
+          lines << ""
+          lines << "## Project: #{project_name}"
+          lines << ""
+          extract_metadata_lines(analyses, lines)
+          [{ role: "user", content: lines.join("\n") }]
+        end
+        # rubocop:enable Metrics/MethodLength
+
+        # rubocop:disable Metrics/MethodLength
+        def build_symbol_summaries_messages(module_name, analyses)
+          lines = []
+          lines << "You are analyzing a software module called \"#{module_name}\"."
+          lines << ""
+          lines << "Below is the metadata for each file and symbol in this module."
+          lines << ""
+          lines << "For each symbol (class, module, method, constant), provide a one-line summary describing what it does."
+          lines << "Format your response EXACTLY like this, one line per symbol:"
+          lines << "  symbol_name: one-line summary of what this symbol does"
+          lines << "Do NOT include any other text, headings, or commentary."
+          lines << ""
+
+          extract_metadata_lines(analyses, lines)
+
+          [{ role: "user", content: lines.join("\n") }]
+        end
+        # rubocop:enable Metrics/MethodLength
 
         def extract_metadata_lines(analyses, lines)
           analyses.each do |file_path, analysis|

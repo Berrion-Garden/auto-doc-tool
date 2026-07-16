@@ -69,11 +69,13 @@ module AutoDoc
         llm_style = nil
         llm_modules = nil
         llm_data_flows = nil
+        llm_attempted = false
 
         if llm_primary? && @auto_doc_config && @analyses && !@analyses.empty?
           begin
             client = AutoDoc::LLM::Client.build_if_configured(@auto_doc_config)
             if client
+              llm_attempted = true
               summary = AutoDoc::LLM::Summarizer.summarize_architecture_full(@project_name, @analyses, client)
               if summary.is_a?(Hash)
                 llm_overview = summary[:purpose] if summary[:purpose] && !summary[:purpose].empty?
@@ -83,18 +85,19 @@ module AutoDoc
               end
             end
           rescue StandardError => e
+            llm_attempted = true
             handle_llm_failure("architecture overview") { warn "LLM unavailable for #{@project_name}: #{e.message}" }
           end
         end
 
         # Use LLM results where available, fall through to model-based logic
-        overview = llm_overview || handle_llm_failure("overview") { @config[:overview] || "No overview provided." }
+        overview = llm_overview || llm_result_or_fallback(llm_attempted, "overview") { @config[:overview] || "No overview provided." }
 
         # Build modules — prefer LLM, fall back to model-based
         modules = if llm_modules && !llm_modules.empty?
                     llm_modules
                   else
-                    handle_llm_failure("modules") do
+                    llm_result_or_fallback(llm_attempted, "modules") do
                       @models.map do |m|
                         responsibility = if m[:associations] && m[:associations].any?
                                            m[:associations].map { |a| "#{a[:type]} #{a[:target]}" }.join(", ")
@@ -107,13 +110,13 @@ module AutoDoc
                   end
 
         # Detect or use explicit architecture style
-        architecture_style = llm_style || handle_llm_failure("architecture style") { @config[:architecture_style] || detect_architecture_style(modules.size) }
+        architecture_style = llm_style || llm_result_or_fallback(llm_attempted, "architecture style") { @config[:architecture_style] || detect_architecture_style(modules.size) }
 
         # Build data flows — prefer LLM, fall back to model-based
         data_flows = if llm_data_flows && !llm_data_flows.empty?
                        llm_data_flows
                      else
-                       handle_llm_failure("data flows") do
+                       llm_result_or_fallback(llm_attempted, "data flows") do
                          @models.flat_map do |m|
                            (m[:associations] || []).map do |a|
                              { from: m[:model], to: a[:target], description: "#{a[:type]} relationship" }
@@ -135,7 +138,16 @@ module AutoDoc
         end
       end
 
-
+      # Returns the result of the fallback block when LLM was not attempted,
+      # or delegates to handle_llm_failure (which may raise LLMError) when
+      # LLM was genuinely attempted but produced no result.
+      def llm_result_or_fallback(llm_attempted, description)
+        if llm_attempted
+          handle_llm_failure(description) { yield }
+        else
+          yield
+        end
+      end
     end
   end
 end

@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "generated_at": "2026-07-16T17:11:05+00:00",
+  "generated_at": "2026-07-16T18:08:06+00:00",
   "project": "partial_docs_project",
   "artifacts": {
     "indexes": [
@@ -22,6 +22,7 @@
       "diagrams/deps.mmd"
     ],
     "agents_docs": [
+      "AGENTS.md",
       "lib/AGENTS.md"
     ],
     "architecture": [

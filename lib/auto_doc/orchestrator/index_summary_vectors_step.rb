@@ -12,9 +12,12 @@ module AutoDoc
         module_roots = context[:module_roots]
         analyses     = context[:analyses]
 
+        # Collect LLM symbol summaries if LLM is available
+        llm_summaries = collect_symbol_summaries(analyses, module_roots, config)
+
         # Per-directory INDEX.md, SUMMARY.md, vectors.json
         module_roots.each do |root|
-          walk_subdirectories(context, root, analyses, target_dir, output_dir, config)
+          walk_subdirectories(context, root, analyses, target_dir, output_dir, config, llm_summaries: llm_summaries)
         end
 
         # Project-level INDEX.md, SUMMARY.md, VECTORS.json
@@ -29,7 +32,7 @@ module AutoDoc
         say(context, "  Created #{project_summary_path}", :green)
 
         project_vectors_path = File.join(target_dir, output_dir, "VECTORS.json")
-        vectors_data = AutoDoc::Generator::VectorGenerator.generate_project(analyses, config)
+        vectors_data = AutoDoc::Generator::VectorGenerator.generate_project(analyses, config, llm_summaries: llm_summaries)
         AutoDoc::Generator::VectorGenerator.write(project_vectors_path, vectors_data)
         say(context, "  Created #{project_vectors_path}", :green)
 
@@ -38,7 +41,38 @@ module AutoDoc
 
       private
 
-      def walk_subdirectories(context, root, analyses, target_dir, output_dir, config)
+      def collect_symbol_summaries(analyses, module_roots, config)
+        return nil unless config.respond_to?(:llm_primary?) && config.llm_primary?
+
+        client = AutoDoc::LLM::Client.build_if_configured(config)
+        return nil unless client
+
+        llm_summaries = {}
+
+        # Build a lookup of symbol_name => type from analyses
+        symbol_types = {}
+        analyses.each_value do |analysis|
+          (analysis[:definitions] || []).each do |defn|
+            next unless defn.is_a?(Hash)
+            symbol_types[defn[:name].to_s] = defn[:type].to_s.downcase
+          end
+        end
+
+        module_roots.each do |root|
+          base_name = File.basename(root)
+          root_analyses = analyses.select { |fp, _| fp.start_with?("#{root}/") }
+          next if root_analyses.empty?
+
+          response = AutoDoc::LLM::Summarizer.summarize_symbols(base_name, root_analyses, client)
+          next unless response.is_a?(String) && !response.empty?
+
+          llm_summaries.merge!(AutoDoc::LLM::ResponseParser.parse_symbol_summaries(response, symbol_types))
+        end
+
+        llm_summaries.empty? ? nil : llm_summaries
+      end
+
+      def walk_subdirectories(context, root, analyses, target_dir, output_dir, config, llm_summaries: nil)
         dirs_to_process = [root]
         dirs_to_process.reject! { |d| d == context[:target_dir] }
 
@@ -74,7 +108,7 @@ module AutoDoc
           # vectors.json — skip root to avoid duplicating project-level VECTORS.json
           next if dir == root
 
-          vectors_data = AutoDoc::Generator::VectorGenerator.generate_directory(display_name, dir_analyses, config)
+          vectors_data = AutoDoc::Generator::VectorGenerator.generate_directory(display_name, dir_analyses, config, llm_summaries: llm_summaries)
           vectors_path = File.join(target_dir, output_dir, output_rel, "vectors.json")
           AutoDoc::Generator::VectorGenerator.write(vectors_path, vectors_data)
           say(context, "  Created #{vectors_path}", :green)

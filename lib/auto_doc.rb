@@ -37,6 +37,7 @@ module AutoDoc
   # Load generators
   require_relative "auto_doc/generator/template_helper"
   require_relative "auto_doc/generator/agents_md_generator"
+  require_relative "auto_doc/generator/agents_overview_generator"
   require_relative "auto_doc/generator/readme_generator"
   require_relative "auto_doc/generator/diagram_generator"
   require_relative "auto_doc/generator/index_generator"
@@ -66,6 +67,7 @@ module AutoDoc
   # Load orchestrator pipeline steps
   require_relative "auto_doc/orchestrator/base_step"
   require_relative "auto_doc/orchestrator/agents_md_step"
+  require_relative "auto_doc/orchestrator/agents_overview_step"
   require_relative "auto_doc/orchestrator/readme_step"
   require_relative "auto_doc/orchestrator/index_summary_vectors_step"
   require_relative "auto_doc/orchestrator/diagram_step"

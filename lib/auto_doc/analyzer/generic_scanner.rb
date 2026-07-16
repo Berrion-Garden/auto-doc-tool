@@ -28,6 +28,8 @@ module AutoDoc
 
       # Regex patterns for extracting definitions, keyed by language symbol.
       # Each entry may contain :function, :class, and :method patterns.
+      # NOTE: :ruby is intentionally absent — Ruby files are parsed via Ripper in SourceParser, not regex.
+      # The :ruby extension in SUPPORTED_EXTENSIONS allows detect_language to route correctly.
       REGEX_PATTERNS = {
         python: {
           function: /def\s+(\w+)/,
@@ -147,6 +149,10 @@ module AutoDoc
         []
       end
 
+      # NOTE: Reserved for future use — LLM enrichment of parsed definitions.
+      # Currently not wired into AnalysisPipeline; will be activated when
+      # LLM-based definition refinement is implemented.
+      #
       # Analyzes source content using an LLM client for enrichment.
       #
       # @param content [String] The file's source content

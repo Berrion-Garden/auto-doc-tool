@@ -89,6 +89,17 @@ module AutoDoc
           ResponseParser.parse_llm_data_flows(summary[:data_flow])
         end
 
+        # Summarizes each symbol in a module with a one-line description.
+        #
+        # @param module_name [String] The module name
+        # @param analyses    [Hash]   Analysis data filtered to this module
+        # @param client      [Client] An LLM Client instance
+        # @return [String, nil]       Raw LLM response with symbol_name: summary lines, or nil on failure
+        def summarize_symbols(module_name, analyses, client)
+          messages = PromptBuilder.build(:symbol_summaries, module_name, analyses)
+          client.chat(messages)
+        end
+
         # Returns container/module descriptions keyed by module root name.
         # Filters analyses to only include files within the given module roots,
         # then includes metadata grouped by root.

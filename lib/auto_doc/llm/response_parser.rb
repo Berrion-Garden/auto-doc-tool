@@ -135,6 +135,27 @@ module AutoDoc
           result.empty? ? nil : result
         end
 
+        # Parses symbol summaries from LLM response in "symbol_name: summary" format.
+        #
+        # @param response [String] Raw LLM response with "name: summary" lines
+        # @param symbol_types [Hash] Map of symbol_name => type_string (e.g. {"Foo" => "class"})
+        # @return [Hash] Map of entry_id => summary_text (e.g. {"class_Foo" => "does X"})
+        def parse_symbol_summaries(response, symbol_types)
+          return {} if response.nil? || response.empty?
+          result = {}
+          response.each_line do |line|
+            match = line.match(/^\s*(\w[\w:]*\w)\s*:\s*(.+)$/)
+            next unless match
+            symbol_name = match[1]
+            summary_text = match[2].strip
+            type = symbol_types[symbol_name]
+            next unless type
+            entry_id = "#{type}_#{symbol_name.gsub("::", "_")}"
+            result[entry_id] = summary_text
+          end
+          result
+        end
+
         # Parses LLM markdown bullet list for modules.
         # Supports patterns:
         #   - **Name** - Description

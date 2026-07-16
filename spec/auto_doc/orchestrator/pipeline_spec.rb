@@ -22,6 +22,7 @@ RSpec.describe AutoDoc::Orchestrator::Pipeline do
     allow(say_spy).to receive(:call)
 
     # Stub out all steps to avoid triggering actual generators
+    allow_any_instance_of(AutoDoc::Orchestrator::AgentsOverviewStep).to receive(:run)
     allow_any_instance_of(AutoDoc::Orchestrator::AgentsMdStep).to receive(:run)
     allow_any_instance_of(AutoDoc::Orchestrator::ReadmeStep).to receive(:run)
     allow_any_instance_of(AutoDoc::Orchestrator::IndexSummaryVectorsStep).to receive(:run)
@@ -34,6 +35,7 @@ RSpec.describe AutoDoc::Orchestrator::Pipeline do
     it "executes all steps" do
       # expect_any_instance_of does not support .ordered in RSpec 3,
       # so we verify each step's run is called at all
+      expect_any_instance_of(AutoDoc::Orchestrator::AgentsOverviewStep).to receive(:run).with(hash_including(:analyses))
       expect_any_instance_of(AutoDoc::Orchestrator::AgentsMdStep).to receive(:run).with(hash_including(:analyses))
       expect_any_instance_of(AutoDoc::Orchestrator::ReadmeStep).to receive(:run).with(hash_including(:analyses))
       expect_any_instance_of(AutoDoc::Orchestrator::IndexSummaryVectorsStep).to receive(:run).with(hash_including(:analyses))

@@ -6,6 +6,7 @@ module AutoDoc
       include MetricsHelper
 
       STEPS = [
+        AgentsOverviewStep.new,
         AgentsMdStep.new,
         ReadmeStep.new,
         IndexSummaryVectorsStep.new,

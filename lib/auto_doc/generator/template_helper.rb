@@ -19,6 +19,15 @@ module AutoDoc
         raise
       end
 
+      # Builds an LLM client when LLM is configured as the primary documentation source.
+      # Handles both @auto_doc_config (ArchitectureGenerator) and @config (other generators).
+      # @return [AutoDoc::LLM::Client, nil] LLM client instance or nil if not available
+      def build_llm_client
+        return nil unless llm_primary?
+        cfg = @auto_doc_config || @config
+        AutoDoc::LLM::Client.build_if_configured(cfg)
+      end
+
       # Returns true when the config has LLM as the primary documentation source.
       # Handles both @auto_doc_config (ArchitectureGenerator) and @config (other generators).
       def llm_primary?

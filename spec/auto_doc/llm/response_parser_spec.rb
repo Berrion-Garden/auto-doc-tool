@@ -222,4 +222,28 @@ RSpec.describe AutoDoc::LLM::ResponseParser do
       expect(described_class.parse_llm_data_flows("")).to eq([])
     end
   end
+
+  describe ".parse_symbol_summaries" do
+    let(:symbol_types) { { "Foo" => "class", "Bar" => "module", "Foo::Bar" => "class" } }
+
+    it "parses symbol name: summary format" do
+      response = "Foo: does X\nBar: does Y"
+      result = described_class.parse_symbol_summaries(response, symbol_types)
+      expect(result).to eq({ "class_Foo" => "does X", "module_Bar" => "does Y" })
+    end
+
+    it "returns empty hash for empty string" do
+      expect(described_class.parse_symbol_summaries("", symbol_types)).to eq({})
+    end
+
+    it "returns empty hash for nil" do
+      expect(described_class.parse_symbol_summaries(nil, symbol_types)).to eq({})
+    end
+
+    it "parses :: symbol names" do
+      response = "Foo::Bar: does the thing"
+      result = described_class.parse_symbol_summaries(response, symbol_types)
+      expect(result).to eq({ "class_Foo_Bar" => "does the thing" })
+    end
+  end
 end
