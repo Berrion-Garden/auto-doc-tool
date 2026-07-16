@@ -105,7 +105,7 @@ RSpec.describe AutoDoc::Generator::AgentsMdGenerator do
     end
 
     it "rescues StandardError from LLM code and falls back to developer to fill in" do
-      allow(AutoDoc::LLM::Client).to receive(:from_config).and_raise(StandardError, "Unexpected error")
+      allow(http).to receive(:request).and_raise(StandardError, "Unexpected error")
 
       result = generator.generate(module_name, tree_text, files, config: llm_config)
       expect(result).to include("developer to fill in")

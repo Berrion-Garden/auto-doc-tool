@@ -54,7 +54,7 @@ module AutoDoc
 
         module_name  = @module_name
         tree_text    = @tree_text
-         files      = @files
+        files      = @files
         generated_at = Time.now.strftime("%Y-%m-%d %H:%M:%S %Z")
 
         # Derived variables for the template binding
@@ -63,29 +63,38 @@ module AutoDoc
         public_symbol_count = public_symbols.size
         dependencies      = []
 
-        # Attempt LLM-enhanced purpose_summary (best-effort, nil on failure)
-        purpose_summary = nil
-        begin
-          if @config.respond_to?(:llm_config) && (llm_cfg = @config.llm_config)
-            client = AutoDoc::LLM::Client.from_config(@config)
-            if client.configured?
-              analyses = build_analyses_from_files(@files)
-              result = AutoDoc::LLM::Summarizer.summarize_module(@module_name, analyses, client)
-              purpose_summary = result if result
-            end
-          end
-        rescue StandardError
-          warn "LLM enrichment failed: #{$!}"
-        end
+        purpose_summary = llm_purpose_summary
 
         ERB.new(template_text).result(binding)
+      end
+
+      # Attempts LLM-generated purpose summary, falling back to nil on any failure.
+      def llm_purpose_summary
+        return nil unless (client = build_llm_client)
+        analyses = build_analyses(@files)
+        result = AutoDoc::LLM::Summarizer.summarize_module(@module_name, analyses, client)
+        return nil if result.to_s.strip.empty?
+        result
+      rescue
+        nil
+      end
+
+      def build_llm_client
+        return nil unless @config.respond_to?(:llm_config)
+        cfg = @config.llm_config
+        return nil unless cfg
+        client = AutoDoc::LLM::Client.new(cfg)
+        return nil unless client.configured?
+        client
+      rescue
+        nil
       end
 
       # Converts file analysis records into the analyses hash format expected by Summarizer.
       #
       # @param files [Array<Hash>] Array of file analysis records with :path, :classes, etc.
       # @return [Hash] Analyses hash: { file_path => { definitions: [...] } }
-      def build_analyses_from_files(files)
+      def build_analyses(files)
         analyses = {}
         files.each do |file_info|
           path = file_info[:path] || file_info[:name]
@@ -98,6 +107,7 @@ module AutoDoc
       end
 
       def build_public_symbols(files)
+        return nil if files.nil?
         symbols = []
         files.each do |file_info|
           (file_info[:classes] || []).each do |defn|
