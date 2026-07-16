@@ -10,6 +10,8 @@ module AutoDoc
         schema_tables  = context[:schema_tables] || []
         models         = context[:models] || []
         class_hierarchy = context[:class_hierarchy] || []
+        analyses        = context[:analyses] || []
+        auto_doc_config = context[:config]
 
         architecture_config = {
           overview: "Auto-generated architecture documentation for #{project_name}.",
@@ -27,7 +29,9 @@ module AutoDoc
 
         architecture_path = File.join(target_dir, output_dir, "architecture.md")
         AutoDoc::Generator::ArchitectureGenerator.generate(project_name, schema_tables, models, class_hierarchy,
-                                                            architecture_config, output_path: architecture_path)
+                                                            architecture_config, output_path: architecture_path,
+                                                            analyses: analyses,
+                                                            auto_doc_config: auto_doc_config)
         say(context, "  Created #{architecture_path}", :green)
 
         context

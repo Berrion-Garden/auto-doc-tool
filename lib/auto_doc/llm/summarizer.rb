@@ -236,60 +236,52 @@ module AutoDoc
         # rubocop:enable Metrics/MethodLength
 
         # Parses a markdown response from the LLM into a structured hash for
-        # architecture_full. Looks for ## headings and maps known headings to
-        # the expected keys.
+        # architecture_full. Uses parse_section to extract each known section
+        # by heading name.
         #
         # @param response [String] Raw LLM markdown response
         # @return [Hash] Hash with :purpose, :style, :modules, :data_flow keys
         def parse_architecture_full(response)
-          result = { purpose: "", style: "", modules: "", data_flow: "" }
-          current_section = nil
-          current_content = []
+          result = {
+            purpose: parse_section(response, "Purpose") || "",
+            style: parse_section(response, "Architectural Style") || "",
+            modules: parse_section(response, "Main Modules") || "",
+            data_flow: parse_section(response, "Data Flow") || ""
+          }
 
-          response.each_line do |line|
-            if line.match?(/^##\s+/)
-              # Save previous section content
-              if current_section
-                section_key = normalize_arch_section_heading(current_section)
-                result[section_key] = current_content.join.strip if result.key?(section_key)
-              end
-              current_section = line.sub(/^##\s+/, "").strip
-              current_content = []
-            else
-              current_content << line
-            end
-          end
-          # Save last section
-          if current_section
-            section_key = normalize_arch_section_heading(current_section)
-            result[section_key] = current_content.join.strip if result.key?(section_key)
+          # If no sections were found, try alternative heading names
+          if result.values.all?(&:empty?)
+            result[:purpose] = parse_section(response, "Introduction") || ""
           end
 
-          # If no sections were parsed (response is paragraph-only), put everything in :purpose
+          # If still no sections parsed (response is paragraph-only), put everything in :purpose
           result[:purpose] = response.strip if result.values.all?(&:empty?)
 
           result
         end
 
-        # Maps a markdown heading text to one of the four architecture keys.
+        # Extracts content under a named markdown section heading from an LLM response.
+        # Looks for `## section_name` (case-insensitive) and returns content until
+        # the next `##` heading or end-of-string. Returns nil if not found.
         #
-        # @param heading [String] The heading text (e.g. "Purpose", "Main Modules")
-        # @return [Symbol] One of :purpose, :style, :modules, :data_flow
-        def normalize_arch_section_heading(heading)
-          mapping = {
-            "purpose" => :purpose,
-            "introduction" => :purpose,
-            "overview" => :purpose,
-            "architectural style" => :style,
-            "architecture" => :style,
-            "style" => :style,
-            "main modules" => :modules,
-            "modules" => :modules,
-            "components" => :modules,
-            "data flow" => :data_flow,
-            "dataflow" => :data_flow
-          }
-          mapping[heading.downcase.strip] || :purpose
+        # @param response     [String] Raw LLM markdown response
+        # @param section_name [String] The section heading to find (e.g. "Purpose")
+        # @return [String, nil]        Extracted content (stripped whitespace) or nil
+        def parse_section(response, section_name)
+          regex = /^##\s+#{Regexp.escape(section_name)}\s*$/i
+          lines = response.lines
+          start_idx = lines.index { |line| line.match?(regex) }
+          return nil if start_idx.nil?
+
+          # Skip the heading line
+          content_start = start_idx + 1
+          end_idx = lines[content_start..].index { |line| line.match?(/^##\s+/) }
+
+          if end_idx
+            lines[content_start, end_idx].join.strip
+          else
+            lines[content_start..].join.strip
+          end
         end
 
         # Parses the LLM response for system_context. Tries JSON first, then
