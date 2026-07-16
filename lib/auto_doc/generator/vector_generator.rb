@@ -134,17 +134,13 @@ module AutoDoc
           summary:       summary,
           signature:     signature.to_s,
           visibility:    defn[:visibility] || "public",
-          keywords:      keyword_extraction(defn[:name].to_s, summary),
+          keywords:      llm_summary_text ? extract_keywords_from_text(llm_summary_text) : keyword_extraction(defn[:name].to_s, summary),
           dependencies:  defn[:dependencies] || [],
           consumed_by:   [],
           parent_module: defn[:parent_module]
         }
 
-        if llm_summary_text
-          llm_keywords = extract_keywords_from_text(llm_summary_text)
-          entry[:keywords] = (entry[:keywords] + llm_keywords).uniq.first(15)
-          entry[:llm_summary] = llm_summary_text
-        end
+        entry[:llm_summary] = llm_summary_text if llm_summary_text
 
         entry
       end
