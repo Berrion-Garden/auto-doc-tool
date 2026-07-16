@@ -29,7 +29,7 @@ module AutoDoc
       llm: {
         provider: "openai",
         endpoint: "https://llms.berrion.garden/v1",
-        api_key: nil,
+        api_key: "autodoc",
         model: "summarizer",
         timeout: 120
       }
@@ -47,12 +47,8 @@ module AutoDoc
     def initialize(path, overrides = {})
       @path = File.expand_path(path)
       file_config = read_file_config
-      @explicit_llm = file_config.key?(:llm)
       @config = deep_merge(DEFAULTS.dup, file_config)
-      unless overrides.empty?
-        @explicit_llm ||= overrides.key?(:llm)
-        @config = deep_merge(@config, overrides)
-      end
+      @config = deep_merge(@config, overrides) unless (overrides || {}).empty?
     end
 
     # Convenience accessors for nested config keys
@@ -117,7 +113,6 @@ module AutoDoc
     end
 
     def llm_config
-      return nil unless @explicit_llm
       @config[:llm] || DEFAULTS[:llm]
     end
 
