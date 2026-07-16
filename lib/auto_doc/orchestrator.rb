@@ -78,7 +78,11 @@ module AutoDoc
 
       # Write JSON report for CI pipelines
       json_path = File.join(target_dir, config.output_dir, "report.json")
-      FileUtils.mkdir_p(File.dirname(json_path)) rescue nil
+      begin
+        FileUtils.mkdir_p(File.dirname(json_path))
+      rescue Errno::EACCES, Errno::ENOSPC, SystemCallError => e
+        $stderr.puts "[AutoDoc] Failed to create audit report directory: #{e.message}"
+      end
       File.write(json_path, AutoDoc::Reporter::AuditReporter.format_json(report)) if File.writable?(File.dirname(json_path))
 
       report

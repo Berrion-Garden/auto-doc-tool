@@ -259,4 +259,37 @@ RSpec.describe AutoDoc::LLM::Client do
       client.chat([{ role: "user", content: "test" }])
     end
   end
+
+  describe ".build_if_configured" do
+    it "returns nil with stderr warning when llm_config raises" do
+      config = Object.new
+      config.define_singleton_method(:llm_config) { raise StandardError, "something broke" }
+      allow($stderr).to receive(:puts)
+      expect($stderr).to receive(:puts).with(/\[AutoDoc\] LLM client initialization failed/)
+      begin
+        saved_env = ENV.delete("AUTO_DOC_DISABLE_LLM")
+        result = AutoDoc::LLM::Client.build_if_configured(config)
+        expect(result).to be_nil
+      ensure
+        ENV["AUTO_DOC_DISABLE_LLM"] = saved_env if saved_env
+      end
+    end
+
+    it "returns nil when ENV disables LLM" do
+      begin
+        saved = ENV.delete("AUTO_DOC_DISABLE_LLM")
+        ENV["AUTO_DOC_DISABLE_LLM"] = "true"
+        config = Object.new
+        config.define_singleton_method(:llm_config) { { endpoint: "https://test", api_key: "key" } }
+        result = AutoDoc::LLM::Client.build_if_configured(config)
+        expect(result).to be_nil
+      ensure
+        if saved
+          ENV["AUTO_DOC_DISABLE_LLM"] = saved
+        else
+          ENV.delete("AUTO_DOC_DISABLE_LLM")
+        end
+      end
+    end
+  end
 end

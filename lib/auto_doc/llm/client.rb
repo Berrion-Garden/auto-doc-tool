@@ -93,7 +93,8 @@ module AutoDoc
         client = new(cfg)
         return nil unless client.configured?
         client
-      rescue
+      rescue StandardError => e
+        $stderr.puts "[AutoDoc] LLM client initialization failed: #{e.message}"
         nil
       end
     end

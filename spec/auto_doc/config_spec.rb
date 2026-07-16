@@ -98,7 +98,7 @@ RSpec.describe AutoDoc::Config do
       llm = cfg.llm_config
       expect(llm[:endpoint]).to eq("https://custom.endpoint/v1")
       expect(llm[:provider]).to eq("openai") # falls back to DEFAULT
-      expect(llm[:api_key]).to eq("autodoc") # falls back to DEFAULT
+      expect(llm[:api_key]).to be_nil # falls back to DEFAULT (nil)
       expect(llm[:model]).to eq("summarizer") # falls back to DEFAULT
       expect(llm[:timeout]).to eq(120) # falls back to DEFAULT
     end
