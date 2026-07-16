@@ -78,14 +78,27 @@ end
 
 The `llm_spec.rb` only verifies that constants are defined. It does NOT test `Client#chat` or `Summarizer` methods against real or mocked HTTP responses.
 
+### `LlmMockHelper` (`spec/support/llm_mock_helper.rb`)
+
+Shared test helper for LLM-related specs. Provides:
+- `mock_llm_client` — Stubs `Client.build_if_configured` to return a mock client whose `chat` method returns configured response text
+- `primary_llm_config` — Creates an `AutoDoc::Config` with `llm.primary: true`
+- `standard_llm_config` — Creates an `AutoDoc::Config` with `llm.primary: false` (default)
+
+Used by integration and unit tests to simulate both primary and non-primary modes.
+
+### Integration Test Coverage
+
 The `spec/auto_doc/llm/integration_spec.rb` provides integration-level coverage of the LLM chain. It mocks `Net::HTTP` directly (not via WebMock/VCR) to test:
 - `Client.from_config` builds correctly from Config with LLM settings
 - `Client.chat` returns mocked responses
 - `Summarizer.summarize_module/architecture/components` return client response text
 - `SummaryGenerator` integrates LLM (3 chat calls) and falls back to static inference
 - `AgentsMdGenerator` integrates LLM (1 chat call) and falls back to placeholder text
-- `AUTO_DOC_DISABLE_LLM` environment variable disables LLM in both generators
-- Backward compatibility when no config is passed to `AgentsMdGenerator`
+- `ArchitectureGenerator` LLM enhancement in primary mode
+- `ReadmeGenerator` LLM enhancement in primary mode
+- `AUTO_DOC_DISABLE_LLM` environment variable disables LLM in all generators
+- Backward compatibility when no config is passed
 
 ### Config Tests
 
@@ -103,11 +116,8 @@ Fixtures are in `fixtures/` and `test_fixtures/` directories. Used by generator 
 
 ## Known Test Status
 
-At time of final review (commit `8e7254a`):
-- **592 specs passing** (includes 15 integration tests)
-- **42 pre-existing failures** (not introduced by LLM work):
-  - `server_spec.rb`: 36 failures (Sinatra server test issues)
-  - `cli_spec.rb`: 1 failure
-  - `self_test_spec.rb`: 5 failures
-- These failures are confirmed unchanged from the baseline before the LLM project.
-- Integration tests are tagged with `:integration` for selective execution via `rspec --tag integration`
+At time of LLM Primary Driver Architecture final review (commit `4c04a36`):
+- **721 specs passing** (includes enhanced integration test suite)
+- Pre-existing failures unchanged from baseline
+- Integration tests tagged with `:integration` for selective execution via `rspec --tag integration`
+- `LlmMockHelper` provides reusable stubs for all LLM-related tests

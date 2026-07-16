@@ -60,7 +60,9 @@ require 'auto_doc'
     │
     ├── auto_doc/llm.rb → LLM module loader
     │   ├── llm/client.rb → HTTP client
-    │   └── llm/summarizer.rb → Prompt builder
+    │   ├── llm/summarizer.rb → Delegates to PromptBuilder + ResponseParser
+    │   ├── llm/prompt_builder.rb → Prompt construction (8 types)
+    │   └── llm/response_parser.rb → Response parsing (markdown/JSON/bullets)
     │
     ├── auto_doc/generator/* → Document generators
     │   ├── template_helper.rb → Template mixin
@@ -158,15 +160,31 @@ llm:
   api_key: autodoc
   model: summarizer
   timeout: 120
+  primary: false
 ```
 
 ### LLM Configuration
 
-The `llm:` section enables optional LLM-powered summarization for `SUMMARY.md` and `AGENTS.md` generation. When `endpoint` and `api_key` are both present and non-empty, LLM calls are attempted with graceful fallback to static inference on any failure. Default config uses `https://llms.berrion.garden/v1` with model `summarizer` and api_key `autodoc`.
+The `llm:` section enables optional LLM-powered summarization for `SUMMARY.md`, `AGENTS.md`, `README.md`, and `architecture.md` generation. LLM usage is **off by default** (`llm.primary: false`) and only activates when `--llm-primary` CLI flag is passed or `llm.primary: true` is set in `.autodoc.yml`.
 
-Set `AUTO_DOC_DISABLE_LLM=true` to disable LLM calls regardless of config.
+When `llm.primary: true`:
+- Generators try LLM first for each section (purpose, architecture, components)
+- On failure (timeout, error, empty response), a warning is emitted to stderr and the generator falls back to static analysis
+- `ArchitectureGenerator` makes 1 LLM call for the full structured overview
+- `SummaryGenerator` makes up to 3 LLM calls (purpose, architecture, components)
+- `AgentsMdGenerator` makes 1 LLM call (module purpose)
+- `ReadmeGenerator` makes 1 LLM call (overview text)
+- `DiagramStep` makes up to 2 LLM calls (C4 context, C4 containers)
 
-Config is discovered by walking up from the target directory. CLI flags override config values.
+When `llm.primary: false` (default):
+- Zero LLM calls are made by any generator or pipeline step
+- All content is generated via static analysis and heuristics
+
+Default config uses `https://llms.berrion.garden/v1` with model `summarizer` and api_key `autodoc`.
+
+Set `AUTO_DOC_DISABLE_LLM=true` to disable LLM calls regardless of `llm.primary` setting.
+
+Config is discovered by walking up from the target directory. CLI flags override config values. The `--llm-primary` flag is available on `generate`, `verify`, and `audit` commands.
 
 ### Environment Variables
 

@@ -46,40 +46,47 @@ Orchestrator.generate(path, say:)
             │               FilesDataBuilder.build(file_analyses)
             │               AgentsMdGenerator.generate(name, tree, files, config:, output_path:)
             │                       │
-            │                       ├── (if LLM configured) LLM::Client.build_if_configured(config)
-            │                       │       ├── AUTO_DOC_DISABLE_LLM check
-            │                       │       ├── config.llm_config validation
-            │                       │       └── Client.configured? check
-            │                       ├── (if client available) Summarizer.summarize_module → purpose_summary
-            │                       └── (fallback) purpose_summary = nil → placeholder text
-            │
-            │   Additional Summarizer methods (available but not yet wired into pipeline steps):
-            │   ├── Summarizer.summarize_architecture_full → multi-paragraph architecture overview
-            │   ├── Summarizer.summarize_system_context → external systems interaction list (JSON or bullets)
-            │   └── Summarizer.summarize_container_descriptions → module root descriptions keyed by name
+            │                       ├── llm_primary? == false
+            │                       │       └── purpose_summary = placeholder text (zero LLM calls)
+            │                       │
+            │                       └── llm_primary? == true
+            │                               ├── Client.build_if_configured(config)
+            │                               │       ├── AUTO_DOC_DISABLE_LLM check
+            │                               │       ├── config.llm_config validation
+            │                               │       └── Client.configured? check
+            │                               ├── (client available) Summarizer.summarize_module
+            │                               │       └── PromptBuilder.build(:agents_md, ...)
+            │                               │       └── ResponseParser.parse_purpose(...)
+            │                               ├── (success) → purpose_summary = LLM result
+            │                               └── (failure) → warn_llm_fallback + placeholder text
             │
             ├── ReadmeStep.run(context)
             │       │
-            │       └── ReadmeGenerator.generate(...)
+            │       └── ReadmeGenerator.generate(project_name, structure, stats,
+            │               config:, analyses:, output_path:)
+            │               │
+            │               ├── llm_primary? == false → overview_text = placeholder
+            │               └── llm_primary? == true
+            │                       └── Summarizer.summarize_module → llm_module_overview
             │
             ├── IndexSummaryVectorsStep.run(context)
             │       │
             │       ├── IndexGenerator.generate(project-level)
             │       ├── SummaryGenerator.generate(project-level)
             │       │       │
-            │       │       ├── (if LLM configured) llm_purpose → Summarizer.summarize_module
-            │       │       ├── (if LLM configured) llm_architecture → Summarizer.summarize_architecture
-            │       │       ├── (if LLM configured) llm_components → Summarizer.summarize_components
-            │       │       └── (fallback) infer_purpose, extract_key_components, infer_architecture_pattern
+            │       │       ├── llm_primary? == false
+            │       │       │       └── infer_purpose, extract_key_components, infer_architecture_pattern
+            │       │       │
+            │       │       └── llm_primary? == true
+            │       │               ├── llm_purpose → Summarizer.summarize_module
+            │       │               ├── llm_architecture → Summarizer.summarize_architecture
+            │       │               ├── llm_components → Summarizer.summarize_components
+            │       │               └── any failure → warn_llm_fallback + static fallback
             │       │
-            │       │   Additional Summarizer methods (available but not yet wired into SummaryGenerator):
-            │       │   ├── Summarizer.summarize_architecture_full → multi-paragraph overview
-            │       │   ├── Summarizer.summarize_system_context → external systems list
-            │       │   └── Summarizer.summarize_container_descriptions → module descriptions
             │       ├── VectorGenerator.generate(project-level)
             │       └── for each module_root:
             │               IndexGenerator.generate(module-level)
-            │               SummaryGenerator.generate(module-level)  (same LLM/fallback pattern)
+            │               SummaryGenerator.generate(module-level)  (same LLM gate pattern)
             │               VectorGenerator.generate(module-level)
             │
             ├── DiagramStep.run(context)
@@ -87,12 +94,28 @@ Orchestrator.generate(path, say:)
             │       ├── GraphDataBuilder.build(analyses) → DAG data
             │       ├── ClassHierarchyBuilder.build(analyses) → inheritance
             │       ├── ContainerDataFlowBuilder.build(analyses) → containers
+            │       ├── (if llm_primary?) Summarizer.summarize_system_context → C4 context
+            │       ├── (if llm_primary?) Summarizer.summarize_containers → C4 containers
             │       ├── ERD (if Rails): SchemaParser + ModelAssociationParser
             │       └── Diagram generators for each type
             │
             ├── ArchitectureStep.run(context)
             │       │
-            │       └── ArchitectureGenerator.generate(context_data)
+            │       └── ArchitectureGenerator.generate(project_name, schema_tables, models,
+            │               class_hierarchy, config, output_path:, analyses:, auto_doc_config:)
+            │               │
+            │               ├── llm_primary? == false or no analyses
+            │               │       └── Model-based data (Rails associations, static heuristics)
+            │               │
+            │               └── llm_primary? == true && @auto_doc_config && @analyses
+            │                       ├── Summarizer.summarize_architecture_full
+            │                       │       └── PromptBuilder.build(:architecture_full, ...)
+            │                       │       └── ResponseParser.parse_architecture_full(...)
+            │                       │       └── returns { purpose:, style:, modules:, data_flow: }
+            │                       ├── LLM success → use parsed results for sections
+            │                       │       ├── Summarizer.parse_architecture_modules(summary)
+            │                       │       └── Summarizer.parse_architecture_data_flows(summary)
+            │                       └── rescue StandardError → full static fallback
             │
             └── ManifestStep.run(context)
                     │

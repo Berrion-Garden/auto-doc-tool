@@ -11,7 +11,7 @@ The orchestrator coordinates the full documentation generation workflow, from so
 Top-level coordinator. Receives CLI options and manages the complete `generate` or `audit` workflow.
 
 **`generate(path, say:)` workflow:**
-1. Load `Config` from target directory with CLI overrides
+1. Load `Config` from target directory with CLI overrides (including `--llm-primary` flag → `{ llm: { primary: true } }`)
 2. Resolve output directory (CLI flag > format option > config default)
 3. Resolve module roots (config `module_roots` → fall back to `[base_dir]`)
 4. Run analysis pipeline (incremental if `--incremental` flag set)
@@ -99,15 +99,15 @@ STEPS = [
 
 #### `AgentsMdStep`
 
-For each module root: builds file tree, transforms analyses to files data, calls `AgentsMdGenerator.generate` with `config: config`, writes `AGENTS.md` to output. The `config:` parameter enables LLM integration when LLM settings are configured.
+For each module root: builds file tree, transforms analyses to files data, calls `AgentsMdGenerator.generate` with `config: config`, writes `AGENTS.md` to output. The `config:` parameter enables LLM integration via the `llm_primary?` gate — when `llm.primary: false` (default), no LLM call is made.
 
 #### `ReadmeStep`
 
-Generates project-level `README.md` with project stats, module summary, and file count.
+Generates project-level `README.md` with project stats, module summary, and file count. Calls `ReadmeGenerator.generate` with `config: config` and `analyses: context[:analyses]` to support LLM enhancement.
 
 #### `IndexSummaryVectorsStep`
 
-For each module root and the project level: generates `INDEX.md`, `SUMMARY.md`, and `VECTORS.json`.
+For each module root and the project level: generates `INDEX.md`, `SUMMARY.md`, and `VECTORS.json`. Calls `SummaryGenerator.generate` with `config` parameter from context for LLM gating via `llm_primary?`.
 
 #### `DiagramStep`
 
@@ -119,7 +119,7 @@ Conditionally generates Mermaid diagrams based on project content:
 
 #### `ArchitectureStep`
 
-Generates `architecture.md` using C4-informed template with context and container data.
+Generates `architecture.md` using C4-informed template with context and container data. Passes `auto_doc_config: auto_doc_config` (the `AutoDoc::Config` instance) and `analyses: context[:analyses]` to `ArchitectureGenerator.generate` for LLM gating via `llm_primary?`.
 
 #### `ManifestStep`
 
