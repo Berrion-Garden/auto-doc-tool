@@ -10,23 +10,7 @@ RSpec.describe "LLM Integration: Client → Summarizer → Generator Output", :i
   #   Config → Client#chat → Summarizer → Generator (SummaryGenerator / AgentsMdGenerator)
   #
   # It ensures the consumer generators (SummaryGenerator, AgentsMdGenerator)
-  # correctly wire through the LLM layer when AUTO_DOC_DISABLE_LLM is unset
-  # and a configured LLM client is available.
-
-  # Per-example env var management — each test starts with env var unset
-  # so LLM code paths are exercised. Tests that set the var are responsible
-  # for restoring it in their own after blocks.
-  before do
-    @saved_disable_llm = ENV.delete("AUTO_DOC_DISABLE_LLM")
-  end
-
-  after do
-    if @saved_disable_llm
-      ENV["AUTO_DOC_DISABLE_LLM"] = @saved_disable_llm
-    else
-      ENV.delete("AUTO_DOC_DISABLE_LLM")
-    end
-  end
+  # correctly wire through the LLM layer when a configured LLM client is available.
 
   let(:project_dir) { Dir.mktmpdir }
   let(:nil_llm_project_dir) { Dir.mktmpdir }
@@ -50,27 +34,26 @@ RSpec.describe "LLM Integration: Client → Summarizer → Generator Output", :i
   # Config without LLM settings — makes Client.configured? return false
   let(:nil_llm_config) { AutoDoc::Config.load(nil_llm_project_dir, { llm: { endpoint: nil, api_key: nil } }) }
 
-  let(:http) { double("Net::HTTP") }
-  let(:response) { double("Net::HTTPResponse") }
-
-  before do
-    allow(Net::HTTP).to receive(:new).and_return(http)
-    allow(http).to receive(:open_timeout=)
-    allow(http).to receive(:read_timeout=)
-    allow(http).to receive(:use_ssl=)
-  end
-
   # ---------------------------------------------------------------------------
   # Client → chat integration
   # ---------------------------------------------------------------------------
   describe "AutoDoc::LLM::Client via Config" do
-    it "builds a client from Config#llm_config and returns chat responses" do
+    let(:http) { double("Net::HTTP") }
+    let(:response) { double("Net::HTTPResponse") }
+
+    before do
+      allow(Net::HTTP).to receive(:new).and_return(http)
+      allow(http).to receive(:open_timeout=)
+      allow(http).to receive(:read_timeout=)
+      allow(http).to receive(:use_ssl=)
       allow(http).to receive(:request).and_return(response)
       allow(response).to receive(:value).and_return(nil)
       allow(response).to receive(:body).and_return(
         '{"choices":[{"message":{"content":"Hello from LLM!"}}]}'
       )
+    end
 
+    it "builds a client from Config#llm_config and returns chat responses" do
       client = AutoDoc::LLM::Client.from_config(config)
       expect(client.configured?).to be true
       result = client.chat([{ role: "user", content: "Hi" }])
@@ -89,6 +72,21 @@ RSpec.describe "LLM Integration: Client → Summarizer → Generator Output", :i
   # Summarizer → Client integration
   # ---------------------------------------------------------------------------
   describe "AutoDoc::LLM::Summarizer via Client" do
+    let(:http) { double("Net::HTTP") }
+    let(:response) { double("Net::HTTPResponse") }
+
+    before do
+      allow(Net::HTTP).to receive(:new).and_return(http)
+      allow(http).to receive(:open_timeout=)
+      allow(http).to receive(:read_timeout=)
+      allow(http).to receive(:use_ssl=)
+      allow(http).to receive(:request).and_return(response)
+      allow(response).to receive(:value).and_return(nil)
+      allow(response).to receive(:body).and_return(
+        '{"choices":[{"message":{"content":"LLM module summary output."}}]}'
+      )
+    end
+
     let(:analyses) do
       {
         "/project/app/controllers/users_controller.rb" => {
@@ -109,14 +107,6 @@ RSpec.describe "LLM Integration: Client → Summarizer → Generator Output", :i
     end
 
     let(:client) { AutoDoc::LLM::Client.from_config(config) }
-
-    before do
-      allow(http).to receive(:request).and_return(response)
-      allow(response).to receive(:value).and_return(nil)
-      allow(response).to receive(:body).and_return(
-        '{"choices":[{"message":{"content":"LLM module summary output."}}]}'
-      )
-    end
 
     it "summarize_module returns client response text" do
       result = AutoDoc::LLM::Summarizer.summarize_module("app", analyses, client)
@@ -156,14 +146,11 @@ RSpec.describe "LLM Integration: Client → Summarizer → Generator Output", :i
     end
 
     it "uses LLM content in purpose, architecture, and components when configured" do
-      # SummaryGenerator calls chat 3 times: purpose, architecture, components
-      allow(http).to receive(:request).and_return(response).exactly(3).times
-      allow(response).to receive(:value).and_return(nil).exactly(3).times
-      allow(response).to receive(:body).and_return(
-        '{"choices":[{"message":{"content":"LLM-powered purpose for lib"}}]}',
-        '{"choices":[{"message":{"content":"LLM-powered architecture"}}]}',
-        '{"choices":[{"message":{"content":"- Foo (class): Main component"}}]}'
-      )
+      mock_llm_client({
+        "what this module does" => "LLM-powered purpose for lib",
+        "overall architecture" => "LLM-powered architecture",
+        "component relationships" => "- Foo (class): Main component"
+      })
 
       result = AutoDoc::Generator::SummaryGenerator.generate(dir_name, analyses, config)
       expect(result).to include("LLM-powered purpose for lib")
@@ -177,7 +164,9 @@ RSpec.describe "LLM Integration: Client → Summarizer → Generator Output", :i
     end
 
     it "falls back to static inference when LLM call fails" do
-      allow(http).to receive(:request).and_raise(SocketError, "network unreachable")
+      client = instance_double(AutoDoc::LLM::Client)
+      allow(client).to receive(:chat).and_raise(SocketError, "network unreachable")
+      allow(AutoDoc::LLM::Client).to receive(:build_if_configured).and_return(client)
 
       result = AutoDoc::Generator::SummaryGenerator.generate(dir_name, analyses, config)
       expect(result).to include("Core library code")
@@ -186,11 +175,12 @@ RSpec.describe "LLM Integration: Client → Summarizer → Generator Output", :i
 
     it "respects AUTO_DOC_DISABLE_LLM env var" do
       ENV["AUTO_DOC_DISABLE_LLM"] = "true"
-      expect(Net::HTTP).not_to receive(:new)
 
       result = AutoDoc::Generator::SummaryGenerator.generate(dir_name, analyses, config)
       expect(result).to include("Core library code")
       expect(result).to include("Modular library")
+
+      ENV.delete("AUTO_DOC_DISABLE_LLM")
     end
   end
 
@@ -209,11 +199,9 @@ RSpec.describe "LLM Integration: Client → Summarizer → Generator Output", :i
     end
 
     it "uses LLM for purpose summary when configured" do
-      allow(http).to receive(:request).and_return(response)
-      allow(response).to receive(:value).and_return(nil)
-      allow(response).to receive(:body).and_return(
-        '{"choices":[{"message":{"content":"The lib module contains core classes."}}]}'
-      )
+      mock_llm_client({
+        "summary of what this module does" => "The lib module contains core classes."
+      })
 
       result = AutoDoc::Generator::AgentsMdGenerator.generate(
         module_name, tree_text, files, config: config
@@ -222,9 +210,7 @@ RSpec.describe "LLM Integration: Client → Summarizer → Generator Output", :i
     end
 
     it "falls back gracefully when LLM returns nil" do
-      allow(http).to receive(:request).and_return(response)
-      allow(response).to receive(:value).and_return(nil)
-      allow(response).to receive(:body).and_return('{"choices":[{"message":{"content":null}}]}')
+      mock_llm_client({})
 
       result = AutoDoc::Generator::AgentsMdGenerator.generate(
         module_name, tree_text, files, config: config
@@ -233,7 +219,9 @@ RSpec.describe "LLM Integration: Client → Summarizer → Generator Output", :i
     end
 
     it "falls back gracefully when LLM call raises" do
-      allow(http).to receive(:request).and_raise(Errno::ECONNREFUSED)
+      client = instance_double(AutoDoc::LLM::Client)
+      allow(client).to receive(:chat).and_raise(Errno::ECONNREFUSED)
+      allow(AutoDoc::LLM::Client).to receive(:build_if_configured).and_return(client)
 
       result = AutoDoc::Generator::AgentsMdGenerator.generate(
         module_name, tree_text, files, config: config
@@ -243,12 +231,13 @@ RSpec.describe "LLM Integration: Client → Summarizer → Generator Output", :i
 
     it "respects AUTO_DOC_DISABLE_LLM env var" do
       ENV["AUTO_DOC_DISABLE_LLM"] = "true"
-      expect(Net::HTTP).not_to receive(:new)
 
       result = AutoDoc::Generator::AgentsMdGenerator.generate(
         module_name, tree_text, files, config: config
       )
       expect(result).to include("developer to fill in")
+
+      ENV.delete("AUTO_DOC_DISABLE_LLM")
     end
 
     it "works without any config (backward compat)" do

@@ -116,55 +116,20 @@ RSpec.describe AutoDoc::Generator::SummaryGenerator do
   end
 
   describe "LLM integration" do
-    before do
-      @original_disable_llm = ENV["AUTO_DOC_DISABLE_LLM"]
-      ENV.delete("AUTO_DOC_DISABLE_LLM")
-    end
+    let(:tmpdir) { Dir.mktmpdir }
+    after { FileUtils.remove_entry(tmpdir) }
 
-    after do
-      if @original_disable_llm
-        ENV["AUTO_DOC_DISABLE_LLM"] = @original_disable_llm
-      else
-        ENV.delete("AUTO_DOC_DISABLE_LLM")
-      end
-    end
-
-    let(:llm_project_dir) { Dir.mktmpdir }
     let(:llm_config) do
-      File.write(File.join(llm_project_dir, ".autodoc.yml"), <<~YAML)
-        llm:
-          provider: openai
-          endpoint: https://api.openai.com/v1
-          api_key: sk-test
-          model: gpt-4o
-      YAML
-      AutoDoc::Config.load(llm_project_dir)
+      AutoDoc::Config.load(tmpdir, llm: { endpoint: "https://test", api_key: "test", model: "gpt-4o" })
     end
-    let(:no_llm_project_dir) { Dir.mktmpdir }
-    let(:no_llm_config) { AutoDoc::Config.load(no_llm_project_dir, { llm: { endpoint: nil, api_key: nil } }) }
-    after do
-      FileUtils.remove_entry(llm_project_dir)
-      FileUtils.remove_entry(no_llm_project_dir)
-    end
-
-    let(:http) { double("Net::HTTP") }
-    let(:response) { double("Net::HTTPResponse") }
-
-    before do
-      allow(Net::HTTP).to receive(:new).and_return(http)
-      allow(http).to receive(:open_timeout=)
-      allow(http).to receive(:read_timeout=)
-      allow(http).to receive(:use_ssl=)
-    end
+    let(:no_llm_config) { AutoDoc::Config.load(tmpdir) }
 
     it "uses LLM when client is configured" do
-      allow(http).to receive(:request).and_return(response).exactly(3).times
-      allow(response).to receive(:value).and_return(nil).exactly(3).times
-      allow(response).to receive(:body).and_return(
-        '{"choices":[{"message":{"content":"LLM-powered purpose: core library"}}]}',
-        '{"choices":[{"message":{"content":"LLM-powered architecture: modular composition"}}]}',
-        '{"choices":[{"message":{"content":"- Foo (class): Main application class\n- Utils (module): Utility functions"}}]}'
-      )
+      mock_llm_client({
+        "what this module does" => "LLM-powered purpose: core library",
+        "overall architecture" => "LLM-powered architecture: modular composition",
+        "component relationships" => "- Foo (class): Main application class\n- Utils (module): Utility functions"
+      })
 
       result = described_class.generate(dir_name, analyses, llm_config)
       expect(result).to include("LLM-powered purpose: core library")
@@ -172,14 +137,15 @@ RSpec.describe AutoDoc::Generator::SummaryGenerator do
     end
 
     it "falls back to static when client not configured" do
-      # no_llm_config has no llm section, so Client.configured? returns false
       result = described_class.generate(dir_name, analyses, no_llm_config)
       expect(result).to include("Core library code")
       expect(result).to include("Modular library")
     end
 
     it "falls back to static when LLM call fails" do
-      allow(http).to receive(:request).and_raise(SocketError, "connection refused")
+      client = instance_double(AutoDoc::LLM::Client)
+      allow(client).to receive(:chat).and_raise(SocketError, "connection refused")
+      allow(AutoDoc::LLM::Client).to receive(:build_if_configured).and_return(client)
 
       result = described_class.generate(dir_name, analyses, llm_config)
       expect(result).to include("Core library code")
@@ -189,8 +155,9 @@ RSpec.describe AutoDoc::Generator::SummaryGenerator do
     end
 
     it "rescues StandardError from LLM code and falls back to static values" do
-      # Make Client.new raise to trigger rescue inside private llm_xxx methods
-      allow(AutoDoc::LLM::Client).to receive(:new).and_raise(StandardError, "Unexpected LLM error")
+      client = instance_double(AutoDoc::LLM::Client)
+      allow(client).to receive(:chat).and_raise(StandardError, "Unexpected LLM error")
+      allow(AutoDoc::LLM::Client).to receive(:build_if_configured).and_return(client)
 
       result = described_class.generate(dir_name, analyses, llm_config)
       expect(result).to include("Core library code")
@@ -200,35 +167,18 @@ RSpec.describe AutoDoc::Generator::SummaryGenerator do
     end
 
     context "with LLM primary mode" do
-      let(:primary_project_dir) { Dir.mktmpdir }
       let(:primary_config) do
-        File.write(File.join(primary_project_dir, ".autodoc.yml"), <<~YAML)
-          llm:
-            provider: openai
-            endpoint: https://api.openai.com/v1
-            api_key: sk-test
-            model: gpt-4o
-            primary: true
-        YAML
-        AutoDoc::Config.load(primary_project_dir)
-      end
-      after { FileUtils.remove_entry(primary_project_dir) }
-
-      before do
-        allow(Net::HTTP).to receive(:new).and_return(http)
-        allow(http).to receive(:open_timeout=)
-        allow(http).to receive(:read_timeout=)
-        allow(http).to receive(:use_ssl=)
+        AutoDoc::Config.load(tmpdir, llm: {
+          endpoint: "https://test", api_key: "test", model: "gpt-4o", primary: true
+        })
       end
 
       it "uses LLM text when LLM succeeds" do
-        allow(http).to receive(:request).and_return(response).exactly(3).times
-        allow(response).to receive(:value).and_return(nil).exactly(3).times
-        allow(response).to receive(:body).and_return(
-          '{"choices":[{"message":{"content":"LLM primary purpose"}}]}',
-          '{"choices":[{"message":{"content":"LLM primary architecture"}}]}',
-          '{"choices":[{"message":{"content":"LLM primary components"}}]}'
-        )
+        mock_llm_client({
+          "what this module does" => "LLM primary purpose",
+          "overall architecture" => "LLM primary architecture",
+          "component relationships" => "LLM primary components"
+        })
 
         result = described_class.generate(dir_name, analyses, primary_config)
         expect(result).to include("LLM primary purpose")
@@ -237,7 +187,9 @@ RSpec.describe AutoDoc::Generator::SummaryGenerator do
       end
 
       it "emits stderr warning and falls back to static when LLM fails" do
-        allow(http).to receive(:request).and_raise(SocketError, "connection refused")
+        client = instance_double(AutoDoc::LLM::Client)
+        allow(client).to receive(:chat).and_raise(SocketError, "connection refused")
+        allow(AutoDoc::LLM::Client).to receive(:build_if_configured).and_return(client)
 
         result = nil
         expect { result = described_class.generate(dir_name, analyses, primary_config) }
@@ -247,7 +199,9 @@ RSpec.describe AutoDoc::Generator::SummaryGenerator do
       end
 
       it "does not emit stderr warning when llm_primary? is false" do
-        allow(http).to receive(:request).and_raise(SocketError, "connection refused")
+        client = instance_double(AutoDoc::LLM::Client)
+        allow(client).to receive(:chat).and_raise(SocketError, "connection refused")
+        allow(AutoDoc::LLM::Client).to receive(:build_if_configured).and_return(client)
 
         expect { described_class.generate(dir_name, analyses, llm_config) }
           .not_to output(/LLM unavailable/).to_stderr

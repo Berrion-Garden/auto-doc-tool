@@ -103,5 +103,39 @@ RSpec.describe AutoDoc::Orchestrator::Pipeline do
       # Should still count correctly
       expect(result[:classes_count]).to be > 0
     end
+
+    it "passes config to each step via context" do
+      expect_any_instance_of(AutoDoc::Orchestrator::AgentsMdStep).to receive(:run) do |_step, ctx|
+        expect(ctx[:config]).to eq(config)
+      end
+
+      pipeline.run(analyses,
+        target_dir: "/project",
+        output_dir: "/project/.docs",
+        module_roots: ["/project/app"],
+        say: say_spy)
+    end
+
+    context "with LLM config" do
+      let(:tmpdir) { Dir.mktmpdir }
+      let(:llm_config) do
+        AutoDoc::Config.load(tmpdir, llm: { endpoint: "https://test", api_key: "test", model: "gpt-4o" })
+      end
+      let(:pipeline) { described_class.new(llm_config) }
+      after { FileUtils.remove_entry(tmpdir) }
+
+      it "passes llm_config to each step" do
+        expect_any_instance_of(AutoDoc::Orchestrator::AgentsMdStep).to receive(:run) do |_step, ctx|
+          cfg = ctx[:config]
+          expect(cfg.llm_config[:endpoint]).to eq("https://test")
+        end
+
+        pipeline.run(analyses,
+          target_dir: "/project",
+          output_dir: "/project/.docs",
+          module_roots: ["/project/app"],
+          say: say_spy)
+      end
+    end
   end
 end

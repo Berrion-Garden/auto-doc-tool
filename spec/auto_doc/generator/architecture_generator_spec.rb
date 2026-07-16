@@ -166,13 +166,16 @@ RSpec.describe AutoDoc::Generator::ArchitectureGenerator do
     end
 
     context "with LLM integration" do
+      let(:tmpdir) { Dir.mktmpdir }
       let(:analyses_hash) { { "lib/foo.rb" => { definitions: [] } } }
+      after { FileUtils.remove_entry(tmpdir) }
+
+      let(:auto_doc_config_obj) do
+        AutoDoc::Config.load(tmpdir, llm: { endpoint: "https://test", api_key: "test", model: "test-model" })
+      end
 
       context "when LLM returns structured data" do
         let(:mock_client) { instance_double(AutoDoc::LLM::Client) }
-        let(:auto_doc_config_obj) do
-          instance_double(AutoDoc::Config, llm_config: { endpoint: "https://test", api_key: "test", model: "test-model" })
-        end
         let(:llm_summary) do
           {
             purpose: "LLM-powered doc tool",
@@ -216,9 +219,6 @@ RSpec.describe AutoDoc::Generator::ArchitectureGenerator do
 
       context "when LLM available but summary returns nil" do
         let(:mock_client) { instance_double(AutoDoc::LLM::Client) }
-        let(:auto_doc_config_obj) do
-          instance_double(AutoDoc::Config, llm_config: { endpoint: "https://test", api_key: "test", model: "test-model" })
-        end
 
         before do
           allow(AutoDoc::LLM::Client).to receive(:build_if_configured).and_return(mock_client)
@@ -239,9 +239,9 @@ RSpec.describe AutoDoc::Generator::ArchitectureGenerator do
 
         context "with llm_primary? enabled" do
           let(:primary_config_obj) do
-            instance_double(AutoDoc::Config,
-              llm_config: { endpoint: "https://test", api_key: "test", model: "test-model" },
-              llm_primary?: true)
+            AutoDoc::Config.load(tmpdir, llm: {
+              endpoint: "https://test", api_key: "test", model: "test-model", primary: true
+            })
           end
 
           it "emits stderr warning for each fallback field" do
@@ -261,8 +261,6 @@ RSpec.describe AutoDoc::Generator::ArchitectureGenerator do
 
         context "with llm_primary? false (default)" do
           it "does not emit stderr warning" do
-            allow($stderr).to receive(:puts) # suppress unrelated output
-
             expect {
               generator.generate(project_name, schema_tables, models, class_hierarchy, config,
                 analyses: analyses_hash, auto_doc_config: auto_doc_config_obj)

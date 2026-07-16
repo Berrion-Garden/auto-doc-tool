@@ -71,7 +71,8 @@ module AutoDoc
       target_dir = File.expand_path(path)
       say.call("  Analyzing #{target_dir}...", :green)
 
-      config = AutoDoc::Config.load(target_dir, { audit: { min_doc_coverage: threshold } })
+      overrides = cli_overrides(@options).merge(audit: { min_doc_coverage: threshold })
+      config = AutoDoc::Config.load(target_dir, overrides)
 
       analyses ||= analyze_project(target_dir, config)
       report   = AutoDoc::Reporter::AuditReporter.generate(target_dir, config, analyses)
@@ -95,7 +96,7 @@ module AutoDoc
       overrides = {}
       overrides[:exclude_patterns] = options[:exclude] if options[:exclude]
       overrides[:incremental] = options[:incremental] if options.key?(:incremental)
-      overrides.compact!
+      overrides[:llm] = { primary: true } if options[:"llm-primary"]
       overrides
     end
 

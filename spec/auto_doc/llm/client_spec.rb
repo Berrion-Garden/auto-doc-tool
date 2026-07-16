@@ -261,6 +261,10 @@ RSpec.describe AutoDoc::LLM::Client do
   end
 
   describe ".build_if_configured" do
+    before do
+      allow(AutoDoc::LLM::Client).to receive(:build_if_configured).and_call_original
+    end
+
     it "returns nil with stderr warning when llm_config raises" do
       config = Object.new
       config.define_singleton_method(:llm_config) { raise StandardError, "something broke" }

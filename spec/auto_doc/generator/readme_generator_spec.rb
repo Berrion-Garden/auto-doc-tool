@@ -98,49 +98,20 @@ RSpec.describe AutoDoc::Generator::ReadmeGenerator do
   end
 
   describe "LLM integration" do
-    before do
-      @original_disable_llm = ENV["AUTO_DOC_DISABLE_LLM"]
-      ENV.delete("AUTO_DOC_DISABLE_LLM")
-    end
-
-    after do
-      if @original_disable_llm
-        ENV["AUTO_DOC_DISABLE_LLM"] = @original_disable_llm
-      else
-        ENV.delete("AUTO_DOC_DISABLE_LLM")
-      end
-    end
-
+    let(:tmpdir) { Dir.mktmpdir }
     let(:analyses) { { "lib/foo.rb" => { definitions: [{ name: "Foo", type: :class }] } } }
     let(:mock_client) { instance_double(AutoDoc::LLM::Client) }
-    let(:llm_project_dir) { Dir.mktmpdir }
     let(:llm_config) do
-      File.write(File.join(llm_project_dir, ".autodoc.yml"), <<~YAML)
-        llm:
-          provider: openai
-          endpoint: https://api.openai.com/v1
-          api_key: sk-test
-          model: gpt-4o
-      YAML
-      AutoDoc::Config.load(llm_project_dir)
+      AutoDoc::Config.load(tmpdir, llm: { endpoint: "https://test", api_key: "test", model: "gpt-4o" })
     end
-    after { FileUtils.remove_entry(llm_project_dir) }
+    let(:primary_config) do
+      AutoDoc::Config.load(tmpdir, llm: {
+        endpoint: "https://test", api_key: "test", model: "gpt-4o", primary: true
+      })
+    end
+    after { FileUtils.remove_entry(tmpdir) }
 
     context "when llm_primary? is true" do
-      let(:primary_project_dir) { Dir.mktmpdir }
-      let(:primary_config) do
-        File.write(File.join(primary_project_dir, ".autodoc.yml"), <<~YAML)
-          llm:
-            provider: openai
-            endpoint: https://api.openai.com/v1
-            api_key: sk-test
-            model: gpt-4o
-            primary: true
-        YAML
-        AutoDoc::Config.load(primary_project_dir)
-      end
-      after { FileUtils.remove_entry(primary_project_dir) }
-
       before do
         allow(AutoDoc::LLM::Client).to receive(:build_if_configured).and_return(mock_client)
       end

@@ -45,6 +45,8 @@ module AutoDoc
                                 desc: "Output format: autodoc (.autodoc/) or docs (.docs/)"
     method_option :output_dir,  type: :string,
                                 desc: "Output directory (default: .docs)"
+    method_option :"llm-primary", type: :boolean, default: false,
+                                desc: "Use LLM as primary documentation source"
     def generate(path = ".")
       return help("generate") if path == "--help" || path == "-h"
 
@@ -104,6 +106,8 @@ module AutoDoc
                               desc: "Minimum doc coverage percentage for passing CI gate"
     method_option :fail, type: :boolean, default: false,
                          desc: "Exit with code 1 if coverage below threshold (CI mode)"
+    method_option :"llm-primary", type: :boolean, default: false,
+                              desc: "Use LLM as primary documentation source"
     def audit(path = ".")
       return help("audit") if path == "--help" || path == "-h"
 
@@ -205,6 +209,8 @@ module AutoDoc
               desc: "Minimum doc coverage percentage for passing CI gate"
     method_option :ci, type: :boolean, default: false,
               desc: "Exit with code 1 on audit failure (for CI pipelines)"
+    method_option :"llm-primary", type: :boolean, default: false,
+              desc: "Use LLM as primary documentation source"
     def verify(path = ".")
       return help("verify") if path == "--help" || path == "-h"
 

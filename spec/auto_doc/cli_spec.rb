@@ -205,6 +205,65 @@ RSpec.describe AutoDoc::CLI do
     end
   end
 
+  describe "generate --llm-primary" do
+    let(:tmpdir) { Dir.mktmpdir }
+    after { FileUtils.remove_entry(tmpdir) }
+
+    before do
+      # Create a minimal Ruby project
+      FileUtils.mkdir_p(File.join(tmpdir, "lib"))
+      File.write(File.join(tmpdir, "lib", "test.rb"), "class Test; end")
+    end
+
+    it "generates docs with --llm-primary flag" do
+      expect(AutoDoc::Config).to receive(:load).with(
+        anything,
+        hash_including(llm: { primary: true })
+      ).at_least(:once).and_call_original
+
+      expect {
+        described_class.start(["generate", "--llm-primary", tmpdir])
+      }.to output(/Documentation generation complete/).to_stdout
+      expect(File).to exist(File.join(tmpdir, ".docs", "README.md"))
+    end
+
+    it "generates docs with --llm-primary combined with --format" do
+      expect(AutoDoc::Config).to receive(:load).with(
+        anything,
+        hash_including(llm: { primary: true })
+      ).at_least(:once).and_call_original
+
+      expect {
+        described_class.start(["generate", "--llm-primary", "--format", "autodoc", tmpdir])
+      }.to output(/Documentation generation complete/).to_stdout
+      expect(File).to exist(File.join(tmpdir, ".autodoc", "README.md"))
+    end
+  end
+
+  describe "audit --llm-primary" do
+    it "runs audit with --llm-primary flag" do
+      expect(AutoDoc::Config).to receive(:load).with(
+        anything,
+        hash_including(llm: { primary: true })
+      ).at_least(:once).and_call_original
+
+      fixture = fixture_path("sample_ruby_project")
+      expect { cli.start(["audit", "--llm-primary", "--threshold", "0", fixture]) }.to output(/Coverage:/).to_stdout
+    end
+  end
+
+  describe "verify --llm-primary" do
+    it "runs verify with --llm-primary flag" do
+      expect(AutoDoc::Config).to receive(:load).with(
+        anything,
+        hash_including(llm: { primary: true })
+      ).at_least(:once).and_call_original
+
+      fixture = fixture_path("sample_ruby_project")
+      expect { cli.start(["verify", "--llm-primary", "--threshold", "0", fixture]) }.to output(/Documentation generation complete/).to_stdout
+    end
+  end
+
   describe "--json flag" do
     describe "generate --json" do
       let(:tmpdir) { Dir.mktmpdir }
