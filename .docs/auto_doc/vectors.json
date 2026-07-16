@@ -7,23 +7,22 @@
       "scope": "public",
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/agent_query_service.rb",
       "line": 7,
-      "summary": "",
+      "summary": "Serves as the main entry point and core module for the library",
       "signature": "AutoDoc",
       "visibility": "public",
       "keywords": [
+        "serves",
         "main",
         "entry",
         "point",
-        "loads",
         "core",
-        "dependencies",
-        "initializes",
+        "module",
         "library"
       ],
       "dependencies": [],
       "consumed_by": [],
       "parent_module": null,
-      "llm_summary": "Main entry point that loads core dependencies and initializes the library."
+      "llm_summary": "Serves as the main entry point and core module for the library"
     },
     {
       "id": "module_AutoDoc",
@@ -32,23 +31,22 @@
       "scope": "public",
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/analyzer/analysis_cache.rb",
       "line": 3,
-      "summary": "",
+      "summary": "Serves as the main entry point and core module for the library",
       "signature": "AutoDoc",
       "visibility": "public",
       "keywords": [
+        "serves",
         "main",
         "entry",
         "point",
-        "loads",
         "core",
-        "dependencies",
-        "initializes",
+        "module",
         "library"
       ],
       "dependencies": [],
       "consumed_by": [],
       "parent_module": null,
-      "llm_summary": "Main entry point that loads core dependencies and initializes the library."
+      "llm_summary": "Serves as the main entry point and core module for the library"
     },
     {
       "id": "module_AutoDoc",
@@ -57,23 +55,22 @@
       "scope": "public",
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/analyzer/analysis_pipeline.rb",
       "line": 3,
-      "summary": "",
+      "summary": "Serves as the main entry point and core module for the library",
       "signature": "AutoDoc",
       "visibility": "public",
       "keywords": [
+        "serves",
         "main",
         "entry",
         "point",
-        "loads",
         "core",
-        "dependencies",
-        "initializes",
+        "module",
         "library"
       ],
       "dependencies": [],
       "consumed_by": [],
       "parent_module": null,
-      "llm_summary": "Main entry point that loads core dependencies and initializes the library."
+      "llm_summary": "Serves as the main entry point and core module for the library"
     },
     {
       "id": "module_AutoDoc",
@@ -82,23 +79,22 @@
       "scope": "public",
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/analyzer/diff_service.rb",
       "line": 3,
-      "summary": "",
+      "summary": "Serves as the main entry point and core module for the library",
       "signature": "AutoDoc",
       "visibility": "public",
       "keywords": [
+        "serves",
         "main",
         "entry",
         "point",
-        "loads",
         "core",
-        "dependencies",
-        "initializes",
+        "module",
         "library"
       ],
       "dependencies": [],
       "consumed_by": [],
       "parent_module": null,
-      "llm_summary": "Main entry point that loads core dependencies and initializes the library."
+      "llm_summary": "Serves as the main entry point and core module for the library"
     },
     {
       "id": "module_AutoDoc",
@@ -107,23 +103,22 @@
       "scope": "public",
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/analyzer/generic_scanner.rb",
       "line": 3,
-      "summary": "",
+      "summary": "Serves as the main entry point and core module for the library",
       "signature": "AutoDoc",
       "visibility": "public",
       "keywords": [
+        "serves",
         "main",
         "entry",
         "point",
-        "loads",
         "core",
-        "dependencies",
-        "initializes",
+        "module",
         "library"
       ],
       "dependencies": [],
       "consumed_by": [],
       "parent_module": null,
-      "llm_summary": "Main entry point that loads core dependencies and initializes the library."
+      "llm_summary": "Serves as the main entry point and core module for the library"
     },
     {
       "id": "module_AutoDoc",
@@ -132,23 +127,22 @@
       "scope": "public",
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/analyzer/import_extractor.rb",
       "line": 3,
-      "summary": "",
+      "summary": "Serves as the main entry point and core module for the library",
       "signature": "AutoDoc",
       "visibility": "public",
       "keywords": [
+        "serves",
         "main",
         "entry",
         "point",
-        "loads",
         "core",
-        "dependencies",
-        "initializes",
+        "module",
         "library"
       ],
       "dependencies": [],
       "consumed_by": [],
       "parent_module": null,
-      "llm_summary": "Main entry point that loads core dependencies and initializes the library."
+      "llm_summary": "Serves as the main entry point and core module for the library"
     },
     {
       "id": "module_AutoDoc",
@@ -157,23 +151,22 @@
       "scope": "public",
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/analyzer/model_association_parser.rb",
       "line": 3,
-      "summary": "",
+      "summary": "Serves as the main entry point and core module for the library",
       "signature": "AutoDoc",
       "visibility": "public",
       "keywords": [
+        "serves",
         "main",
         "entry",
         "point",
-        "loads",
         "core",
-        "dependencies",
-        "initializes",
+        "module",
         "library"
       ],
       "dependencies": [],
       "consumed_by": [],
       "parent_module": null,
-      "llm_summary": "Main entry point that loads core dependencies and initializes the library."
+      "llm_summary": "Serves as the main entry point and core module for the library"
     },
     {
       "id": "module_AutoDoc",
@@ -182,23 +175,22 @@
       "scope": "public",
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/analyzer/orphans_service.rb",
       "line": 5,
-      "summary": "",
+      "summary": "Serves as the main entry point and core module for the library",
       "signature": "AutoDoc",
       "visibility": "public",
       "keywords": [
+        "serves",
         "main",
         "entry",
         "point",
-        "loads",
         "core",
-        "dependencies",
-        "initializes",
+        "module",
         "library"
       ],
       "dependencies": [],
       "consumed_by": [],
       "parent_module": null,
-      "llm_summary": "Main entry point that loads core dependencies and initializes the library."
+      "llm_summary": "Serves as the main entry point and core module for the library"
     },
     {
       "id": "module_AutoDoc",
@@ -207,23 +199,22 @@
       "scope": "public",
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/analyzer/schema_parser.rb",
       "line": 3,
-      "summary": "",
+      "summary": "Serves as the main entry point and core module for the library",
       "signature": "AutoDoc",
       "visibility": "public",
       "keywords": [
+        "serves",
         "main",
         "entry",
         "point",
-        "loads",
         "core",
-        "dependencies",
-        "initializes",
+        "module",
         "library"
       ],
       "dependencies": [],
       "consumed_by": [],
       "parent_module": null,
-      "llm_summary": "Main entry point that loads core dependencies and initializes the library."
+      "llm_summary": "Serves as the main entry point and core module for the library"
     },
     {
       "id": "module_AutoDoc",
@@ -232,23 +223,22 @@
       "scope": "public",
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/analyzer/source_parser.rb",
       "line": 5,
-      "summary": "",
+      "summary": "Serves as the main entry point and core module for the library",
       "signature": "AutoDoc",
       "visibility": "public",
       "keywords": [
+        "serves",
         "main",
         "entry",
         "point",
-        "loads",
         "core",
-        "dependencies",
-        "initializes",
+        "module",
         "library"
       ],
       "dependencies": [],
       "consumed_by": [],
       "parent_module": null,
-      "llm_summary": "Main entry point that loads core dependencies and initializes the library."
+      "llm_summary": "Serves as the main entry point and core module for the library"
     },
     {
       "id": "module_AutoDoc",
@@ -257,23 +247,22 @@
       "scope": "public",
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/analyzer/yard_reader.rb",
       "line": 9,
-      "summary": "",
+      "summary": "Serves as the main entry point and core module for the library",
       "signature": "AutoDoc",
       "visibility": "public",
       "keywords": [
+        "serves",
         "main",
         "entry",
         "point",
-        "loads",
         "core",
-        "dependencies",
-        "initializes",
+        "module",
         "library"
       ],
       "dependencies": [],
       "consumed_by": [],
       "parent_module": null,
-      "llm_summary": "Main entry point that loads core dependencies and initializes the library."
+      "llm_summary": "Serves as the main entry point and core module for the library"
     },
     {
       "id": "module_AutoDoc",
@@ -282,23 +271,22 @@
       "scope": "public",
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/cli.rb",
       "line": 8,
-      "summary": "",
+      "summary": "Serves as the main entry point and core module for the library",
       "signature": "AutoDoc",
       "visibility": "public",
       "keywords": [
+        "serves",
         "main",
         "entry",
         "point",
-        "loads",
         "core",
-        "dependencies",
-        "initializes",
+        "module",
         "library"
       ],
       "dependencies": [],
       "consumed_by": [],
       "parent_module": null,
-      "llm_summary": "Main entry point that loads core dependencies and initializes the library."
+      "llm_summary": "Serves as the main entry point and core module for the library"
     },
     {
       "id": "module_AutoDoc",
@@ -307,23 +295,22 @@
       "scope": "public",
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/config.rb",
       "line": 10,
-      "summary": "",
+      "summary": "Serves as the main entry point and core module for the library",
       "signature": "AutoDoc",
       "visibility": "public",
       "keywords": [
+        "serves",
         "main",
         "entry",
         "point",
-        "loads",
         "core",
-        "dependencies",
-        "initializes",
+        "module",
         "library"
       ],
       "dependencies": [],
       "consumed_by": [],
       "parent_module": null,
-      "llm_summary": "Main entry point that loads core dependencies and initializes the library."
+      "llm_summary": "Serves as the main entry point and core module for the library"
     },
     {
       "id": "module_AutoDoc",
@@ -332,23 +319,22 @@
       "scope": "public",
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/documentation_index.rb",
       "line": 6,
-      "summary": "",
+      "summary": "Serves as the main entry point and core module for the library",
       "signature": "AutoDoc",
       "visibility": "public",
       "keywords": [
+        "serves",
         "main",
         "entry",
         "point",
-        "loads",
         "core",
-        "dependencies",
-        "initializes",
+        "module",
         "library"
       ],
       "dependencies": [],
       "consumed_by": [],
       "parent_module": null,
-      "llm_summary": "Main entry point that loads core dependencies and initializes the library."
+      "llm_summary": "Serves as the main entry point and core module for the library"
     },
     {
       "id": "module_AutoDoc",
@@ -357,23 +343,22 @@
       "scope": "public",
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/errors.rb",
       "line": 3,
-      "summary": "",
+      "summary": "Serves as the main entry point and core module for the library",
       "signature": "AutoDoc",
       "visibility": "public",
       "keywords": [
+        "serves",
         "main",
         "entry",
         "point",
-        "loads",
         "core",
-        "dependencies",
-        "initializes",
+        "module",
         "library"
       ],
       "dependencies": [],
       "consumed_by": [],
       "parent_module": null,
-      "llm_summary": "Main entry point that loads core dependencies and initializes the library."
+      "llm_summary": "Serves as the main entry point and core module for the library"
     },
     {
       "id": "module_AutoDoc",
@@ -382,23 +367,22 @@
       "scope": "public",
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/generator/agents_md_generator.rb",
       "line": 6,
-      "summary": "",
+      "summary": "Serves as the main entry point and core module for the library",
       "signature": "AutoDoc",
       "visibility": "public",
       "keywords": [
+        "serves",
         "main",
         "entry",
         "point",
-        "loads",
         "core",
-        "dependencies",
-        "initializes",
+        "module",
         "library"
       ],
       "dependencies": [],
       "consumed_by": [],
       "parent_module": null,
-      "llm_summary": "Main entry point that loads core dependencies and initializes the library."
+      "llm_summary": "Serves as the main entry point and core module for the library"
     },
     {
       "id": "module_AutoDoc",
@@ -407,23 +391,22 @@
       "scope": "public",
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/generator/agents_overview_generator.rb",
       "line": 7,
-      "summary": "",
+      "summary": "Serves as the main entry point and core module for the library",
       "signature": "AutoDoc",
       "visibility": "public",
       "keywords": [
+        "serves",
         "main",
         "entry",
         "point",
-        "loads",
         "core",
-        "dependencies",
-        "initializes",
+        "module",
         "library"
       ],
       "dependencies": [],
       "consumed_by": [],
       "parent_module": null,
-      "llm_summary": "Main entry point that loads core dependencies and initializes the library."
+      "llm_summary": "Serves as the main entry point and core module for the library"
     },
     {
       "id": "module_AutoDoc",
@@ -432,23 +415,22 @@
       "scope": "public",
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/generator/architecture_generator.rb",
       "line": 6,
-      "summary": "",
+      "summary": "Serves as the main entry point and core module for the library",
       "signature": "AutoDoc",
       "visibility": "public",
       "keywords": [
+        "serves",
         "main",
         "entry",
         "point",
-        "loads",
         "core",
-        "dependencies",
-        "initializes",
+        "module",
         "library"
       ],
       "dependencies": [],
       "consumed_by": [],
       "parent_module": null,
-      "llm_summary": "Main entry point that loads core dependencies and initializes the library."
+      "llm_summary": "Serves as the main entry point and core module for the library"
     },
     {
       "id": "module_AutoDoc",
@@ -457,23 +439,22 @@
       "scope": "public",
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/generator/c4_diagram_generator.rb",
       "line": 6,
-      "summary": "",
+      "summary": "Serves as the main entry point and core module for the library",
       "signature": "AutoDoc",
       "visibility": "public",
       "keywords": [
+        "serves",
         "main",
         "entry",
         "point",
-        "loads",
         "core",
-        "dependencies",
-        "initializes",
+        "module",
         "library"
       ],
       "dependencies": [],
       "consumed_by": [],
       "parent_module": null,
-      "llm_summary": "Main entry point that loads core dependencies and initializes the library."
+      "llm_summary": "Serves as the main entry point and core module for the library"
     },
     {
       "id": "module_AutoDoc",
@@ -482,23 +463,22 @@
       "scope": "public",
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/generator/class_diagram_generator.rb",
       "line": 6,
-      "summary": "",
+      "summary": "Serves as the main entry point and core module for the library",
       "signature": "AutoDoc",
       "visibility": "public",
       "keywords": [
+        "serves",
         "main",
         "entry",
         "point",
-        "loads",
         "core",
-        "dependencies",
-        "initializes",
+        "module",
         "library"
       ],
       "dependencies": [],
       "consumed_by": [],
       "parent_module": null,
-      "llm_summary": "Main entry point that loads core dependencies and initializes the library."
+      "llm_summary": "Serves as the main entry point and core module for the library"
     },
     {
       "id": "module_AutoDoc",
@@ -507,23 +487,22 @@
       "scope": "public",
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/generator/diagram_generator.rb",
       "line": 6,
-      "summary": "",
+      "summary": "Serves as the main entry point and core module for the library",
       "signature": "AutoDoc",
       "visibility": "public",
       "keywords": [
+        "serves",
         "main",
         "entry",
         "point",
-        "loads",
         "core",
-        "dependencies",
-        "initializes",
+        "module",
         "library"
       ],
       "dependencies": [],
       "consumed_by": [],
       "parent_module": null,
-      "llm_summary": "Main entry point that loads core dependencies and initializes the library."
+      "llm_summary": "Serves as the main entry point and core module for the library"
     },
     {
       "id": "module_AutoDoc",
@@ -532,23 +511,22 @@
       "scope": "public",
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/generator/erd_generator.rb",
       "line": 6,
-      "summary": "",
+      "summary": "Serves as the main entry point and core module for the library",
       "signature": "AutoDoc",
       "visibility": "public",
       "keywords": [
+        "serves",
         "main",
         "entry",
         "point",
-        "loads",
         "core",
-        "dependencies",
-        "initializes",
+        "module",
         "library"
       ],
       "dependencies": [],
       "consumed_by": [],
       "parent_module": null,
-      "llm_summary": "Main entry point that loads core dependencies and initializes the library."
+      "llm_summary": "Serves as the main entry point and core module for the library"
     },
     {
       "id": "module_AutoDoc",
@@ -557,23 +535,22 @@
       "scope": "public",
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/generator/index_generator.rb",
       "line": 6,
-      "summary": "",
+      "summary": "Serves as the main entry point and core module for the library",
       "signature": "AutoDoc",
       "visibility": "public",
       "keywords": [
+        "serves",
         "main",
         "entry",
         "point",
-        "loads",
         "core",
-        "dependencies",
-        "initializes",
+        "module",
         "library"
       ],
       "dependencies": [],
       "consumed_by": [],
       "parent_module": null,
-      "llm_summary": "Main entry point that loads core dependencies and initializes the library."
+      "llm_summary": "Serves as the main entry point and core module for the library"
     },
     {
       "id": "module_AutoDoc",
@@ -582,23 +559,22 @@
       "scope": "public",
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/generator/map_generator.rb",
       "line": 6,
-      "summary": "",
+      "summary": "Serves as the main entry point and core module for the library",
       "signature": "AutoDoc",
       "visibility": "public",
       "keywords": [
+        "serves",
         "main",
         "entry",
         "point",
-        "loads",
         "core",
-        "dependencies",
-        "initializes",
+        "module",
         "library"
       ],
       "dependencies": [],
       "consumed_by": [],
       "parent_module": null,
-      "llm_summary": "Main entry point that loads core dependencies and initializes the library."
+      "llm_summary": "Serves as the main entry point and core module for the library"
     },
     {
       "id": "module_AutoDoc",
@@ -607,23 +583,22 @@
       "scope": "public",
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/generator/readme_generator.rb",
       "line": 6,
-      "summary": "",
+      "summary": "Serves as the main entry point and core module for the library",
       "signature": "AutoDoc",
       "visibility": "public",
       "keywords": [
+        "serves",
         "main",
         "entry",
         "point",
-        "loads",
         "core",
-        "dependencies",
-        "initializes",
+        "module",
         "library"
       ],
       "dependencies": [],
       "consumed_by": [],
       "parent_module": null,
-      "llm_summary": "Main entry point that loads core dependencies and initializes the library."
+      "llm_summary": "Serves as the main entry point and core module for the library"
     },
     {
       "id": "module_AutoDoc",
@@ -632,23 +607,22 @@
       "scope": "public",
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/generator/summary_generator.rb",
       "line": 6,
-      "summary": "",
+      "summary": "Serves as the main entry point and core module for the library",
       "signature": "AutoDoc",
       "visibility": "public",
       "keywords": [
+        "serves",
         "main",
         "entry",
         "point",
-        "loads",
         "core",
-        "dependencies",
-        "initializes",
+        "module",
         "library"
       ],
       "dependencies": [],
       "consumed_by": [],
       "parent_module": null,
-      "llm_summary": "Main entry point that loads core dependencies and initializes the library."
+      "llm_summary": "Serves as the main entry point and core module for the library"
     },
     {
       "id": "module_AutoDoc",
@@ -657,23 +631,22 @@
       "scope": "public",
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/generator/template_helper.rb",
       "line": 3,
-      "summary": "",
+      "summary": "Serves as the main entry point and core module for the library",
       "signature": "AutoDoc",
       "visibility": "public",
       "keywords": [
+        "serves",
         "main",
         "entry",
         "point",
-        "loads",
         "core",
-        "dependencies",
-        "initializes",
+        "module",
         "library"
       ],
       "dependencies": [],
       "consumed_by": [],
       "parent_module": null,
-      "llm_summary": "Main entry point that loads core dependencies and initializes the library."
+      "llm_summary": "Serves as the main entry point and core module for the library"
     },
     {
       "id": "module_AutoDoc",
@@ -682,23 +655,22 @@
       "scope": "public",
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/generator/vector_generator.rb",
       "line": 6,
-      "summary": "",
+      "summary": "Serves as the main entry point and core module for the library",
       "signature": "AutoDoc",
       "visibility": "public",
       "keywords": [
+        "serves",
         "main",
         "entry",
         "point",
-        "loads",
         "core",
-        "dependencies",
-        "initializes",
+        "module",
         "library"
       ],
       "dependencies": [],
       "consumed_by": [],
       "parent_module": null,
-      "llm_summary": "Main entry point that loads core dependencies and initializes the library."
+      "llm_summary": "Serves as the main entry point and core module for the library"
     },
     {
       "id": "module_AutoDoc",
@@ -707,23 +679,46 @@
       "scope": "public",
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/llm/client.rb",
       "line": 7,
-      "summary": "",
+      "summary": "Serves as the main entry point and core module for the library",
       "signature": "AutoDoc",
       "visibility": "public",
       "keywords": [
+        "serves",
         "main",
         "entry",
         "point",
-        "loads",
         "core",
-        "dependencies",
-        "initializes",
+        "module",
         "library"
       ],
       "dependencies": [],
       "consumed_by": [],
       "parent_module": null,
-      "llm_summary": "Main entry point that loads core dependencies and initializes the library."
+      "llm_summary": "Serves as the main entry point and core module for the library"
+    },
+    {
+      "id": "module_AutoDoc",
+      "symbol": "AutoDoc",
+      "type": "module",
+      "scope": "public",
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/llm/enricher.rb",
+      "line": 3,
+      "summary": "Serves as the main entry point and core module for the library",
+      "signature": "AutoDoc",
+      "visibility": "public",
+      "keywords": [
+        "serves",
+        "main",
+        "entry",
+        "point",
+        "core",
+        "module",
+        "library"
+      ],
+      "dependencies": [],
+      "consumed_by": [],
+      "parent_module": null,
+      "llm_summary": "Serves as the main entry point and core module for the library"
     },
     {
       "id": "module_AutoDoc",
@@ -732,23 +727,22 @@
       "scope": "public",
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/llm/prompt_builder.rb",
       "line": 3,
-      "summary": "",
+      "summary": "Serves as the main entry point and core module for the library",
       "signature": "AutoDoc",
       "visibility": "public",
       "keywords": [
+        "serves",
         "main",
         "entry",
         "point",
-        "loads",
         "core",
-        "dependencies",
-        "initializes",
+        "module",
         "library"
       ],
       "dependencies": [],
       "consumed_by": [],
       "parent_module": null,
-      "llm_summary": "Main entry point that loads core dependencies and initializes the library."
+      "llm_summary": "Serves as the main entry point and core module for the library"
     },
     {
       "id": "module_AutoDoc",
@@ -757,23 +751,22 @@
       "scope": "public",
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/llm/response_parser.rb",
       "line": 5,
-      "summary": "",
+      "summary": "Serves as the main entry point and core module for the library",
       "signature": "AutoDoc",
       "visibility": "public",
       "keywords": [
+        "serves",
         "main",
         "entry",
         "point",
-        "loads",
         "core",
-        "dependencies",
-        "initializes",
+        "module",
         "library"
       ],
       "dependencies": [],
       "consumed_by": [],
       "parent_module": null,
-      "llm_summary": "Main entry point that loads core dependencies and initializes the library."
+      "llm_summary": "Serves as the main entry point and core module for the library"
     },
     {
       "id": "module_AutoDoc",
@@ -782,23 +775,22 @@
       "scope": "public",
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/llm/summarizer.rb",
       "line": 3,
-      "summary": "",
+      "summary": "Serves as the main entry point and core module for the library",
       "signature": "AutoDoc",
       "visibility": "public",
       "keywords": [
+        "serves",
         "main",
         "entry",
         "point",
-        "loads",
         "core",
-        "dependencies",
-        "initializes",
+        "module",
         "library"
       ],
       "dependencies": [],
       "consumed_by": [],
       "parent_module": null,
-      "llm_summary": "Main entry point that loads core dependencies and initializes the library."
+      "llm_summary": "Serves as the main entry point and core module for the library"
     },
     {
       "id": "module_AutoDoc",
@@ -807,23 +799,22 @@
       "scope": "public",
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/llm.rb",
       "line": 3,
-      "summary": "",
+      "summary": "Serves as the main entry point and core module for the library",
       "signature": "AutoDoc",
       "visibility": "public",
       "keywords": [
+        "serves",
         "main",
         "entry",
         "point",
-        "loads",
         "core",
-        "dependencies",
-        "initializes",
+        "module",
         "library"
       ],
       "dependencies": [],
       "consumed_by": [],
       "parent_module": null,
-      "llm_summary": "Main entry point that loads core dependencies and initializes the library."
+      "llm_summary": "Serves as the main entry point and core module for the library"
     },
     {
       "id": "module_AutoDoc",
@@ -832,23 +823,22 @@
       "scope": "public",
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/orchestrator/agents_md_step.rb",
       "line": 3,
-      "summary": "",
+      "summary": "Serves as the main entry point and core module for the library",
       "signature": "AutoDoc",
       "visibility": "public",
       "keywords": [
+        "serves",
         "main",
         "entry",
         "point",
-        "loads",
         "core",
-        "dependencies",
-        "initializes",
+        "module",
         "library"
       ],
       "dependencies": [],
       "consumed_by": [],
       "parent_module": null,
-      "llm_summary": "Main entry point that loads core dependencies and initializes the library."
+      "llm_summary": "Serves as the main entry point and core module for the library"
     },
     {
       "id": "module_AutoDoc",
@@ -857,23 +847,22 @@
       "scope": "public",
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/orchestrator/agents_overview_step.rb",
       "line": 3,
-      "summary": "",
+      "summary": "Serves as the main entry point and core module for the library",
       "signature": "AutoDoc",
       "visibility": "public",
       "keywords": [
+        "serves",
         "main",
         "entry",
         "point",
-        "loads",
         "core",
-        "dependencies",
-        "initializes",
+        "module",
         "library"
       ],
       "dependencies": [],
       "consumed_by": [],
       "parent_module": null,
-      "llm_summary": "Main entry point that loads core dependencies and initializes the library."
+      "llm_summary": "Serves as the main entry point and core module for the library"
     },
     {
       "id": "module_AutoDoc",
@@ -882,23 +871,22 @@
       "scope": "public",
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/orchestrator/architecture_step.rb",
       "line": 3,
-      "summary": "",
+      "summary": "Serves as the main entry point and core module for the library",
       "signature": "AutoDoc",
       "visibility": "public",
       "keywords": [
+        "serves",
         "main",
         "entry",
         "point",
-        "loads",
         "core",
-        "dependencies",
-        "initializes",
+        "module",
         "library"
       ],
       "dependencies": [],
       "consumed_by": [],
       "parent_module": null,
-      "llm_summary": "Main entry point that loads core dependencies and initializes the library."
+      "llm_summary": "Serves as the main entry point and core module for the library"
     },
     {
       "id": "module_AutoDoc",
@@ -907,23 +895,22 @@
       "scope": "public",
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/orchestrator/base_step.rb",
       "line": 3,
-      "summary": "",
+      "summary": "Serves as the main entry point and core module for the library",
       "signature": "AutoDoc",
       "visibility": "public",
       "keywords": [
+        "serves",
         "main",
         "entry",
         "point",
-        "loads",
         "core",
-        "dependencies",
-        "initializes",
+        "module",
         "library"
       ],
       "dependencies": [],
       "consumed_by": [],
       "parent_module": null,
-      "llm_summary": "Main entry point that loads core dependencies and initializes the library."
+      "llm_summary": "Serves as the main entry point and core module for the library"
     },
     {
       "id": "module_AutoDoc",
@@ -932,23 +919,22 @@
       "scope": "public",
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/orchestrator/diagram_step.rb",
       "line": 5,
-      "summary": "",
+      "summary": "Serves as the main entry point and core module for the library",
       "signature": "AutoDoc",
       "visibility": "public",
       "keywords": [
+        "serves",
         "main",
         "entry",
         "point",
-        "loads",
         "core",
-        "dependencies",
-        "initializes",
+        "module",
         "library"
       ],
       "dependencies": [],
       "consumed_by": [],
       "parent_module": null,
-      "llm_summary": "Main entry point that loads core dependencies and initializes the library."
+      "llm_summary": "Serves as the main entry point and core module for the library"
     },
     {
       "id": "module_AutoDoc",
@@ -957,23 +943,22 @@
       "scope": "public",
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/orchestrator/index_summary_vectors_step.rb",
       "line": 5,
-      "summary": "",
+      "summary": "Serves as the main entry point and core module for the library",
       "signature": "AutoDoc",
       "visibility": "public",
       "keywords": [
+        "serves",
         "main",
         "entry",
         "point",
-        "loads",
         "core",
-        "dependencies",
-        "initializes",
+        "module",
         "library"
       ],
       "dependencies": [],
       "consumed_by": [],
       "parent_module": null,
-      "llm_summary": "Main entry point that loads core dependencies and initializes the library."
+      "llm_summary": "Serves as the main entry point and core module for the library"
     },
     {
       "id": "module_AutoDoc",
@@ -982,23 +967,22 @@
       "scope": "public",
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/orchestrator/manifest_step.rb",
       "line": 3,
-      "summary": "",
+      "summary": "Serves as the main entry point and core module for the library",
       "signature": "AutoDoc",
       "visibility": "public",
       "keywords": [
+        "serves",
         "main",
         "entry",
         "point",
-        "loads",
         "core",
-        "dependencies",
-        "initializes",
+        "module",
         "library"
       ],
       "dependencies": [],
       "consumed_by": [],
       "parent_module": null,
-      "llm_summary": "Main entry point that loads core dependencies and initializes the library."
+      "llm_summary": "Serves as the main entry point and core module for the library"
     },
     {
       "id": "module_AutoDoc",
@@ -1007,23 +991,22 @@
       "scope": "public",
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/orchestrator/metrics_helper.rb",
       "line": 3,
-      "summary": "",
+      "summary": "Serves as the main entry point and core module for the library",
       "signature": "AutoDoc",
       "visibility": "public",
       "keywords": [
+        "serves",
         "main",
         "entry",
         "point",
-        "loads",
         "core",
-        "dependencies",
-        "initializes",
+        "module",
         "library"
       ],
       "dependencies": [],
       "consumed_by": [],
       "parent_module": null,
-      "llm_summary": "Main entry point that loads core dependencies and initializes the library."
+      "llm_summary": "Serves as the main entry point and core module for the library"
     },
     {
       "id": "module_AutoDoc",
@@ -1032,23 +1015,22 @@
       "scope": "public",
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/orchestrator/pipeline.rb",
       "line": 3,
-      "summary": "",
+      "summary": "Serves as the main entry point and core module for the library",
       "signature": "AutoDoc",
       "visibility": "public",
       "keywords": [
+        "serves",
         "main",
         "entry",
         "point",
-        "loads",
         "core",
-        "dependencies",
-        "initializes",
+        "module",
         "library"
       ],
       "dependencies": [],
       "consumed_by": [],
       "parent_module": null,
-      "llm_summary": "Main entry point that loads core dependencies and initializes the library."
+      "llm_summary": "Serves as the main entry point and core module for the library"
     },
     {
       "id": "module_AutoDoc",
@@ -1057,23 +1039,22 @@
       "scope": "public",
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/orchestrator/readme_step.rb",
       "line": 3,
-      "summary": "",
+      "summary": "Serves as the main entry point and core module for the library",
       "signature": "AutoDoc",
       "visibility": "public",
       "keywords": [
+        "serves",
         "main",
         "entry",
         "point",
-        "loads",
         "core",
-        "dependencies",
-        "initializes",
+        "module",
         "library"
       ],
       "dependencies": [],
       "consumed_by": [],
       "parent_module": null,
-      "llm_summary": "Main entry point that loads core dependencies and initializes the library."
+      "llm_summary": "Serves as the main entry point and core module for the library"
     },
     {
       "id": "module_AutoDoc",
@@ -1082,23 +1063,22 @@
       "scope": "public",
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/orchestrator.rb",
       "line": 7,
-      "summary": "",
+      "summary": "Serves as the main entry point and core module for the library",
       "signature": "AutoDoc",
       "visibility": "public",
       "keywords": [
+        "serves",
         "main",
         "entry",
         "point",
-        "loads",
         "core",
-        "dependencies",
-        "initializes",
+        "module",
         "library"
       ],
       "dependencies": [],
       "consumed_by": [],
       "parent_module": null,
-      "llm_summary": "Main entry point that loads core dependencies and initializes the library."
+      "llm_summary": "Serves as the main entry point and core module for the library"
     },
     {
       "id": "module_AutoDoc",
@@ -1107,23 +1087,22 @@
       "scope": "public",
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/reporter/audit_reporter.rb",
       "line": 7,
-      "summary": "",
+      "summary": "Serves as the main entry point and core module for the library",
       "signature": "AutoDoc",
       "visibility": "public",
       "keywords": [
+        "serves",
         "main",
         "entry",
         "point",
-        "loads",
         "core",
-        "dependencies",
-        "initializes",
+        "module",
         "library"
       ],
       "dependencies": [],
       "consumed_by": [],
       "parent_module": null,
-      "llm_summary": "Main entry point that loads core dependencies and initializes the library."
+      "llm_summary": "Serves as the main entry point and core module for the library"
     },
     {
       "id": "module_AutoDoc",
@@ -1132,23 +1111,22 @@
       "scope": "public",
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/reporter/completeness_checker.rb",
       "line": 3,
-      "summary": "",
+      "summary": "Serves as the main entry point and core module for the library",
       "signature": "AutoDoc",
       "visibility": "public",
       "keywords": [
+        "serves",
         "main",
         "entry",
         "point",
-        "loads",
         "core",
-        "dependencies",
-        "initializes",
+        "module",
         "library"
       ],
       "dependencies": [],
       "consumed_by": [],
       "parent_module": null,
-      "llm_summary": "Main entry point that loads core dependencies and initializes the library."
+      "llm_summary": "Serves as the main entry point and core module for the library"
     },
     {
       "id": "module_AutoDoc",
@@ -1157,23 +1135,22 @@
       "scope": "public",
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/search_service.rb",
       "line": 6,
-      "summary": "",
+      "summary": "Serves as the main entry point and core module for the library",
       "signature": "AutoDoc",
       "visibility": "public",
       "keywords": [
+        "serves",
         "main",
         "entry",
         "point",
-        "loads",
         "core",
-        "dependencies",
-        "initializes",
+        "module",
         "library"
       ],
       "dependencies": [],
       "consumed_by": [],
       "parent_module": null,
-      "llm_summary": "Main entry point that loads core dependencies and initializes the library."
+      "llm_summary": "Serves as the main entry point and core module for the library"
     },
     {
       "id": "module_AutoDoc",
@@ -1182,23 +1159,22 @@
       "scope": "public",
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/server.rb",
       "line": 7,
-      "summary": "",
+      "summary": "Serves as the main entry point and core module for the library",
       "signature": "AutoDoc",
       "visibility": "public",
       "keywords": [
+        "serves",
         "main",
         "entry",
         "point",
-        "loads",
         "core",
-        "dependencies",
-        "initializes",
+        "module",
         "library"
       ],
       "dependencies": [],
       "consumed_by": [],
       "parent_module": null,
-      "llm_summary": "Main entry point that loads core dependencies and initializes the library."
+      "llm_summary": "Serves as the main entry point and core module for the library"
     },
     {
       "id": "module_AutoDoc",
@@ -1207,23 +1183,22 @@
       "scope": "public",
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/tester/e2e_runner.rb",
       "line": 6,
-      "summary": "",
+      "summary": "Serves as the main entry point and core module for the library",
       "signature": "AutoDoc",
       "visibility": "public",
       "keywords": [
+        "serves",
         "main",
         "entry",
         "point",
-        "loads",
         "core",
-        "dependencies",
-        "initializes",
+        "module",
         "library"
       ],
       "dependencies": [],
       "consumed_by": [],
       "parent_module": null,
-      "llm_summary": "Main entry point that loads core dependencies and initializes the library."
+      "llm_summary": "Serves as the main entry point and core module for the library"
     },
     {
       "id": "module_AutoDoc",
@@ -1232,23 +1207,22 @@
       "scope": "public",
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/transformer/class_hierarchy_builder.rb",
       "line": 3,
-      "summary": "",
+      "summary": "Serves as the main entry point and core module for the library",
       "signature": "AutoDoc",
       "visibility": "public",
       "keywords": [
+        "serves",
         "main",
         "entry",
         "point",
-        "loads",
         "core",
-        "dependencies",
-        "initializes",
+        "module",
         "library"
       ],
       "dependencies": [],
       "consumed_by": [],
       "parent_module": null,
-      "llm_summary": "Main entry point that loads core dependencies and initializes the library."
+      "llm_summary": "Serves as the main entry point and core module for the library"
     },
     {
       "id": "module_AutoDoc",
@@ -1257,23 +1231,22 @@
       "scope": "public",
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/transformer/container_data_flow_builder.rb",
       "line": 3,
-      "summary": "",
+      "summary": "Serves as the main entry point and core module for the library",
       "signature": "AutoDoc",
       "visibility": "public",
       "keywords": [
+        "serves",
         "main",
         "entry",
         "point",
-        "loads",
         "core",
-        "dependencies",
-        "initializes",
+        "module",
         "library"
       ],
       "dependencies": [],
       "consumed_by": [],
       "parent_module": null,
-      "llm_summary": "Main entry point that loads core dependencies and initializes the library."
+      "llm_summary": "Serves as the main entry point and core module for the library"
     },
     {
       "id": "module_AutoDoc",
@@ -1282,23 +1255,22 @@
       "scope": "public",
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/transformer/erd_relationship_builder.rb",
       "line": 3,
-      "summary": "",
+      "summary": "Serves as the main entry point and core module for the library",
       "signature": "AutoDoc",
       "visibility": "public",
       "keywords": [
+        "serves",
         "main",
         "entry",
         "point",
-        "loads",
         "core",
-        "dependencies",
-        "initializes",
+        "module",
         "library"
       ],
       "dependencies": [],
       "consumed_by": [],
       "parent_module": null,
-      "llm_summary": "Main entry point that loads core dependencies and initializes the library."
+      "llm_summary": "Serves as the main entry point and core module for the library"
     },
     {
       "id": "module_AutoDoc",
@@ -1307,23 +1279,22 @@
       "scope": "public",
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/transformer/files_data_builder.rb",
       "line": 3,
-      "summary": "",
+      "summary": "Serves as the main entry point and core module for the library",
       "signature": "AutoDoc",
       "visibility": "public",
       "keywords": [
+        "serves",
         "main",
         "entry",
         "point",
-        "loads",
         "core",
-        "dependencies",
-        "initializes",
+        "module",
         "library"
       ],
       "dependencies": [],
       "consumed_by": [],
       "parent_module": null,
-      "llm_summary": "Main entry point that loads core dependencies and initializes the library."
+      "llm_summary": "Serves as the main entry point and core module for the library"
     },
     {
       "id": "module_AutoDoc",
@@ -1332,23 +1303,22 @@
       "scope": "public",
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/transformer/graph_data_builder.rb",
       "line": 3,
-      "summary": "",
+      "summary": "Serves as the main entry point and core module for the library",
       "signature": "AutoDoc",
       "visibility": "public",
       "keywords": [
+        "serves",
         "main",
         "entry",
         "point",
-        "loads",
         "core",
-        "dependencies",
-        "initializes",
+        "module",
         "library"
       ],
       "dependencies": [],
       "consumed_by": [],
       "parent_module": null,
-      "llm_summary": "Main entry point that loads core dependencies and initializes the library."
+      "llm_summary": "Serves as the main entry point and core module for the library"
     },
     {
       "id": "module_AutoDoc",
@@ -1357,23 +1327,22 @@
       "scope": "public",
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/transformer.rb",
       "line": 3,
-      "summary": "",
+      "summary": "Serves as the main entry point and core module for the library",
       "signature": "AutoDoc",
       "visibility": "public",
       "keywords": [
+        "serves",
         "main",
         "entry",
         "point",
-        "loads",
         "core",
-        "dependencies",
-        "initializes",
+        "module",
         "library"
       ],
       "dependencies": [],
       "consumed_by": [],
       "parent_module": null,
-      "llm_summary": "Main entry point that loads core dependencies and initializes the library."
+      "llm_summary": "Serves as the main entry point and core module for the library"
     },
     {
       "id": "module_AutoDoc",
@@ -1382,23 +1351,22 @@
       "scope": "public",
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/utils/file_tree_builder.rb",
       "line": 3,
-      "summary": "",
+      "summary": "Serves as the main entry point and core module for the library",
       "signature": "AutoDoc",
       "visibility": "public",
       "keywords": [
+        "serves",
         "main",
         "entry",
         "point",
-        "loads",
         "core",
-        "dependencies",
-        "initializes",
+        "module",
         "library"
       ],
       "dependencies": [],
       "consumed_by": [],
       "parent_module": null,
-      "llm_summary": "Main entry point that loads core dependencies and initializes the library."
+      "llm_summary": "Serves as the main entry point and core module for the library"
     },
     {
       "id": "module_AutoDoc",
@@ -1407,23 +1375,22 @@
       "scope": "public",
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/utils/markdown_helper.rb",
       "line": 3,
-      "summary": "",
+      "summary": "Serves as the main entry point and core module for the library",
       "signature": "AutoDoc",
       "visibility": "public",
       "keywords": [
+        "serves",
         "main",
         "entry",
         "point",
-        "loads",
         "core",
-        "dependencies",
-        "initializes",
+        "module",
         "library"
       ],
       "dependencies": [],
       "consumed_by": [],
       "parent_module": null,
-      "llm_summary": "Main entry point that loads core dependencies and initializes the library."
+      "llm_summary": "Serves as the main entry point and core module for the library"
     },
     {
       "id": "module_AutoDoc",
@@ -1432,23 +1399,22 @@
       "scope": "public",
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/utils/output_formatter.rb",
       "line": 5,
-      "summary": "",
+      "summary": "Serves as the main entry point and core module for the library",
       "signature": "AutoDoc",
       "visibility": "public",
       "keywords": [
+        "serves",
         "main",
         "entry",
         "point",
-        "loads",
         "core",
-        "dependencies",
-        "initializes",
+        "module",
         "library"
       ],
       "dependencies": [],
       "consumed_by": [],
       "parent_module": null,
-      "llm_summary": "Main entry point that loads core dependencies and initializes the library."
+      "llm_summary": "Serves as the main entry point and core module for the library"
     },
     {
       "id": "module_AutoDoc",
@@ -1457,23 +1423,22 @@
       "scope": "public",
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/utils/timestamp_tracker.rb",
       "line": 6,
-      "summary": "",
+      "summary": "Serves as the main entry point and core module for the library",
       "signature": "AutoDoc",
       "visibility": "public",
       "keywords": [
+        "serves",
         "main",
         "entry",
         "point",
-        "loads",
         "core",
-        "dependencies",
-        "initializes",
+        "module",
         "library"
       ],
       "dependencies": [],
       "consumed_by": [],
       "parent_module": null,
-      "llm_summary": "Main entry point that loads core dependencies and initializes the library."
+      "llm_summary": "Serves as the main entry point and core module for the library"
     },
     {
       "id": "module_AutoDoc",
@@ -1482,23 +1447,22 @@
       "scope": "public",
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/utils/yaml_config_loader.rb",
       "line": 10,
-      "summary": "",
+      "summary": "Serves as the main entry point and core module for the library",
       "signature": "AutoDoc",
       "visibility": "public",
       "keywords": [
+        "serves",
         "main",
         "entry",
         "point",
-        "loads",
         "core",
-        "dependencies",
-        "initializes",
+        "module",
         "library"
       ],
       "dependencies": [],
       "consumed_by": [],
       "parent_module": null,
-      "llm_summary": "Main entry point that loads core dependencies and initializes the library."
+      "llm_summary": "Serves as the main entry point and core module for the library"
     },
     {
       "id": "module_AutoDoc",
@@ -1507,24 +1471,23 @@
       "scope": "public",
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/version.rb",
       "line": 3,
-      "summary": "",
+      "summary": "Serves as the main entry point and core module for the library",
       "signature": "AutoDoc",
       "visibility": "public",
       "keywords": [
+        "serves",
         "main",
         "entry",
         "point",
-        "loads",
         "core",
-        "dependencies",
-        "initializes",
+        "module",
         "library"
       ],
       "dependencies": [],
       "consumed_by": [],
       "parent_module": null,
-      "llm_summary": "Main entry point that loads core dependencies and initializes the library."
+      "llm_summary": "Serves as the main entry point and core module for the library"
     }
   ],
-  "generated_at": "2026-07-16T18:29:31Z"
+  "generated_at": "2026-07-16T20:07:34Z"
 }

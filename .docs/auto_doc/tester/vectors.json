@@ -7,24 +7,23 @@
       "scope": "public",
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/tester/e2e_runner.rb",
       "line": 6,
-      "summary": "",
+      "summary": "Serves as the main entry point and core module for the library",
       "signature": "AutoDoc",
       "visibility": "public",
       "keywords": [
+        "serves",
         "main",
         "entry",
         "point",
-        "loads",
         "core",
-        "dependencies",
-        "initializes",
+        "module",
         "library"
       ],
       "dependencies": [],
       "consumed_by": [],
       "parent_module": null,
-      "llm_summary": "Main entry point that loads core dependencies and initializes the library."
+      "llm_summary": "Serves as the main entry point and core module for the library"
     }
   ],
-  "generated_at": "2026-07-16T18:32:23Z"
+  "generated_at": "2026-07-16T20:10:12Z"
 }

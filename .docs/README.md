@@ -1,23 +1,35 @@
 # auto-doc-tool
 
 ## Overview
-### **Purpose**
-The `auto-doc-tool` module is an automated documentation generation system designed to analyze software projects and produce comprehensive, structured developer documentation. Its primary goal is to eliminate manual documentation overhead by extracting architectural insights, code relationships, database schemas, and existing comments to generate maintenance-ready assets, while leveraging AI to fill content gaps and index documentation for semantic search.
+### Module Overview
+**`auto-doc-tool`** is an automated documentation generation system designed to analyze software projects and produce comprehensive, AI-enhanced documentation and architectural diagrams. Primarily written in Ruby but designed to analyze multi-language codebases (e.g., Ruby/Rails, Python, JavaScript), the module scans source code, database schemas, and configuration files, extracts structural relationships, and leverages Large Language Models (LLMs) to generate human-readable narratives, diagrams, and searchable documentation indexes.
 
-### **Core Functionality**
-The module follows a modular pipeline architecture that scans multi-language codebases (Ruby, Python, JavaScript, Rails), transforms parsed data into structured representations, and generates various documentation outputs. It supports incremental updates (diff tracking), AI-assisted content generation, and completeness auditing to ensure documentation stays aligned with the evolving codebase.
+### Core Purpose
+- **Automate Documentation Creation:** Eliminate manual documentation upkeep by automatically generating Markdown files, class/ERD/C4 diagrams, summaries, and vector embeddings.
+- **AI-Assisted Enrichment:** Use LLMs to understand code context, generate descriptions, and transform raw parsed data into structured documentation.
+- **Incremental & Auditable Workflows:** Support efficient rebuilds through caching and diff tracking, while providing completeness checks and audit reports to maintain documentation quality.
 
-### **Key Components**
-- **Analyzer Suite:** Parses source code, imports, dependencies, database schemas, and existing documentation standards (e.g., YARD). Handles language-agnostic scanning and tracks code changes via a diff service.
-- **Data Transformers:** Converts raw parsed data into structured graphs and metadata, including class hierarchies, container data flows, ERD relationships, and file system trees.
-- **LLM Integration:** Dedicated modules for client communication, prompt construction, response parsing, and content summarization, enabling AI-driven documentation generation and enhancement.
-- **Documentation Generators:** Produces diverse artifacts such as architecture maps, C4 diagrams, class/ERD diagrams, markdown guides, overview pages, and vector embeddings for search.
-- **Orchestrator & Pipeline:** Coordinates the end-to-end workflow using step-based execution. Manages caching, sequential task routing, metrics collection, and output indexing.
-- **Reporting & Auditing:** Includes completeness checkers and audit reporters that evaluate documentation coverage across the project and generate compliance summaries.
-- **Interface Layer:** Exposes functionality via a CLI (`cli.rb`) and a web server (`server.rb`), backed by configuration management, versioning, and error handling utilities.
+### Key Components
 
-### **Architecture Overview**
-The tool operates on a clear separation of concerns: `analyzer` → `transformer` → `orchestrator` → `generator` → `reporter`. This design allows individual stages to be extended, tested, or replaced independently. Test fixtures demonstrate compatibility across Rails, standalone Ruby, Python, and JavaScript projects, highlighting its framework-agnostic analysis approach.
+| Component | Responsibility |
+|-----------|----------------|
+| **Analyzer** | Parses source files, database schemas, imports, and model associations to extract classes, modules, methods, and dependencies. Includes `AnalysisCache` and `DiffService` for optimized, incremental scanning. |
+| **LLM Integration** | Manages client communication, prompt construction, response parsing, data enrichment, and summarization. Enables AI-driven documentation generation and code explanation. |
+| **Transformer** | Converts raw parsed data into structured intermediate formats, including class hierarchy builders, data flow graph builders, ERD relationship mappers, and file data aggregators. |
+| **Generator** | Produces final documentation artifacts: Markdown agents/docs, architecture & overview pages, C4/class/ERD diagrams, searchable vector indexes, and project summaries. |
+| **Orchestrator & Pipeline** | Coordinates the end-to-end documentation workflow. Executes a sequence of configurable steps (e.g., scan → transform → LLM enrich → generate diagrams → build vectors) through a unified pipeline interface. |
+| **Reporter & Auditor** | Evaluates documentation completeness against the codebase, identifies undocumented components, and generates audit reports for tracking documentation health. |
+| **CLI & Server Interface** | Provides a command-line entry point for triggering builds and a web server interface (powered by Hono) for serving, browsing, and interacting with generated documentation. |
+| **Utilities** | Shared helpers for YAML configuration loading, file tree construction, markdown formatting, output styling, timestamp tracking, and error handling. |
+
+### Typical Workflow
+1. **Scan & Analyze:** The analyzer extracts structural data from target files and schemas, applying caching/diff logic to skip unchanged regions.
+2. **Transform & Structure:** Raw data is converted into graph-based and hierarchical formats (class trees, data flows, relationships).
+3. **LLM Enrichment:** Prompts are generated based on the extracted structure; the LLM client produces summaries, descriptions, and architectural insights.
+4. **Generation & Indexing:** Generators output Markdown, diagrams, and vector embeddings. The orchestrator sequences these steps efficiently.
+5. **Audit & Serve:** The completeness checker verifies coverage, and the server/CLI presents the final documentation to users or CI/CD pipelines.
+
+This module is structured for maintainability, testing (extensive `spec/` coverage), and extensibility, making it suitable for teams seeking automated, AI-augmented architectural and API documentation.
 
 ## Files
 | File | Classes/Modules | Methods | Documented? |
@@ -30,10 +42,10 @@ The tool operates on a clear separation of concerns: `analyzer` → `transformer
 
 ## Summary
 - Total modules: 2
-- Total classes: 957
+- Total classes: 958
 - Total methods: 7
 - Documentation coverage: 0.2%
 
 
 ---
-*Generated by auto-doc v1.0.0 on 2026-07-16 11:27:21 PDT. Review and commit as your documentation.*
+*Generated by auto-doc v1.0.0 on 2026-07-16 13:05:51 PDT. Review and commit as your documentation.*

@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "generated_at": "2026-07-16T02:54:24-07:00",
+  "generated_at": "2026-07-16T13:13:25-07:00",
   "project": "auto-doc-tool",
   "artifacts": {
     "indexes": [
@@ -48,6 +48,7 @@
       "diagrams/deps.mmd"
     ],
     "agents_docs": [
+      "AGENTS.md",
       "bin/AGENTS.md",
       "lib/AGENTS.md"
     ],
@@ -64,7 +65,7 @@
     "lib",
     "bin"
   ],
-  "coverage_pct": 24.0,
-  "total_symbols": 96,
-  "total_files": 138
+  "coverage_pct": 0.2,
+  "total_symbols": 13199,
+  "total_files": 3514
 }

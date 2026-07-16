@@ -7,23 +7,46 @@
       "scope": "public",
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/llm/client.rb",
       "line": 7,
-      "summary": "",
+      "summary": "Serves as the main entry point and core module for the library",
       "signature": "AutoDoc",
       "visibility": "public",
       "keywords": [
+        "serves",
         "main",
         "entry",
         "point",
-        "loads",
         "core",
-        "dependencies",
-        "initializes",
+        "module",
         "library"
       ],
       "dependencies": [],
       "consumed_by": [],
       "parent_module": null,
-      "llm_summary": "Main entry point that loads core dependencies and initializes the library."
+      "llm_summary": "Serves as the main entry point and core module for the library"
+    },
+    {
+      "id": "module_AutoDoc",
+      "symbol": "AutoDoc",
+      "type": "module",
+      "scope": "public",
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/llm/enricher.rb",
+      "line": 3,
+      "summary": "Serves as the main entry point and core module for the library",
+      "signature": "AutoDoc",
+      "visibility": "public",
+      "keywords": [
+        "serves",
+        "main",
+        "entry",
+        "point",
+        "core",
+        "module",
+        "library"
+      ],
+      "dependencies": [],
+      "consumed_by": [],
+      "parent_module": null,
+      "llm_summary": "Serves as the main entry point and core module for the library"
     },
     {
       "id": "module_AutoDoc",
@@ -32,23 +55,22 @@
       "scope": "public",
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/llm/prompt_builder.rb",
       "line": 3,
-      "summary": "",
+      "summary": "Serves as the main entry point and core module for the library",
       "signature": "AutoDoc",
       "visibility": "public",
       "keywords": [
+        "serves",
         "main",
         "entry",
         "point",
-        "loads",
         "core",
-        "dependencies",
-        "initializes",
+        "module",
         "library"
       ],
       "dependencies": [],
       "consumed_by": [],
       "parent_module": null,
-      "llm_summary": "Main entry point that loads core dependencies and initializes the library."
+      "llm_summary": "Serves as the main entry point and core module for the library"
     },
     {
       "id": "module_AutoDoc",
@@ -57,23 +79,22 @@
       "scope": "public",
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/llm/response_parser.rb",
       "line": 5,
-      "summary": "",
+      "summary": "Serves as the main entry point and core module for the library",
       "signature": "AutoDoc",
       "visibility": "public",
       "keywords": [
+        "serves",
         "main",
         "entry",
         "point",
-        "loads",
         "core",
-        "dependencies",
-        "initializes",
+        "module",
         "library"
       ],
       "dependencies": [],
       "consumed_by": [],
       "parent_module": null,
-      "llm_summary": "Main entry point that loads core dependencies and initializes the library."
+      "llm_summary": "Serves as the main entry point and core module for the library"
     },
     {
       "id": "module_AutoDoc",
@@ -82,24 +103,23 @@
       "scope": "public",
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/llm/summarizer.rb",
       "line": 3,
-      "summary": "",
+      "summary": "Serves as the main entry point and core module for the library",
       "signature": "AutoDoc",
       "visibility": "public",
       "keywords": [
+        "serves",
         "main",
         "entry",
         "point",
-        "loads",
         "core",
-        "dependencies",
-        "initializes",
+        "module",
         "library"
       ],
       "dependencies": [],
       "consumed_by": [],
       "parent_module": null,
-      "llm_summary": "Main entry point that loads core dependencies and initializes the library."
+      "llm_summary": "Serves as the main entry point and core module for the library"
     }
   ],
-  "generated_at": "2026-07-16T18:31:05Z"
+  "generated_at": "2026-07-16T20:09:00Z"
 }
