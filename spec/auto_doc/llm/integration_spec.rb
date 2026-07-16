@@ -217,7 +217,7 @@ RSpec.describe "LLM Integration: Client → Summarizer → Generator Output", :i
       result = AutoDoc::Generator::AgentsMdGenerator.generate(
         module_name, tree_text, files, config: config
       )
-      expect(result).to include("developer to fill in")
+      expect(result).to include("⚠ LLM unavailable — static summary")
     end
 
     it "falls back gracefully when LLM call raises" do
@@ -228,7 +228,7 @@ RSpec.describe "LLM Integration: Client → Summarizer → Generator Output", :i
       result = AutoDoc::Generator::AgentsMdGenerator.generate(
         module_name, tree_text, files, config: config
       )
-      expect(result).to include("developer to fill in")
+      expect(result).to include("⚠ LLM unavailable — static summary")
     end
 
     it "respects AUTO_DOC_DISABLE_LLM env var" do
@@ -237,7 +237,7 @@ RSpec.describe "LLM Integration: Client → Summarizer → Generator Output", :i
       result = AutoDoc::Generator::AgentsMdGenerator.generate(
         module_name, tree_text, files, config: config
       )
-      expect(result).to include("developer to fill in")
+      expect(result).to include("⚠ LLM unavailable — static summary")
 
       ENV.delete("AUTO_DOC_DISABLE_LLM")
     end

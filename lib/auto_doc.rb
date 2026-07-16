@@ -11,6 +11,7 @@ require_relative "auto_doc/version"
 module AutoDoc
   # Load config and utilities
   require_relative "auto_doc/config"
+  require_relative "auto_doc/errors"
   require_relative "auto_doc/utils/yaml_config_loader"
   require_relative "auto_doc/utils/file_tree_builder"
   require_relative "auto_doc/utils/timestamp_tracker"

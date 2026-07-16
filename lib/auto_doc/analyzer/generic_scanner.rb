@@ -153,7 +153,7 @@ module AutoDoc
       # @param language [Symbol] Language symbol (e.g. :python, :javascript)
       # @param client [AutoDoc::LLM::Client] LLM client instance
       # @return [String, nil] LLM response text or nil on failure
-      def enrich_with_llm(content, language, client)
+      def self.enrich_with_llm(content, language, client)
         prompt = "Analyze this #{language} source file. " \
                  "What classes, functions, methods, and imports does it define? " \
                  "What is its purpose?"

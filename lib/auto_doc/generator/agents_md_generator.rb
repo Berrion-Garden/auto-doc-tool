@@ -64,7 +64,7 @@ module AutoDoc
         dependencies      = []
 
         purpose_summary = if llm_primary?
-                             llm_purpose_summary || (warn_llm_fallback("purpose summary"); "⚠ LLM unavailable — static summary")
+                             llm_purpose_summary || handle_llm_failure("purpose summary") { "⚠ LLM unavailable — static summary" }
                            else
                              "developer to fill in"
                            end

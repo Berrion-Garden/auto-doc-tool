@@ -53,17 +53,17 @@ module AutoDoc
 
         dir_name             = @dir_name
         purpose              = if llm_primary?
-                                 llm_purpose || (warn_llm_fallback("purpose"); infer_purpose)
-                               else
-                                 infer_purpose
-                               end
+                                  llm_purpose || handle_llm_failure("purpose") { infer_purpose }
+                                else
+                                  infer_purpose
+                                end
         key_components       = if llm_primary?
-                                  llm_components || (warn_llm_fallback("components"); extract_key_components)
+                                  llm_components || handle_llm_failure("components") { extract_key_components }
                                 else
                                   extract_key_components
                                 end
         architecture_pattern = if llm_primary?
-                                  llm_architecture || (warn_llm_fallback("architecture pattern"); infer_architecture_pattern)
+                                  llm_architecture || handle_llm_failure("architecture pattern") { infer_architecture_pattern }
                                 else
                                   infer_architecture_pattern
                                 end

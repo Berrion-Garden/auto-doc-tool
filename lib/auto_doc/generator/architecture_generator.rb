@@ -83,49 +83,41 @@ module AutoDoc
               end
             end
           rescue StandardError => e
-            warn "LLM unavailable for #{@project_name}: #{e.message}"
+            handle_llm_failure("architecture overview") { warn "LLM unavailable for #{@project_name}: #{e.message}" }
           end
         end
 
         # Use LLM results where available, fall through to model-based logic
-        overview = if llm_overview
-                     llm_overview
-                   else
-                     warn_llm_fallback("overview") if llm_primary?
-                     @config[:overview] || "No overview provided."
-                   end
+        overview = llm_overview || handle_llm_failure("overview") { @config[:overview] || "No overview provided." }
 
         # Build modules — prefer LLM, fall back to model-based
         modules = if llm_modules && !llm_modules.empty?
                     llm_modules
                   else
-                    warn_llm_fallback("modules") if llm_primary?
-                    @models.map do |m|
-                      responsibility = if m[:associations] && m[:associations].any?
-                                         m[:associations].map { |a| "#{a[:type]} #{a[:target]}" }.join(", ")
-                                       else
-                                         "Core entity"
-                                       end
-                      { name: m[:model], responsibility: responsibility }
+                    handle_llm_failure("modules") do
+                      @models.map do |m|
+                        responsibility = if m[:associations] && m[:associations].any?
+                                           m[:associations].map { |a| "#{a[:type]} #{a[:target]}" }.join(", ")
+                                         else
+                                           "Core entity"
+                                         end
+                        { name: m[:model], responsibility: responsibility }
+                      end
                     end
                   end
 
         # Detect or use explicit architecture style
-        architecture_style = if llm_style
-                               llm_style
-                             else
-                               warn_llm_fallback("architecture style") if llm_primary?
-                               @config[:architecture_style] || detect_architecture_style(modules.size)
-                             end
+        architecture_style = llm_style || handle_llm_failure("architecture style") { @config[:architecture_style] || detect_architecture_style(modules.size) }
 
         # Build data flows — prefer LLM, fall back to model-based
         data_flows = if llm_data_flows && !llm_data_flows.empty?
                        llm_data_flows
                      else
-                       warn_llm_fallback("data flows") if llm_primary?
-                       @models.flat_map do |m|
-                         (m[:associations] || []).map do |a|
-                           { from: m[:model], to: a[:target], description: "#{a[:type]} relationship" }
+                       handle_llm_failure("data flows") do
+                         @models.flat_map do |m|
+                           (m[:associations] || []).map do |a|
+                             { from: m[:model], to: a[:target], description: "#{a[:type]} relationship" }
+                           end
                          end
                        end
                      end

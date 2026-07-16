@@ -125,18 +125,16 @@ RSpec.describe AutoDoc::Analyzer::GenericScanner do
     end
   end
 
-  describe "#enrich_with_llm" do
+  describe ".enrich_with_llm" do
     it "returns nil when client returns nil" do
       client = instance_double(AutoDoc::LLM::Client, chat: nil)
-      scanner = described_class.new
-      result = scanner.enrich_with_llm("def foo: pass", :python, client)
+      result = described_class.enrich_with_llm("def foo: pass", :python, client)
       expect(result).to be_nil
     end
 
     it "returns response string from client" do
       client = instance_double(AutoDoc::LLM::Client, chat: "This file defines a function foo.")
-      scanner = described_class.new
-      result = scanner.enrich_with_llm("def foo: pass", :python, client)
+      result = described_class.enrich_with_llm("def foo: pass", :python, client)
       expect(result).to eq("This file defines a function foo.")
     end
 
@@ -145,8 +143,7 @@ RSpec.describe AutoDoc::Analyzer::GenericScanner do
       expect(client).to receive(:chat).with(
         [{ role: "user", content: "Analyze this python source file. What classes, functions, methods, and imports does it define? What is its purpose?" }]
       ).and_return("analysis result")
-      scanner = described_class.new
-      result = scanner.enrich_with_llm("def foo: pass", :python, client)
+      result = described_class.enrich_with_llm("def foo: pass", :python, client)
       expect(result).to eq("analysis result")
     end
   end

@@ -14,12 +14,17 @@ module AutoDoc
       # for non-Ruby files.
       #
       # @param file_list [Array<String>] Absolute file paths to analyze
-      # @return [Hash<String, Hash>] Analysis data: { file_path => { definitions:, docs:, scanner: } }
+      # @return [Hash<String, Hash>] Analysis data: { file_path => { definitions:, docs:, scanner:, language: } }
       def self.run(file_list)
         analyses = {}
 
         file_list.each do |file_path|
           next unless File.exist?(file_path)
+
+          # Detect language early so it can be reused downstream.
+          # Read only the first 1024 bytes for shebang detection (avoids I/O on large files).
+          first_lines = File.read(file_path, 1024, encoding: "UTF-8") rescue nil
+          language = AutoDoc::Analyzer::GenericScanner.detect_language(file_path, first_lines)
 
           definitions = AutoDoc::Analyzer::SourceParser.parse_file(file_path)
           scanner = :ripper
@@ -48,7 +53,12 @@ module AutoDoc
             end
           end
 
-          analyses[file_path] = { definitions: definitions, docs: docs, scanner: scanner }
+          analyses[file_path] = {
+            definitions: definitions,
+            docs: docs,
+            scanner: scanner,
+            language: language
+          }
         end
 
         analyses

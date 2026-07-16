@@ -32,6 +32,29 @@ module AutoDoc
         name = @dir_name || @project_name || @module_name || "unknown"
         $stderr.puts "[AutoDoc] LLM unavailable for #{name} #{description} — using static inference."
       end
+
+      # Returns true when fail_fast mode is enabled for LLM operations.
+      # When true, LLM failures raise LLMError instead of falling back silently.
+      def fail_fast?
+        cfg = @auto_doc_config || @config
+        cfg.respond_to?(:llm_fail_fast?) && cfg.llm_fail_fast?
+      end
+
+      # Central handler for LLM call outcomes in generators.
+      # Always emits a stderr warning about the failure.
+      # When fail_fast mode is active, raises LLMError instead of yielding the fallback block.
+      #
+      # @param description [String] The field or section being generated (e.g. "overview", "purpose")
+      # @yieldreturn [String] Fallback value to use when LLM is unavailable (normal mode only)
+      # @return [String] The result of the fallback block (normal mode) or raises LLMError
+      # @raise [AutoDoc::LLMError] When fail_fast mode is active
+      def handle_llm_failure(description)
+        warn_llm_fallback(description) if llm_primary?
+        if fail_fast?
+          raise AutoDoc::LLMError, "LLM unavailable for #{description}"
+        end
+        yield if block_given?
+      end
     end
   end
 end

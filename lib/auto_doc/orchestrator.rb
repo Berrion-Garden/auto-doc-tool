@@ -141,15 +141,9 @@ module AutoDoc
 
       analyses = AutoDoc::Analyzer::AnalysisPipeline.run(source_files)
 
-      # Add language detection and import data
+      # Add import data (orchestrator-only — AnalysisPipeline and DiffService do not need it).
+      # Language detection is handled inside AnalysisPipeline.
       analyses.each_key do |file_path|
-        # Detect language
-        if File.exist?(file_path)
-          first_lines = File.read(file_path, 1024, encoding: "UTF-8")
-          analyses[file_path][:language] = AutoDoc::Analyzer::GenericScanner.detect_language(file_path, first_lines)
-        end
-
-        # Add import data (orchestrator-only — DiffService does not need it)
         imports = AutoDoc::Analyzer::ImportExtractor.extract(file_path)
         analyses[file_path][:imports] = imports
       end

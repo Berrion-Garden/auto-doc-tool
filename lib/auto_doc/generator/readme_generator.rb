@@ -70,7 +70,7 @@ module AutoDoc
 
         # LLM-generated overview text (only used in LLM primary mode)
         overview_text = if llm_primary?
-                           llm_module_overview || (warn_llm_fallback("overview"); "Developer to fill in")
+                           llm_module_overview || handle_llm_failure("overview") { "Developer to fill in" }
                          else
                            "Developer to fill in"
                          end

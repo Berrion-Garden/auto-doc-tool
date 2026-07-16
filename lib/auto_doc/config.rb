@@ -32,7 +32,8 @@ module AutoDoc
         api_key: "autodoc",
         model: "summarizer",
         timeout: 120,
-        primary: true
+        primary: true,
+        fail_fast: false
       }
     }.freeze
 
@@ -119,6 +120,10 @@ module AutoDoc
 
     def llm_primary?
       @config.dig(:llm, :primary) == true
+    end
+
+    def llm_fail_fast?
+      @config.dig(:llm, :fail_fast) == true
     end
 
     private
