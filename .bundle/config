@@ -1,2 +1,3 @@
 ---
 BUNDLE_BUILD__NIO4R: "--without-ext"
+BUNDLE_PATH: "vendor/bundle"

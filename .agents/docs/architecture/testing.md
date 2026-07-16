@@ -1,131 +1,145 @@
-# Auto-Doc — Testing Strategy
+# Auto-Doc Tool — Testing Strategy
 
-## Test Framework
+## Test Suite Overview
 
-- **RSpec** 3.x with `rspec-core`, `rspec-expectations`, `rspec-mocks`
-- **Rack::Test** for HTTP integration tests (server specs)
-- Test fixtures in `fixtures/` directory
+- **Framework:** RSpec
+- **Example count:** 811
+- **Failures:** 0
+- **Persistence:** `spec/examples.txt` for example status tracking
 
-## Spec Configuration (`spec/spec_helper.rb`)
+## Test Organization
+
+```
+spec/
+├── spec_helper.rb                          # Shared configuration, LLM mock helpers
+├── support/llm_mock_helper.rb              # LLM mocking utilities
+├── auto_doc_spec.rb                        # Top-level gem loading tests
+├── auto_doc/                               # Unit tests mirroring lib/ structure
+│   ├── agent_query_service_spec.rb
+│   ├── cli_spec.rb
+│   ├── config_spec.rb
+│   ├── documentation_index_spec.rb
+│   ├── errors_spec.rb
+│   ├── search_service_spec.rb
+│   ├── server_spec.rb
+│   ├── llm/
+│   │   ├── enricher_spec.rb                # Enricher unit tests (new)
+│   │   └── ...
+│   ├── generator/
+│   │   ├── vector_generator_spec.rb        # VectorGenerator tests
+│   │   └── ...
+│   ├── orchestrator/
+│   │   ├── index_summary_vectors_step_spec.rb
+│   │   └── ...
+│   ├── reporter/
+│   │   └── ...
+│   └── utils/
+│       └── ...
+├── e2e/                                    # End-to-end integration tests
+└── scripts/                                # Test utility scripts
+```
+
+## Test Configuration (`spec_helper.rb`)
 
 ```ruby
-RSpec.configure do |config|
-  config.include Rack::Test::Methods
-  config.mock_with :rspec { |m| m.verify_partial_doubles = true }
-  config.filter_run_when_matching :focus
-  config.example_status_persistence_file_path = "spec/examples.txt"
-  config.disable_monkey_patching!
-  config.profile_examples = 10
+# Loads the gem
+require "auto_doc"
+require "rack/test"
+require_relative "support/llm_mock_helper"
 
-  # Clear analysis cache between every test
-  config.before(:each) { AutoDoc::Analyzer::AnalysisCache.clear! }
+# LLM protection: stub Client.build_if_configured to return nil by default
+config.before(:each) do
+  allow(AutoDoc::LLM::Client).to receive(:build_if_configured).and_return(nil)
+end
+
+# Cache clearing between tests
+config.before(:each) do
+  AutoDoc::Analyzer::AnalysisCache.clear!
+end
+
+# Formatter: doc format when running single spec file
+config.filter_run_when_matching :focus       # Focus filtering
+config.profile_examples = 10                # Profile top 10 examples
+```
+
+## LLM Mocking Strategy
+
+### `LlmMockHelper` (spec/support/llm_mock_helper.rb)
+
+Provides test doubles for LLM integration testing:
+
+**`mock_llm_client(response_map = {}, primary: false)`**
+- Creates a `Client` instance double
+- Stubs `#chat(messages)` to match against `response_map` keys (substring matching on prompt content)
+- Stubs `Client.build_if_configured(config)` to return the mock client
+- Returns the mock client for further configuration
+
+**`primary_llm_config`**
+- Creates a `Config` double with `llm_primary?` returning `true`
+- Returns a valid `llm_config` hash
+
+**`standard_llm_config`**
+- Creates a `Config` double with `llm_primary?` returning `false`
+- Returns a valid `llm_config` hash
+
+### Default Behavior
+
+By default (spec_helper `before(:each)`), `Client.build_if_configured` returns `nil`, which means:
+- Enricher returns analyses unchanged
+- No LLM calls are made in tests unless explicitly mocked
+- Tests can verify non-LLM behavior without interference
+
+### Explicit LLM Mocking
+
+Tests that need LLM behavior call `mock_llm_client(response_map)` to override the default stub:
+
+```ruby
+# In enricher_spec.rb:
+before do
+  mock_llm_client({
+    "app" => "UsersController: Handles HTTP requests\nUser: Represents user data",
+    "lib" => "UserService: Orchestrates user-related business logic"
+  })
 end
 ```
 
-## Test Suite Inventory
+The mock client matches LLM prompts by checking if the prompt content includes any key in `response_map`.
 
-### Unit Tests
+## Test Coverage Highlights
 
-| Spec File | Target | Coverage |
-|-----------|--------|----------|
-| `spec/auto_doc/llm_spec.rb` | `AutoDoc::LLM`, `Client`, `Summarizer` constants | Module loading |
-| `spec/auto_doc/config_spec.rb` | `Config.load`, defaults, YAML merge, CLI overrides, output_dir fallback, fail_fast | Full |
-| `spec/auto_doc/generator/summary_generator_spec.rb` | `SummaryGenerator.generate` with various inputs | Full |
-| `spec/auto-doc/generator/agents_md_generator_spec.rb` | `AgentsMdGenerator.generate` with various inputs | Full |
-| `spec/auto_doc/analyzer/source_parser_spec.rb` | `SourceParser.parse_file` on various Ruby files | Full |
-| `spec/auto_doc/analyzer/generic_scanner_spec.rb` | `GenericScanner` language detection, regex parsing, unsupported extensions | Full |
-| `spec/auto_doc/analyzer/analysis_pipeline_spec.rb` | `AnalysisPipeline` fallback behavior, language/scanner keys | Full |
-| `spec/auto_doc/analyzer/yard_reader_spec.rb` | YARD comment extraction | Full |
-| `spec/auto_doc/analyzer/import_extractor_spec.rb` | Import statement extraction | Full |
-| `spec/auto_doc/analyzer/schema_parser_spec.rb` | Rails schema parsing | Full |
-| `spec/auto_doc/analyzer/model_association_parser_spec.rb` | Rails model associations | Full |
-| `spec/auto_doc/analyzer/orphans_service_spec.rb` | Orphan file detection | Full |
-| `spec/auto_doc/utils/file_tree_builder_spec.rb` | Directory tree generation | Full |
-| `spec/auto_doc/utils/output_formatter_spec.rb` | Text/JSON/agent output formatting | Full |
-| `spec/auto_doc/utils/markdown_helper_spec.rb` | Markdown utilities | Full |
-| `spec/auto_doc/utils/timestamp_tracker_spec.rb` | Mtime-based change detection | Full |
-| `spec/auto_doc/utils/yaml_config_loader_spec.rb` | YAML loading with fallback | Full |
-| `spec/auto_doc/reporter/completeness_checker_spec.rb` | Coverage calculation | Full |
-| `spec/auto_doc/reporter/audit_reporter_spec.rb` | Audit report generation | Full |
-| `spec/auto_doc/search_service_spec.rb` | Full-text search | Full |
-| `spec/auto_doc/agent_query_service_spec.rb` | Natural-language queries | Full |
-| `spec/auto_doc/transformer/graph_data_builder_spec.rb` | DAG graph building | Full |
-| `spec/auto_doc/errors_spec.rb` | `LLMError` class definition | Full |
-| `spec/auto_doc/generator/template_helper_spec.rb` | `TemplateHelper` methods including fail_fast | Full |
+### Enricher (`spec/auto_doc/llm/enricher_spec.rb`)
 
-### Generator Tests
+245 lines, tests the following scenarios:
+- **LLM primary + configured:** Populates docs arrays with summaries, preserves hash identity
+- **Config guard:** Returns analyses unchanged when `llm_primary? == false`
+- **Client unavailable:** Returns analyses unchanged when `build_if_configured` returns nil
+- **Nil LLM response:** Logs warning, continues processing other modules
+- **Empty LLM response:** Does not modify docs arrays
+- **Namespaced symbols:** Handles `::` in symbol names (converts to `_` in entry_id)
+- **Module root filtering:** Files outside module roots are not enriched
 
-| Spec File | Target |
-|-----------|--------|
-| `spec/auto_doc/generator/readme_generator_spec.rb` | `ReadmeGenerator` |
-| `spec/auto_doc/generator/index_generator_spec.rb` | `IndexGenerator` |
-| `spec/auto_doc/generator/diagram_generator_spec.rb` | `DiagramGenerator` |
-| `spec/auto_doc/generator/c4_diagram_generator_spec.rb` | `C4DiagramGenerator` |
-| `spec/auto_doc/generator/class_diagram_generator_spec.rb` | `ClassDiagramGenerator` |
-| `spec/auto_doc/generator/erd_generator_spec.rb` | `ErdGenerator` |
-| `spec/auto_doc/generator/architecture_generator_spec.rb` | `ArchitectureGenerator` |
-| `spec/auto_doc/generator/vector_generator_spec.rb` | `VectorGenerator` (includes LLM summary integration tests) |
-| `spec/auto_doc/generator/map_generator_spec.rb` | `MapGenerator` |
-| `spec/auto_doc/generator/agents_overview_generator_spec.rb` | `AgentsOverviewGenerator` (7 sections, tech stack, conventions) |
+### VectorGenerator (`spec/auto_doc/generator/vector_generator_spec.rb`)
 
-### Integration Tests
+Tests keyword extraction, doc index construction, vector entry building with and without summaries, merged keyword behavior.
 
-| Spec File | Target |
-|-----------|--------|
-| `spec/auto_doc/llm/integration_spec.rb` | Full LLM chain: Config → Client → Summarizer → Generator. 15 examples, `:integration` tag for selective execution. Tests LLM success, fallback, ENV guard, and backward compatibility. |
-| `spec/auto_doc/cli_spec.rb` | CLI command execution |
-| `spec/auto_doc/server_spec.rb` | Sinatra server HTTP endpoints |
-| `spec/e2e/self_test_spec.rb` | End-to-end self-test against project source |
-| `spec/auto_doc/orchestrator/pipeline_spec.rb` | Pipeline step execution with context flow |
-| `spec/auto_doc/orchestrator/agents_md_step_spec.rb` | AgentsMdStep orchestration |
-| `spec/auto_doc/orchestrator/diagram_step_spec.rb` | DiagramStep orchestration |
-| `spec/auto_doc/orchestrator/base_step_spec.rb` | BaseStep interface |
-| `spec/auto_doc/orchestrator/metrics_helper_spec.rb` | MetricsHelper count_classes_and_methods, calculate_coverage |
+### SearchService (`spec/auto_doc/search_service_spec.rb`)
 
-## Stubbing Policy
+Tests all search strategies: symbol exact, dependency match, keyword overlap (high/low), summary match, summary text, source grep. Includes edge cases: empty summary, missing summary field, keyword overlap >3 scoring.
 
-### LLM Tests
+### Orchestrator (`spec/auto_doc/orchestrator_spec.rb`)
 
-The `llm_spec.rb` only verifies that constants are defined. It does NOT test `Client#chat` or `Summarizer` methods against real or mocked HTTP responses.
+82 lines, tests Enricher wiring in both LLM-primary and non-primary paths.
 
-### `LlmMockHelper` (`spec/support/llm_mock_helper.rb`)
+## Tagging Strategy
 
-Shared test helper for LLM-related specs. Provides:
-- `mock_llm_client` — Stubs `Client.build_if_configured` to return a mock client whose `chat` method returns configured response text
-- `primary_llm_config` — Creates an `AutoDoc::Config` with `llm.primary: true`
-- `standard_llm_config` — Creates an `AutoDoc::Config` with `llm.primary: false` (default)
-
-Used by integration and unit tests to simulate both primary and non-primary modes.
-
-### Integration Test Coverage
-
-The `spec/auto_doc/llm/integration_spec.rb` provides integration-level coverage of the LLM chain. It mocks `Net::HTTP` directly (not via WebMock/VCR) to test:
-- `Client.from_config` builds correctly from Config with LLM settings
-- `Client.chat` returns mocked responses
-- `Summarizer.summarize_module/architecture/components` return client response text
-- `SummaryGenerator` integrates LLM (3 chat calls) and falls back to static inference
-- `AgentsMdGenerator` integrates LLM (1 chat call) and falls back to placeholder text
-- `ArchitectureGenerator` LLM enhancement in primary mode
-- `ReadmeGenerator` LLM enhancement in primary mode
-- `AUTO_DOC_DISABLE_LLM` environment variable disables LLM in all generators
-- Backward compatibility when no config is passed
-
-### Generator Tests
-
-Generator specs use in-memory analysis data (hardcoded hashes) rather than reading from disk. Output file tests use `Dir.mktmpdir` for temporary output paths.
+Tests use RSpec tags for selective execution:
+- `~integration` — Exclude integration/e2e tests during fast unit test runs
+- Custom tags may be added for specific module groups
 
 ## Test Fixtures
 
-Fixtures are in `fixtures/` and `test_fixtures/` directories. Used by generator specs and E2E tests.
+Fixture files are stored in `fixtures/` directory (referenced via `FIXTURES_DIR` constant and `fixture_path` helper). Used for integration tests that need realistic source files.
 
-## Known Test Status
+## E2E Testing
 
-At time of LLM Primary Driver Architecture final review (commit `4c04a36`):
-- **721 specs passing** (includes enhanced integration test suite)
-- Pre-existing failures unchanged from baseline
-- Integration tests tagged with `:integration` for selective execution via `rspec --tag integration`
-- `LlmMockHelper` provides reusable stubs for all LLM-related tests
-
-Current state (post-project 2026-07-16-best-llm-powered-doc, commit `08bbc78`):
-- **784 specs passing, 0 failures**
-- New specs added by project: `generic_scanner_spec.rb`, `analysis_pipeline_spec.rb`, `errors_spec.rb`, `template_helper_spec.rb`, `agents_overview_generator_spec.rb`, `vector_generator_spec.rb` (LLM summary tests), `pipeline_spec.rb`, `agents_md_step_spec.rb`, `diagram_step_spec.rb`, `base_step_spec.rb`, `metrics_helper_spec.rb`
+End-to-end tests in `spec/e2e/` run the full generation pipeline against fixture projects and verify output artifacts. The `Tester::E2ERunner` class orchestrates these tests.

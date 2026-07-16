@@ -68,6 +68,14 @@ RSpec.describe AutoDoc::Analyzer::SchemaParser do
         expect(index_names).to include("index_comments_on_post_id", "index_comments_on_user_id")
       end
 
+      it "parses multi-column indexes" do
+        posts_table = tables.find { |t| t[:table_name] == "posts" }
+        indexes = posts_table[:indexes]
+        multi_col = indexes.find { |i| i[:name] == "index_posts_on_user_and_published" }
+        expect(multi_col).not_to be_nil
+        expect(multi_col[:columns]).to eq(["user_id", "published"])
+      end
+
       it "parses foreign key references" do
         comments_table = tables.find { |t| t[:table_name] == "comments" }
         expect(comments_table[:foreign_keys]).to be_an(Array)
@@ -100,6 +108,46 @@ RSpec.describe AutoDoc::Analyzer::SchemaParser do
           File.write(File.join(dir, "db", "schema.rb"), "")
           result = described_class.parse(dir)
           expect(result).to eq([])
+        end
+      end
+    end
+
+    context "with create_table and do |t| on next line" do
+      it "handles create_table with do block on the next line" do
+        Dir.mktmpdir do |dir|
+          FileUtils.mkdir_p(File.join(dir, "db"))
+          File.write(File.join(dir, "db", "schema.rb"), <<~SCHEMA)
+            ActiveRecord::Schema[7.0].define do
+              create_table "widgets", force: :cascade
+                do |t|
+                t.string "name", null: false
+                t.integer "count"
+              end
+            end
+          SCHEMA
+          result = described_class.parse(dir)
+          expect(result.length).to eq(1)
+          expect(result.first[:table_name]).to eq("widgets")
+          col_names = result.first[:columns].map { |c| c[:name] }
+          expect(col_names).to include("name", "count")
+        end
+      end
+    end
+
+    context "with deeply indented end" do
+      it "handles deeply indented end blocks" do
+        Dir.mktmpdir do |dir|
+          FileUtils.mkdir_p(File.join(dir, "db"))
+          File.write(File.join(dir, "db", "schema.rb"), <<~SCHEMA)
+            ActiveRecord::Schema[7.0].define do
+                create_table "gadgets", force: :cascade do |t|
+                    t.string "label"
+                end
+            end
+          SCHEMA
+          result = described_class.parse(dir)
+          expect(result.length).to eq(1)
+          expect(result.first[:table_name]).to eq("gadgets")
         end
       end
     end

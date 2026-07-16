@@ -1,247 +1,130 @@
-# Auto-Doc — Architecture Overview
+# Auto-Doc Tool — Architecture Overview
 
-## Project Summary
+## Purpose
 
-**auto-doc** is a pure-Ruby documentation generator that analyzes Ruby source files and produces comprehensive documentation artifacts: per-module `AGENTS.md`, project-level `README.md`, `INDEX.md`, `SUMMARY.md`, Mermaid diagrams (dependency DAG, class hierarchy, C4 context/container, ERD), vector-based search indexes, and architecture documentation. It requires no external services or API keys — only Ruby stdlib plus two lightweight dependencies (`thor` for CLI, `sinatra` for the web server). LLM-powered summarization is optional: when configured via `.autodoc.yml`, LLM-generated summaries enhance `SUMMARY.md` and `AGENTS.md` output, with graceful fallback to static inference when unavailable.
+Auto-Doc is a Ruby gem that automates documentation generation for Ruby projects. It analyzes source code to extract symbol metadata (classes, modules, methods, constants), generates structured documentation artifacts (INDEX.md, SUMMARY.md, AGENTS.md, vectors.json, diagrams), and provides multi-strategy search across all generated and source files.
 
-- **Version:** 1.0.0
-- **Ruby:** >= 3.0.0
-- **Repository:** https://github.com/pik-ai/auto-doc
-- **License:** MIT
+## Project Structure
+
+```
+auto-doc/
+├── exe/auto-doc                  # CLI entry point (Thor)
+├── lib/auto_doc.rb               # Main gem entry, requires all submodules
+├── lib/auto_doc/
+│   ├── cli.rb                    # Thor-based CLI (generate, audit, search, server, test)
+│   ├── config.rb                 # Configuration loader (.autodoc.yml with fallback defaults)
+│   ├── server.rb                 # Sinatra server for serving generated docs
+│   ├── documentation_index.rb    # Unified data-access layer for .docs/ artifacts
+│   ├── search_service.rb         # Multi-strategy ranked search engine
+│   ├── agent_query_service.rb    # Agent-facing query abstraction
+│   ├── transformer.rb            # Markdown transformation utilities
+│   ├── errors.rb                 # Custom error types
+│   ├── version.rb                # Gem version
+│   ├── llm/                      # LLM integration submodule
+│   │   ├── client.rb             # OpenAI-compatible HTTP client (Net::HTTP)
+│   │   ├── summarizer.rb         # LLM summarization coordinator
+│   │   ├── prompt_builder.rb     # Prompt construction for all LLM use cases
+│   │   ├── response_parser.rb    # Response parsing (markdown, JSON, bullet lists)
+│   │   └── enricher.rb           # Pre-processing enrichment of analyses with LLM summaries
+│   ├── analyzer/                 # Source code analysis submodule
+│   │   ├── analysis_pipeline.rb  # Entry point: file globbing → parsing → YARD
+│   │   ├── analysis_cache.rb     # In-process analysis caching
+│   │   ├── source_parser.rb      # Ruby syntax parser
+│   │   ├── yard_reader.rb        # YARD documentation extraction
+│   │   ├── schema_parser.rb      # Database schema detection
+│   │   ├── model_association_parser.rb  # ActiveRecord association detection
+│   │   ├── import_extractor.rb   # require/include/extend/prepend extraction
+│   │   ├── generic_scanner.rb    # Multi-language file type detection
+│   │   ├── diff_service.rb       # Incremental analysis change detection
+│   │   └── orphans_service.rb    # Undocumented symbol detection
+│   ├── generator/                # Documentation artifact generation
+│   │   ├── index_generator.rb
+│   │   ├── summary_generator.rb
+│   │   ├── vector_generator.rb   # VECTORS.json generation with keyword search support
+│   │   ├── agents_md_generator.rb
+│   │   ├── readme_generator.rb
+│   │   ├── architecture_generator.rb
+│   │   ├── diagram_generator.rb
+│   │   ├── c4_diagram_generator.rb
+│   │   ├── class_diagram_generator.rb
+│   │   ├── erd_generator.rb
+│   │   ├── agents_overview_generator.rb
+│   │   ├── map_generator.rb
+│   │   └── template_helper.rb
+│   ├── orchestrator/             # Pipeline orchestration
+│   │   ├── pipeline.rb           # 7-step generation pipeline
+│   │   ├── base_step.rb          # Step base class
+│   │   ├── index_summary_vectors_step.rb  # INDEX/SUMMARY/vectors.json generation
+│   │   ├── agents_md_step.rb
+│   │   ├── agents_overview_step.rb
+│   │   ├── readme_step.rb
+│   │   ├── diagram_step.rb
+│   │   ├── architecture_step.rb
+│   │   ├── manifest_step.rb
+│   │   └── metrics_helper.rb
+│   ├── reporter/                 # Audit and completeness reporting
+│   │   ├── audit_reporter.rb
+│   │   └── completeness_checker.rb
+│   ├── tester/                   # E2E test runner
+│   │   └── e2e_runner.rb
+│   ├── utils/                    # Shared utilities
+│   │   ├── yaml_config_loader.rb
+│   │   ├── file_tree_builder.rb
+│   │   ├── timestamp_tracker.rb  # Incremental analysis change tracking
+│   │   ├── output_formatter.rb
+│   │   └── markdown_helper.rb
+│   └── transformer/              # Markdown transformation steps
+├── spec/                         # RSpec test suite (811 examples)
+│   ├── spec_helper.rb
+│   ├── support/llm_mock_helper.rb
+│   ├── auto_doc/
+│   ├── e2e/
+│   └── scripts/
+└── templates/                    # ERB templates for generated docs
+```
 
 ## Design Principles
 
-1. **Zero new gem dependencies** — everything built on stdlib Ruby + thor + sinatra
-2. **File-based everything** — `.docs/` directory is a self-contained knowledge base
-3. **Dual-purpose output** — every file is human-readable AND machine-parseable
-4. **Incremental generation** — only re-analyze changed files using mtime comparison
-5. **Agent-first design** — every command supports `--json` and `--agent` flags
-
-## Architecture Layers
-
-```
-┌─────────────────────────────────────────────────────┐
-│                    CLI (Thor)                        │
-│  Commands: generate, audit, verify, search, agent,  │
-│  diff, orphans, serve, query, tree, diagram, e2e    │
-├─────────────────────────────────────────────────────┤
-│                 Orchestrator                         │
-│  Coordinates analysis → transformation → generation │
-│  Pipeline: AgentsMd → Readme → Index/Summary/Vectors│
-│            → Diagram → Architecture → Manifest       │
-├───────────┬───────────────┬─────────────────────────┤
-│  Analyzer │ Transformer   │     Generator           │
-│  Source   │  FilesData    │  AgentsMdGen            │
-│  Schema   │  ClassHier    │  ReadmeGen              │
-│  YARD     │  ERD Rel      │  IndexGen               │
-│  Import   │  GraphData    │  SummaryGen             │
-│  Diff     │  ContainerDF  │  DiagramGen             │
-│  Orphans  │               │  ArchitectureGen        │
-│  Pipeline │               │  C4/Class/ERD Gen       │
-│  Cache    │               │  VectorGen              │
-│  YARD     │               │  MapGen                 │
-│  Reader   │               │                         │
-├───────────┴───────────────┴─────────────────────────┤
-│              LLM Layer (Off by Default)              │
-│  Client (OpenAI-compatible HTTP, build_if_configured)│
-│  PromptBuilder (8 generator types)                   │
-│  Summarizer (delegates to PromptBuilder+ResponsePars)│
-│  ResponseParser (markdown/JSON/bullet parsing)       │
-│  Gated by llm_primary? (false by default)            │
-│  Used by: SummaryGenerator (3 calls when primary),   │
-│            ArchitectureGenerator (1 call),           │
-│            AgentsMdGenerator (1 call),               │
-│            ReadmeGenerator (1 call)                  │
-│  Primary mode: LLM first → static fallback on fail   │
-│  Non-primary mode: zero LLM calls (static only)      │
-├─────────────────────────────────────────────────────┤
-│              Reporter / Services                     │
-│  CompletenessChecker, AuditReporter                  │
-│  SearchService, AgentQueryService                    │
-│  DocumentationIndex, Server (Sinatra)                │
-└─────────────────────────────────────────────────────┘
-```
-
-## Inverted LLM Priority Architecture
-
-All LLM integration follows the **Inverted Priority Pattern** — rather than always attempting LLM and silently falling back to static analysis, LLM usage is **on by default** (`llm.primary: true`) and can be deactivated by setting `llm.primary: false` in `.autodoc.yml`. This ensures LLM-generated summaries are used by default while allowing users to disable with zero network calls.
-
-### Key Design Decisions
-
-1. **LLM Primary Gate (`llm_primary?`)** — Each generator checks `llm_primary?` before making any LLM call. When `true` (default), generators attempt LLM first for each section. On failure (timeout, error, empty response), they log a warning via `warn_llm_fallback` and fall through to the same static analysis used in non-primary mode.
-2. **Graceful Degradation** — When `llm.primary: true` (default), generators try LLM first on each section. On failure (timeout, error, empty response), they log a warning via `warn_llm_fallback` and fall through to the same static analysis used in non-primary mode.
-3. **Single LLM Call per Generator** — `ArchitectureGenerator` uses one LLM call for the full structured overview (purpose, style, modules, data flows); `SummaryGenerator` uses up to 3 calls (purpose, architecture, components); `AgentsMdGenerator` and `ReadmeGenerator` use 1 call each.
-4. **TemplateHelper Mixin** — Shared `llm_primary?`, `fail_fast?`, and `handle_llm_failure` methods in one place, included by all generators.
-5. **PromptBuilder + ResponseParser** — Prompt construction and response parsing were extracted from `Summarizer` into dedicated classes for testability and separation of concerns.
-6. **Fail-fast mode** — `LLMError` exception class with `fail_fast?` config gate. When enabled, LLM failures raise immediately instead of silently falling back.
-
-### LLM Call Flow
-
-```
-Generator.render_template
-    │
-    ├── llm_primary? == false
-    │       └── Use static analysis (zero LLM calls, backward compatible)
-    │
-    └── llm_primary? == true (default)
-            │
-            ├── Client.build_if_configured(config)
-            │       └── nil → warn_llm_fallback + static fallback
-            │
-            ├── Summarizer.summarize_*(...)  →  PromptBuilder.build(...)
-            │       └── nil/exception → warn_llm_fallback + static fallback
-            │
-            └── ResponseParser.parse_*(response)
-                    └── Use parsed LLM result (replaces static inference)
-```
+1. **Modular, composable pipeline** — The `Orchestrator::Pipeline` runs discrete steps (AgentsOverview → AgentsMd → Readme → IndexSummaryVectors → Diagram → Architecture → Manifest), each operating on a shared context hash.
+2. **Analysis-first, generation-second** — Source code is analyzed once into a structured `analyses` hash (definitions, docs, imports per file), then consumed by all downstream generators.
+3. **LLM as optional enrichment** — LLM-powered summarization is gated behind `config.llm_primary?` and `AUTO_DOC_DISABLE_LLM`. When disabled, the pipeline produces the same artifacts minus LLM-generated summaries.
+4. **Additive feature design** — New features (Enricher pre-processing) are additive: they don't modify existing behaviors but insert new capabilities into the pipeline.
+5. **Multi-strategy search** — Search ranks results across multiple sources (vectors keywords, vector summaries, INDEX.md, SUMMARY.md, AGENTS.md, source grep) with configurable scores.
 
 ## Domain Model Summary
 
-The tool operates on a concept of **Project → ModuleRoot → SourceFile → Symbol** with generated artifacts:
-
-| Domain Entity | Description |
-|---------------|-------------|
-| **Project** | Target codebase being documented |
-| **ModuleRoot** | Top-level directory (app, lib, bin) serving as documentation boundary |
-| **SourceFile** | Single `.rb` file, analyzed via Ripper + YARD |
-| **Symbol** | Named code element: class, module, method, constant |
-| **Import** | Dependency declaration (require, include, extend, prepend) |
-| **DocComment** | Documentation comment block associated with a symbol |
-| **Analysis** | Structured hash: `{ definitions:, docs:, imports: }` per file |
-
-### Generated Artifacts
-
-| Artifact | Purpose |
-|----------|---------|
-| `AGENTS.md` | Per-module public API surface with file tree, symbols, dependencies |
-| `INDEX.md` | Full file/symbol/dependency index at project and module level |
-| `SUMMARY.md` | Executive summary with purpose, key components, architecture pattern |
-| `VECTORS.json` | Keyword vectors for all symbols (search index) |
-| `README.md` | Project overview with statistics |
-| `architecture.md` | C4-informed architecture documentation |
-| `.map.json` | Master manifest linking all generated artifacts |
-| `diagrams/*.mmd` | Mermaid diagrams (DAG, class, C4, ERD) |
-| `report.json` | Audit coverage report (machine-readable) |
-
-## Directory Layout
+The core domain data flow:
 
 ```
-lib/
-├── auto_doc.rb                    # Main entry point (requires all submodules)
-├── auto_doc/
-│   ├── version.rb                 # VERSION constant
-│   ├── config.rb                  # Configuration loader with defaults + YAML merge
-│   ├── cli.rb                     # Thor-based CLI (17 commands)
-│   ├── orchestrator.rb            # Coordinates generate/audit workflows
-│   ├── documentation_index.rb     # Index document builder
-│   ├── search_service.rb          # Full-text search across docs
-│   ├── agent_query_service.rb     # Natural-language query interpreter
-│   ├── server.rb                  # Sinatra web server for browsing docs
-│   ├── llm/                       # LLM-powered summarization layer
-│   │   ├── client.rb              # OpenAI-compatible HTTP client
-│   │   ├── summarizer.rb          # Delegates to PromptBuilder + ResponseParser
-│   │   ├── prompt_builder.rb      # Prompt construction (8 generator types)
-│   │   └── response_parser.rb     # Response parsing (markdown/JSON/bullets)
-│   ├── analyzer/                  # Source code analysis
-│   ├── transformer/               # Data transformation pipelines
-│   ├── generator/                 # Document generators
-│   ├── reporter/                  # Audit and completeness reporting
-│   ├── orchestrator/              # Pipeline step implementations
-│   ├── utils/                     # Shared utilities
-│   └── tester/                    # E2E test runner
-templates/                         # ERB templates for all generators
-exe/auto-doc                       # Executable entry point
-spec/                              # RSpec test suite
+Source Files → AnalysisPipeline → analyses hash
+                                        │
+                                        ├→ Enricher.enrich_analyses (LLM summaries → docs arrays)
+                                        │
+                                        └→ Pipeline.steps → Documentation artifacts
+                                               │
+                                               ├→ INDEX.md (symbol index per directory)
+                                               ├→ SUMMARY.md (module overview)
+                                               ├→ AGENTS.md (detailed API docs)
+                                               ├→ VECTORS.json (keyword-indexed symbol entries)
+                                               ├→ Diagrams (mermaid .mmd files)
+                                               ├→ Architecture.md
+                                               └→ Manifest.json
 ```
+
+### Key Data Structures
+
+**`analyses`** — Hash of `file_path => { definitions: [...], docs: [...], imports: [...] }` where each definition is a Hash with `:name`, `:type`, `:line`, `:has_doc?`, `:signature`, `:visibility`, `:dependencies`, `:parent_module`.
+
+**Vector entry** — Generated for each symbol with fields: `id`, `symbol`, `type`, `scope`, `file`, `line`, `summary`, `signature`, `visibility`, `keywords`, `dependencies`, `consumed_by`, `parent_module`.
 
 ## Deviations from Plan
 
-### LLM Primary Driver Architecture (Project: `2026-07-16-llm-primary-driver-architecture`)
+The project plan specified 5 milestones (Enricher creation, Orchestrator wiring, VectorGenerator keyword merge, SearchService summary search, E2E verification). All milestones were completed as planned with no skipped features.
 
-This project refactored the LLM integration from a "try LLM first, silently fall back" pattern to an **Inverted Priority Pattern** where LLM is off by default (`llm.primary: false`) and only activates when explicitly enabled.
+**Intentional deviations from the original Hypothesis 1 plan:**
 
-**Note:** The `primary` default was later changed to `true` in a subsequent project (2026-07-16-best-llm-powered-doc). The current default is `llm.primary: true` (LLM primary on by default).
+- **Keyword merging in `keyword_extraction`**: The plan specified merging name + summary keywords in `keyword_extraction`. The actual implementation passes `summary` (from docs array) to `keyword_extraction` when a summary exists, but uses `extract_keywords_from_text(llm_summary_text)` directly for the legacy `llm_summaries` path. This preserves backward compatibility with the existing `llm_summaries` flow while adding summary-based keyword merging to the new `docs` array path.
 
-**Completed milestone:** LLM Primary Driver Architecture (06e6d3d → 4c04a36, remediated in a6430ae)
+- **Orchestrator always calls Enricher**: The plan suggested guarding Enricher calls in the orchestrator with `@config.respond_to?(:llm_primary?) && @config.llm_primary?`. The actual implementation always calls `Enricher.enrich_analyses` unconditionally — the guard is deferred inside `Enricher.enrich_analyses` itself (line 19: `return analyses unless config.llm_primary?`). This simplifies the orchestrator and keeps the LLM gate localized.
 
-**Changes implemented:**
-1. **Config layer:** Added `llm: { primary: true }` default (changed from original plan's `false` in best-llm-powered-doc project) and `llm_primary?` accessor to `AutoDoc::Config`
-2. **CLI:** Added `--llm-primary` flag to `generate`, `verify`, and `audit` commands; `cli_overrides` maps to `{ llm: { primary: true } }`
-3. **TemplateHelper mixin** (`generator/template_helper.rb`): Added `llm_primary?` gate (checks `@auto_doc_config` then `@config`) and `warn_llm_fallback` for consistent stderr warnings
-4. **All 4 LLM-aware generators** now use `llm_primary?` gate — non-primary mode makes zero LLM calls
-5. **ArchitectureGenerator** LLM call wrapped in `begin/rescue StandardError` with full fallback to static mode
-6. **ArchitectureGenerator** parsing centralized through `Summarizer.parse_architecture_modules` and `Summarizer.parse_architecture_data_flows`
-7. **PromptBuilder** (`llm/prompt_builder.rb`): Extracted prompt construction (12 generator types: agents_md, summary, architecture, components, architecture_full, system_context, containers, readme, agents_overview_overview, agents_overview_tech_stack, agents_overview_architecture, agents_overview_conventions) — originally 8, later expanded by best-llm-powered-doc project.
-8. **ResponseParser** (`llm/response_parser.rb`): Extracted response parsing (markdown headings, JSON arrays, bullet lists, symbol summaries). Added `parse_symbol_summaries` method in best-llm-powered-doc project.
-9. **Summarizer** refactored to delegate to PromptBuilder and ResponseParser; added `parse_architecture_modules`, `parse_architecture_data_flows`, and `summarize_symbols` methods (originally added `summarize_architecture_full`, `summarize_system_context`, `summarize_containers` in earlier project).
-10. **ReadmeGenerator**: New signature accepts `config:` and `analyses:` kwargs; LLM enhancement for `overview_text`
-11. **ReadmeStep**: Forwards config and analyses to ReadmeGenerator
-12. **ArchitectureStep**: Forwards `auto_doc_config` and `analyses` to ArchitectureGenerator
-13. **IndexSummaryVectorsStep/AgentsMdStep**: Forward config from context to generators
-14. **DiagramStep**: LLM calls for C4 context/container gated behind `config.llm_primary?`
-15. **Pipeline context**: Includes `@config` (AutoDoc::Config instance), `all_classes`, `all_methods`, `coverage_pct`
-
-**Deviations from original plan (remediated in review):**
-- **M1 (ArchitectureGenerator LLM gating)**: LLM block was initially not gated by `config.llm_primary?`. Fixed in remediation: gate is now `llm_primary? && @auto_doc_config && @analyses`.
-- **M2 (ArchitectureGenerator parsing coupling)**: Parse methods were duplicated inline in ArchitectureGenerator. Fixed: centralized through `Summarizer.parse_architecture_modules` and `Summarizer.parse_architecture_data_flows`, which delegate to `ResponseParser`.
-- **M3 (ArchitectureGenerator exception handling)**: No rescue wrapping. Fixed: entire LLM block wrapped in `begin/rescue StandardError` with full static fallback.
-- **M5 (Integration test for ArchitectureGenerator primary mode)**: Missing. Fixed: primary-mode integration test added.
-- **M4, M6 (CLI flag)**: `--llm-primary` was missing from `verify` and `audit` commands. Fixed: added to all three commands.
-- **M8 (DiagramStep LLM test)**: DiagramStep LLM calls untested. Acceptable: calls are in orchestrator layer, properly gated and routed through Summarizer. Noted for future improvement.
-
-### 1. Summarizer Self-Doc Regeneration (commit `8e7254a`)
-
-**Plan:** The Summarizer class already has 3 public methods: `summarize_module`, `summarize_architecture`, `summarize_components`.
-
-**Resolved:** LLM self-doc regeneration added 3 new public methods (`summarize_architecture_full`, `summarize_system_context`, `summarize_containers`) and standardized prompt text from "Ruby project" to "software project". These were later refactored during the LLM Primary Driver Architecture project to delegate to `PromptBuilder` and `ResponseParser`.
-
-### 2. Config `llm_config` Accessor (FIXED, commit `ce3f596`)
-
-**Plan:** Add `llm:` section to `DEFAULTS` with provider/endpoint/api_key/model. Add `llm_config` accessor method.
-
-**Resolved:** `Config::DEFAULTS` now includes an `llm:` section with `provider: "openai"`, `endpoint: "https://llms.berrion.garden/v1"`, `api_key: "autodoc"`, `model: "summarizer"`, `timeout: 120`, `primary: true`, `fail_fast: false`. The `llm_config` accessor method is present alongside `llm_primary?` and `llm_fail_fast?`. (Note: `primary` was `false` at time of LLM Primary Driver Architecture project, changed to `true` in best-llm-powered-doc project.)
-
-### 3. SummaryGenerator LLM Integration (FIXED, refactored in primary driver project)
-
-**Plan:** In `render_template`, build an `AutoDoc::LLM::Client` from config if configured. Call `Summarizer` methods — only use results if non-nil; otherwise fall back to existing static methods.
-
-**Resolved:** LLM calls now gated behind `llm_primary?`. In primary mode, attempts LLM with fallback via `warn_llm_fallback`. In non-primary mode, uses only static inference (zero LLM calls).
-
-### 4. AgentsMdGenerator LLM Integration (FIXED, refactored in primary driver project)
-
-**Plan:** Update `self.generate` signature to accept optional `config:` parameter. In `render_template`, use LLM for `purpose_summary`.
-
-**Resolved:** Now uses `llm_primary?` gate. In primary mode, calls `llm_purpose_summary` with `warn_llm_fallback` on failure. In non-primary mode, `purpose_summary` is always the static placeholder.
-
-### 5. AgentsMdStep Config Threading (FIXED)
-
-**Plan:** Update the call to `AgentsMdGenerator.generate` to pass `config: config`.
-
-**Resolved:** `AgentsMdStep#run` calls `AgentsMdGenerator.generate(dir_name, tree_text, files_data, config: config, output_path: output_path)`.
-
-### 6. API Key Default Revert (FIXED, commit `ce3f596`)
-
-**Plan:** Use `"__PLACEHOLDER__"` as default api_key value.
-
-**Resolved:** Reverted from `"__PLACEHOLDER__"` back to `"autodoc"` for out-of-box LLM usage.
-
-### 7. Ruby 3.4 Compatibility (VERIFIED)
-
-**Execution Log Note:** Two source fixes: `Net::HTTPExceptions` for Ruby 3.4 compatibility and String-based type comparison in `extract_key_components`.
-
-**Actual:** `Client#chat` rescues `Net::OpenTimeout, Net::ReadTimeout, Net::HTTPError, Net::HTTPClientException, Net::HTTPFatalError, JSON::ParserError, SocketError, Errno::ECONNREFUSED, Errno::ECONNRESET`. In `Summarizer#extract_metadata_lines`, `defn[:type].to_s` is used for safe Symbol/String comparison.
-
-## Test Status
-
-At the time of LLM Primary Driver Architecture final review (commit `4c04a36`, remediated in `a6430ae`):
-- Total specs: 721 passing (unit + integration)
-- Pre-existing failures: unchanged from baseline
-- Integration tests tagged with `:integration` for selective execution
-- New shared test helper `spec/support/llm_mock_helper.rb` provides `mock_llm_client`, `primary_llm_config`, `standard_llm_config` for LLM-related tests
-- E2E generation verified in both primary and non-primary modes
-
-## Project: 2026-07-16-best-llm-powered-doc
-
-A comprehensive project that added 4 milestones to the auto-doc tool: a language-agnostic file scanner, fail-fast LLM error handling, root AGENTS.md generation, and LLM-enriched VECTORS.json. All milestones completed on first attempt. Final test count: **784 passing, 0 failures**.
-
-### Deviations from the Original Plan
+- **`grep_md_file` removal from SearchService**: The remediation removed dead code `grep_md_file` from `search_service.rb` (31 lines). This was not in the original plan but was required to pass review.

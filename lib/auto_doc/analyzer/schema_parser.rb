@@ -28,6 +28,11 @@ module AutoDoc
         return [] if content.strip.empty?
 
         tables = parse_tables(content)
+
+        if tables.empty?
+          $stderr.puts "[SchemaParser] WARNING: parse_tables returned 0 tables from #{schema_path}"
+        end
+
         parse_foreign_keys!(content, tables)
         migration_ts = migration_timestamps
 
@@ -55,6 +60,8 @@ module AutoDoc
               migration_timestamps: []
             }
             tables << current_table
+          elsif stripped.start_with?("create_table ")
+            $stderr.puts "[SchemaParser] WARN: create_table line did not match name capture regex: #{stripped[0..80]}"
           elsif stripped == "end" && current_table
             current_table = nil
           elsif current_table
@@ -86,12 +93,16 @@ module AutoDoc
       end
 
       def parse_index_line(stripped, table)
-        match = stripped.match(/\At\.index\s+\["([^"]+)"\](?:,\s*name:\s+"([^"]+)")?/)
+        match = stripped.match(/\At\.index\s+\[([^\]]+)\](?:,\s*(?:name:\s*"([^"]+)")?|$)/)
         return unless match
+
+        # Extract all column names from the bracketed content
+        columns = match[1].scan(/"([^"]+)"/).map(&:first)
+        return if columns.empty?
 
         table[:indexes] << {
           name: match[2],
-          columns: [match[1]]
+          columns: columns
         }
       end
 

@@ -31,6 +31,9 @@ module AutoDoc
 
         if is_rails
           schema_tables = AutoDoc::Analyzer::SchemaParser.parse(target_dir)
+          if schema_tables.nil? || schema_tables.empty?
+            $stderr.puts "[DiagramStep] WARNING: SchemaParser returned 0 tables from #{target_dir}/db/schema.rb"
+          end
           models        = AutoDoc::Analyzer::ModelAssociationParser.parse(target_dir)
 
           schema_dir = File.join(target_dir, output_dir, "schema")

@@ -1,97 +1,80 @@
-# Auto-Doc — Analyzer Module
+# Analyzer Submodule — Backend
 
-## Purpose
+## Entry Point
 
-The analyzer module extracts structured information from Ruby source files. It uses the Ruby stdlib `Ripper` for AST-based parsing and custom extraction for YARD doc comments, imports, and Rails-specific metadata.
+### `analysis_pipeline.rb` — Pipeline Orchestration
 
-## Files
+Entry point for source code analysis. Accepts an array of file paths, runs each through `SourceParser` and `YardReader`, returns a hash of `file_path => { definitions: [...], docs: [...], language: ... }`.
 
-### `SourceParser` (`analyzer/source_parser.rb`)
+**Behavior:**
+1. Iterates over provided source files
+2. Runs `SourceParser.parse(file_path)` for each file (extracts classes, modules, methods, constants, imports)
+3. Runs `YardReader.read(file_path)` for YARD doc comment extraction
+4. Detects language via `GenericScanner` (Ruby, TypeScript, etc.)
+5. Returns structured analysis data
 
-Ripper-based parser that walks Ruby S-expressions to extract class, module, and method definitions.
+## Core Parsers
 
-**Algorithm:**
-1. Reads file content and calls `Ripper.sexp(code)`
-2. Recursively walks the S-expression tree via `walk_sexp(sexp, current_scope)`
-3. Tracks module nesting context for proper scope resolution
-4. Handles node types: `:program`, `:class`, `:module`, `:def`, `:defs`, `:sclass`, `:alias`, `:cdecl`, `:const_path_ref`
+### `source_parser.rb` — Ruby Syntax Parser
 
-**Output:** Array of `Definition` hashes:
-```ruby
-{
-  name:           "ClassName",       # Symbol name
-  type:           :class,            # :class, :module, :method
-  line:           5,                 # Line number
-  parent_modules: ["AutoDoc"],      # Nesting context
-  methods:        [{ name: "foo", type: :method, line: 10 }]
-}
-```
+Parses Ruby source files to extract:
+- Classes, modules, methods, constants
+- Method signatures
+- Visibility (public/private/protected)
+- Parent module nesting
+- Line numbers
 
-**Nesting handling:** Constant paths like `::AutoDoc::Analyzer::Foo` are resolved to `["AutoDoc", "Analyzer"]` parent modules.
+Uses Ruby's `Parser` library for AST-based parsing (more reliable than regex).
 
-### `YardReader` (`analyzer/yard_reader.rb`)
+### `yard_reader.rb` — YARD Documentation Extraction
 
-Extracts YARD-style documentation comments from source files.
+Reads YARD doc comments from source files. Extracts:
+- Summary text
+- Parameter descriptions
+- Return type descriptions
+- Tags (@param, @return, @example, etc.)
 
-**Output per comment:**
-```ruby
-{
-  target_name:    "ClassName",
-  target_type:    :class,
-  summary:        "Description text",
-  has_summary?:   true,
-  line:           2
-}
-```
+### `schema_parser.rb` — Database Schema Detection
 
-### `ImportExtractor` (`analyzer/import_extractor.rb`)
+Detects database schema from Rails applications by parsing:
+- `db/schema.rb` or `db/schema.sql`
+- Migration files
 
-Extracts dependency declarations from source files: `require`, `require_relative`, `include`, `extend`, `prepend`.
+Extracts tables, columns, types, indexes, and foreign keys.
 
-**Output:**
-```ruby
-{ path: "json", type: :require, line: 1 }
-```
+### `model_association_parser.rb` — ActiveRecord Association Detection
 
-### `SchemaParser` (`analyzer/schema_parser.rb`)
+Scans Ruby files for ActiveRecord association declarations (`has_many`, `belongs_to`, `has_one`, `has_and_belongs_to_many`). Used for dependency analysis.
 
-Parses Rails `db/schema.rb` files to extract table definitions, columns, types, and constraints. Rails-only — skipped for non-Rails projects.
+## Supporting Services
 
-### `ModelAssociationParser` (`analyzer/model_association_parser.rb`)
+### `import_extractor.rb` — Import Statement Extraction
 
-Extracts Rails model associations (`belongs_to`, `has_many`, `has_one`, `has_and_belongs_to_many`). Rails-only.
+Extracts all import/deployment statements from a file:
+- `require`
+- `require_relative`
+- `include`
+- `extend`
+- `prepend`
 
-### `AnalysisPipeline` (`analyzer/analysis_pipeline.rb`)
+Returns a list of import hashes with `:type`, `:target`, `:line`, `:resolved_path` (when resolvable).
 
-Shared pipeline that combines `SourceParser` and `YardReader` results.
+### `generic_scanner.rb` — Multi-Language File Detection
 
-**Workflow:**
-1. For each file in the input list:
-   a. `SourceParser.parse_file(file_path)` → definitions
-   b. `YardReader.extract(file_path)` → docs
-   c. Build doc index keyed by `:"#{type}_#{name}"`
-   d. Merge `has_doc?` boolean onto each definition
-2. Return analyses hash: `{ file_path => { definitions:, docs: } }`
+Detects the programming language of source files based on file extension. Supports multiple languages beyond Ruby for future extensibility.
 
-**Note:** Import extraction is NOT included in this pipeline — it is handled separately by the Orchestrator.
+Known extensions: Ruby (`.rb`), TypeScript (`.ts`, `.tsx`), JavaScript (`.js`, `.jsx`), Python (`.py`), etc.
 
-### `AnalysisCache` (`analyzer/analysis_cache.rb`)
+### `diff_service.rb` — Incremental Analysis Change Detection
 
-In-process caching of analysis results. Keyed by directory path + config fingerprint.
+Compares current analysis state against stored state to identify which files have changed and need re-analysis. Used for incremental generation mode.
 
-**Usage:** `AnalysisCache.fetch(base_dir, config) { ... }` — returns cached results or executes block and caches result.
+### `orphans_service.rb` — Undocumented Symbol Detection
 
-**Clearing:** `AnalysisCache.clear!` — called before each test to isolate test runs.
+Identifies symbols that lack documentation comments. Used by the audit reporter to calculate documentation coverage.
 
-**Performance:** Warm cache is ~173x faster than cold cache for a 193-file project.
+## Caching
 
-### `DiffService` (`analyzer/diff_service.rb`)
+### `analysis_cache.rb` — In-Process Analysis Cache
 
-Compares current source analysis against a git ref (e.g., `HEAD~5`) to identify:
-- Changed files
-- New or modified symbols
-- Undocumented changes (symbols without doc comments in changed files)
-
-### `OrphansService` (`analyzer/orphans_service.rb`)
-
-Finds `.rb` files that are not documented (no AGENTS.md), not imported by other files, and not referenced. Supports `--rails` mode to skip Rails autoloaded paths.
+Caches analysis results in-process to avoid re-parsing files across multiple CLI invocations within the same process (e.g., when `verify` + `audit` + `generate` are called in sequence). Cleared between test runs via `spec_helper.rb`.

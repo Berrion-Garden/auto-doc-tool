@@ -1,260 +1,165 @@
-# Auto-Doc — Data Flow
+# Auto-Doc Tool — Request Lifecycle & Data Flow
 
-## Request Lifecycle
-
-### `auto-doc generate` Command
+## Generation Request Lifecycle
 
 ```
-CLI (generate command)
+CLI (exe/auto-doc generate)
     │
-    ▼
-Orchestrator.generate(path, say:)
+    ├→ Orchestrator#generate(path, say:)
+    │     │
+    │     ├→ Config.load(target_dir, cli_overrides)
+    │     │
+    │     ├→ resolve_module_roots(target_dir, config)
+    │     │
+    │     ├→ analyze_project(target_dir, config, file_list)
+    │     │     │
+    │     │     ├→ AnalysisCache.fetch(base_dir, config) { ... }  # in-process cache
+    │     │     │     │
+    │     │     │     └→ run_analysis_pipeline(base_dir, excludes, file_list)
+    │     │     │           │
+    │     │     │           ├→ Source files globbed (**/*.rb, etc.)
+    │     │     │           ├→ AnalysisPipeline.run(source_files) → analyses
+    │     │     │           │     │
+    │     │     │           │     └→ For each file:
+    │     │     │           │           SourceParser.parse → definitions
+    │     │     │           │           YardReader.read → docs
+    │     │     │           │           GenericScanner.detect → language
+    │     │     │           │
+    │     │     │           └→ For each file:
+    │     │     │                 ImportExtractor.extract → imports
+    │     │     │
+    │     │     └→ Returns: { file_path => { definitions, docs, imports, language } }
+    │     │
+    │     ├→ Enricher.enrich_analyses(analyses, config, base_dir: target_dir)
+    │     │     │
+    │     │     ├→ Guard: config.llm_primary? → return analyses unchanged if false
+    │     │     ├→ Client.build_if_configured(config) → nil if LLM unavailable
+    │     │     ├→ Build symbol_types lookup (name → type)
+    │     │     ├→ For each module root:
+    │     │     │     ├→ Filter analyses by root (start_with? matching)
+    │     │     │     ├→ Summarizer.summarize_symbols(root, filtered, client) → LLM response
+    │     │     │     ├→ ResponseParser.parse_symbol_summaries(response, symbol_types)
+    │     │     │     └→ For each parsed summary:
+    │     │     │           analyses[file_path][:docs] << {target_name, target_type, summary}
+    │     │     │
+    │     │     └→ Returns: enriched analyses (same hash, mutated)
+    │     │
+    │     ├→ Pipeline.new(config).run(analyses, ...)
+    │     │     │
+    │     │     └→ For each step in STEPS (7 steps):
+    │     │           step.run(context)
+    │     │           │
+    │     │           └→ Context evolves with shared state:
+    │     │                 analyses → enriched analyses hash
+    │     │                 all_classes, all_methods, coverage_pct → counts
+    │     │                 schema_tables, models → detected data
+    │     │
+    │     └→ Return: { project, output_dir, module_roots, analyses_count,
+    │                    classes_count, methods_count, coverage_pct, generated_at,
+    │                    schema_tables, models, created_files }
     │
-    ├── Config.load(target_dir, cli_overrides)
-    │       │
-    │       ├── Walk up directory tree for .autodoc.yml
-    │       ├── deep_merge(DEFAULTS, file_config)
-    │       └── deep_merge(result, cli_overrides)
-    │
-    ├── resolve_module_roots(target_dir, config)
-    │       │
-    │       └── config.module_roots → filter existing dirs → fallback [base_dir]
-    │
-    ├── analyze_project(target_dir, config, [file_list])
-    │       │
-    │       ├── AnalysisCache.fetch(base_dir, config) { ... }  (full scans only)
-    │       │       │
-    │       │       └── run_analysis_pipeline(base_dir, excludes, file_list)
-    │       │               │
-    │       │               ├── Dir.glob("**/*.rb") → filter excludes
-    │       │               ├── AnalysisPipeline.run(ruby_files)
-    │       │               │       │
-    │       │               │       ├── SourceParser.parse_file(file) → definitions
-    │       │               │       ├── YardReader.extract(file) → docs
-    │       │               │       └── Merge has_doc? onto definitions
-    │       │               │
-    │       │               └── ImportExtractor.extract(file) → imports (per file)
-    │       │
-    │       └── (incremental mode: TimestampTracker.stale_files → file_list)
-    │
-    └── Pipeline.run(analyses, target_dir:, output_dir:, module_roots:, say:)
-            │
-            ├── AgentsOverviewStep.run(context)
-            │       │
-            │       └── AgentsOverviewGenerator.generate(project_name, tree_text, analyses,
-            │               config:, output_path:)
-            │               │
-            │               ├── llm_primary? == true
-            │               │       ├── llm_generate_section(:agents_overview_overview)
-            │               │       ├── llm_generate_section(:agents_overview_tech_stack)
-            │               │       ├── llm_generate_section(:agents_overview_architecture)
-            │               │       └── llm_generate_section(:agents_overview_conventions)
-            │               │       └── All delegate to PromptBuilder.build(:agents_overview_*)
-            │               │
-            │               └── llm_primary? == false → static overview text
-            │
-            ├── AgentsMdStep.run(context)
-            │       │
-            │       └── for each module_root:
-            │               FileTreeBuilder.build(root, excludes)
-            │               FilesDataBuilder.build(file_analyses)
-            │               AgentsMdGenerator.generate(name, tree, files, config:, output_path:)
-            │                       │
-            │                       ├── llm_primary? == true (default)
-            │                       │       ├── Client.build_if_configured(config)
-            │                       │       │       ├── AUTO_DOC_DISABLE_LLM check
-            │                       │       │       ├── config.llm_config validation
-            │                       │       │       └── Client.configured? check
-            │                       │       ├── (client available) Summarizer.summarize_module
-            │                       │       │       └── PromptBuilder.build(:agents_md, ...)
-            │                       │       │       └── ResponseParser.parse_purpose(...)
-            │                       │       ├── (success) → purpose_summary = LLM result
-            │                       │       └── (failure) → warn_llm_fallback + placeholder text
-            │                       │
-            │                       └── llm_primary? == false
-            │                               └── purpose_summary = placeholder text (zero LLM calls)
-            │
-            ├── ReadmeStep.run(context)
-            │       │
-            │       └── ReadmeGenerator.generate(project_name, structure, stats,
-            │               config:, analyses:, output_path:)
-            │               │
-            │               ├── llm_primary? == false → overview_text = placeholder
-            │               └── llm_primary? == true
-            │                       └── Summarizer.summarize_module → llm_module_overview
-            │
-            ├── IndexSummaryVectorsStep.run(context)
-            │       │
-            │       ├── IndexGenerator.generate(project-level)
-            │       ├── SummaryGenerator.generate(project-level)
-            │       │       │
-            │       │       ├── llm_primary? == false
-            │       │       │       └── infer_purpose, extract_key_components, infer_architecture_pattern
-            │       │       │
-            │       │       └── llm_primary? == true
-            │       │               ├── llm_purpose → Summarizer.summarize_module
-            │       │               ├── llm_architecture → Summarizer.summarize_architecture
-            │       │               ├── llm_components → Summarizer.summarize_components
-            │       │               └── any failure → warn_llm_fallback + static fallback
-            │       │
-            │       ├── VectorGenerator.generate(project-level)
-            │       └── for each module_root:
-            │               IndexGenerator.generate(module-level)
-            │               SummaryGenerator.generate(module-level)  (same LLM gate pattern)
-            │               VectorGenerator.generate(module-level)
-            │
-            ├── DiagramStep.run(context)
-            │       │
-            │       ├── GraphDataBuilder.build(analyses) → DAG data
-            │       ├── ClassHierarchyBuilder.build(analyses) → inheritance
-            │       ├── ContainerDataFlowBuilder.build(analyses) → containers
-            │       ├── (if llm_primary?) Summarizer.summarize_system_context → C4 context
-            │       ├── (if llm_primary?) Summarizer.summarize_containers → C4 containers
-            │       ├── ERD (if Rails): SchemaParser + ModelAssociationParser
-            │       └── Diagram generators for each type
-            │
-            ├── ArchitectureStep.run(context)
-            │       │
-            │       └── ArchitectureGenerator.generate(project_name, schema_tables, models,
-            │               class_hierarchy, config, output_path:, analyses:, auto_doc_config:)
-            │               │
-            │               ├── llm_primary? == false or no analyses
-            │               │       └── Model-based data (Rails associations, static heuristics)
-            │               │
-            │               └── llm_primary? == true && @auto_doc_config && @analyses
-            │                       ├── Summarizer.summarize_architecture_full
-            │                       │       └── PromptBuilder.build(:architecture_full, ...)
-            │                       │       └── ResponseParser.parse_architecture_full(...)
-            │                       │       └── returns { purpose:, style:, modules:, data_flow: }
-            │                       ├── LLM success → use parsed results for sections
-            │                       │       ├── Summarizer.parse_architecture_modules(summary)
-            │                       │       └── Summarizer.parse_architecture_data_flows(summary)
-            │                       └── rescue StandardError → full static fallback
-            │
-            └── ManifestStep.run(context)
-                    │
-                    └── MapGenerator.generate(all_artifacts)
+    └→ CLI formatting / exit
 ```
 
-### `auto-doc audit` Command
+## Vector Entry Data Flow
 
 ```
-CLI (audit command)
-    │
-    ▼
-Orchestrator.audit(path, threshold, say:, analyses:)
-    │
-    ├── Config.load(target_dir, { audit: { min_doc_coverage: threshold } })
-    │
-    ├── analyze_project(target_dir, config)  (or reuse provided analyses)
-    │       │
-    │       └── AnalysisCache.fetch → same pipeline as generate
-    │
-    ├── AuditReporter.generate(target_dir, config, analyses)
-    │       │
-    │       ├── CompletenessChecker.check(analyses)
-    │       │       │
-    │       │       └── Count documented vs undocumented symbols
-    │       │       └── Calculate per-file coverage percentages
-    │       │
-    │       └── Build report hash: { total_symbols, documented, undocumented,
-    │            coverage_percent, passed_threshold, failures, ... }
-    │
-    └── Write report.json to output directory
+Source file → AnalysisPipeline → analyses[:docs] (YARD docs)
+                                         │
+                              Enricher.enrich_analyses
+                                         │
+                              analyses[:docs] += {target_name, target_type, summary}
+                                         │
+                              IndexSummaryVectorsStep.collect_symbol_summaries
+                                         │
+                              llm_summaries hash = { entry_id => summary }
+                                         │
+                    ┌────────────────────┼────────────────────┐
+                    │                                                    │
+          build_vectors(analyses, llm_summaries:)              generate_project/dir()
+                    │                                                    │
+          For each defn in analyses:             For each file → build_doc_index(docs)
+          build_vector_entry(defn, ...)          For each defn: build_vector_entry(...)
+                    │                                                    │
+          Inside build_vector_entry:     Inside build_vector_entry:
+          ┌─────────────────────────┐    ┌─────────────────────────────────┐
+          │ doc_index lookup        │    │ doc_index lookup                │
+          │ → doc_rec[:summary]     │    │ → doc_rec[:summary]             │
+          └─────────────────────────┘    └─────────────────────────────────┘
+          │                              │
+          │ llm_summaries[entry_id]     │ summary (from docs)
+          │ passed to...                │ passed to keyword_extraction
+          └──────────┬──────────────────┘
+                     │
+          ┌──────────┴──────────────────┐
+          │                             │
+    extract_keywords_from_text     keyword_extraction(name, summary)
+    (llm_summary_text)             (merges name + summary keywords)
+          │                             │
+          └──────────┬──────────────────┘
+                     │
+          keywords array (up to 15, deduplicated)
+                     │
+          Vector entry written to vectors.json
 ```
 
-### `auto-doc search` Command
+## Search Request Flow
 
 ```
-CLI (search command)
+SearchService.search(project_dir, term, options: {source: true, limit: 20})
     │
-    ▼
-SearchService.search(project_dir, term, options:)
+    ├→ DocumentationIndex.new(docs_dir)
+    │     │
+    │     └→ Loads: INDEX.md, VECTORS.json, SUMMARY.md, AGENTS.md, all markdown content
     │
-    ├── Search INDEX.md files (full-text)
-    ├── Search VECTORS.json files (keyword match)
-    ├── Search AGENTS.md files (full-text)
-    └── (if --source) Search .rb source files
-```
-
-### `auto-doc serve` Command
-
-```
-CLI (serve command)
+    ├→ search_index_md(doc_index, term)
+    │     ├→ Symbol exact matches (score 100)
+    │     └→ Dependency partial matches (score 80)
     │
-    ▼
-Sinatra server startup
+    ├→ search_vectors_json(doc_index, term)
+    │     ├→ First pass: keyword overlap (score 60 for 3+, 40 for 1-2)
+    │     │     search_words = term.split(/\s+|_|CamelCase/) → lowercase
+    │     │     overlap = search_words.count { |w| keyword_words.include?(w) }
+    │     │
+    │     └→ Second pass: summary full-text match (score 15)
+    │           search_words.any? { |w| summary.downcase.include?(w) }
+    │           match_type: "vector_summary_match"
     │
-    ├── Set AUTO_DOC_SERVE_DIR environment variable
-    ├── Configure port (default: 4567)
-    └── Server.run!
-```
-
-## Data Transformation Pipeline
-
-```
-Raw Source Files (.rb)
+    ├→ search_summary_md(doc_index, term)    (score 20)
+    └→ search_agents_md(doc_index, term)      (score 20)
+    └→ search_source_files(project_dir, term) (score 10, opt-in)
     │
-    ▼
-┌───────────────────────────┐
-│  SourceParser (Ripper)     │ → definitions array
-│  YardReader               │ → docs array
-│  ImportExtractor          │ → imports array
-└───────────┬───────────────┘
-            │
-            ▼
-    analyses hash: {
-      "/path/to/file.rb" => {
-        definitions: [{ name, type, line, methods, has_doc? }],
-        docs: [{ target_name, target_type, summary }],
-        imports: [{ path, type, line }]
-      }
-    }
-            │
-            ▼
-┌───────────────────────────┐
-│  Transformers              │
-│  FilesDataBuilder          │ → files array for generators
-│  ClassHierarchyBuilder     │ → inheritance relationships
-│  GraphDataBuilder          │ → DAG nodes and edges
-│  ContainerDataFlowBuilder  │ → container diagram data
-│  ErdRelationshipBuilder    │ → ERD data (Rails)
-└───────────┬───────────────┘
-            │
-            ▼
-┌───────────────────────────┐
-│  Generators (ERB)          │
-│  AgentsMdGenerator         │ → AGENTS.md
-│  ReadmeGenerator           │ → README.md
-│  IndexGenerator            │ → INDEX.md
-│  SummaryGenerator          │ → SUMMARY.md
-│  VectorGenerator           │ → VECTORS.json
-│  Diagram generators        │ → .mmd files
-│  ArchitectureGenerator     │ → architecture.md
-│  MapGenerator              │ → .map.json
-└───────────────────────────┘
+    ├→ results.sort_by! { |r| -r[:score] }
+    └→ results.first(limit)
+    │
+    └→ { query: term, results: [...], total: n }
 ```
 
-## Cache State Machine
+## Incremental Analysis Flow
 
 ```
-┌──────────────────┐
-│  No Cache Entry   │
-└──────┬───────────┘
-       │ AnalysisCache.fetch { block }
-       ▼
-┌──────────────────┐     File changed (mtime)
-│  Cache Hit        │─────────────────────┐
-│  (return cached) │                      │
-└──────────────────┘                      ▼
-                                        ┌──────────────┐
-                                        │ Cache Miss /  │
-                                        │ Re-analyze    │
-                                        └──────┬───────┘
-                                               │
-                                               ▼
-                                        ┌──────────────┐
-                                        │ Cache Write   │
-                                        │ (new results) │
-                                        └──────────────┘
+Orchestrator#generate(path, options: {incremental: true})
+    │
+    ├→ TimestampTracker.stale_files(target_dir, output_dir)
+    │     │
+    │     └→ Compares current file mtimes against stored timestamps
+    │         Returns array of changed file paths
+    │
+    ├→ analyze_project(target_dir, config, stale_files)
+    │     │
+    │     └→ Run analysis ONLY on stale files (not cached)
+    │
+    └→ Enricher.enrich_analyses + Pipeline run on partial analyses
 ```
+
+## Error Handling & Guard Chains
+
+Every LLM call is protected by a multi-layer guard:
+
+1. **Env guard:** `AUTO_DOC_DISABLE_LLM` → Client.build_if_configured returns nil
+2. **Config guard:** `config.llm_primary?` → Enricher returns analyses unchanged
+3. **Client guard:** `Client.build_if_configured(config)` → nil if no valid config
+4. **Response guard:** LLM returns nil → Enricher logs warning, skips that module
+5. **Parse guard:** ResponseParser returns empty hash → Enricher skips that module
+
+This ensures the pipeline always completes even when the LLM is unavailable.

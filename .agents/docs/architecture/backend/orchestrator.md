@@ -1,163 +1,114 @@
-# Auto-Doc — Orchestrator Pipeline
+# Orchestrator Submodule — Backend
 
-## Purpose
+## Orchestrator (`orchestrator.rb`)
 
-The orchestrator coordinates the full documentation generation workflow, from source analysis through artifact generation. It separates CLI concerns (output formatting, argument parsing) from workflow logic.
+The top-level orchestration class extracted from the CLI. Accepts explicit parameters and returns results. Handles three main entry points:
 
-## Components
+### `#generate(path, say:)`
 
-### `Orchestrator` (`orchestrator.rb`)
+Full documentation generation pipeline:
+1. Load config (`Config.load`)
+2. Resolve module roots
+3. Run analysis pipeline (with optional incremental mode)
+4. **Enrich analyses** with LLM-generated summaries via `Enricher.enrich_analyses(analyses, config, base_dir: target_dir)`
+5. Run the generation pipeline (`Pipeline.new(config).run(...)`)
+6. Return stats merged with created files list
 
-Top-level coordinator. Receives CLI options and manages the complete `generate` or `audit` workflow.
+Key implementation detail: the Enricher is called **after** `analyze_project` but **before** the pipeline steps. This ensures all downstream steps have access to enriched `analyses[:docs]`.
 
-**`generate(path, say:)` workflow:**
-1. Load `Config` from target directory with CLI overrides (including `--llm-primary` flag → `{ llm: { primary: true } }`)
-2. Resolve output directory (CLI flag > format option > config default)
-3. Resolve module roots (config `module_roots` → fall back to `[base_dir]`)
-4. Run analysis pipeline (incremental if `--incremental` flag set)
-5. Execute `Pipeline` with analysis results
-6. Return stats hash merged with created files list
+### `#audit(path, threshold, say:, analyses:)`
 
-**`audit(path, threshold, say:, analyses:)` workflow:**
-1. Load `Config` with threshold override
-2. Run analysis pipeline (or reuse provided analyses)
-3. Call `AuditReporter.generate` for coverage report
-4. Write `report.json` to output directory
-5. Return report hash
+Documentation coverage audit:
+1. Run or reuse analysis
+2. Generate audit report via `AuditReporter.generate`
+3. Write JSON report to `<output_dir>/report.json`
+4. Return report with pass/fail status
 
-**Analysis caching:** Full-project scans use `AnalysisCache.fetch(base_dir, config)` for in-process caching. Incremental and file-list scans bypass the cache.
+### Private methods
 
-### `BaseStep` (`orchestrator/base_step.rb`)
+- `cli_overrides(options)` — Extracts CLI flags into config overrides (`exclude`, `incremental`, `llm-primary`)
+- `resolve_module_roots(base_dir, config)` — Resolves module root paths to actual directories
+- `analyze_project(base_dir, config, file_list)` — Runs analysis with optional cache for full-project scans
+- `run_analysis_pipeline(base_dir, excludes, file_list)` — File globbing → `AnalysisPipeline.run` → `ImportExtractor` per file
 
-Abstract base class defining the step interface.
+## Pipeline (`orchestrator/pipeline.rb`)
 
-```ruby
-class BaseStep
-  def run(context)
-    raise NotImplementedError
-  end
-
-  protected
-  def say(context, msg, color = nil)
-    context[:say]&.call(msg, color)
-  end
-end
-```
-
-### `Pipeline` (`orchestrator/pipeline.rb`)
-
-Sequential executor of pipeline steps. Steps share a mutable context hash that accumulates data.
-
-**Step order:**
-```ruby
-STEPS = [
-  AgentsMdStep.new,          # 1. Per-module AGENTS.md
-  ReadmeStep.new,            # 2. Project README.md
-  IndexSummaryVectorsStep.new, # 3. INDEX.md + SUMMARY.md + VECTORS.json
-  DiagramStep.new,           # 4. Mermaid diagrams
-  ArchitectureStep.new,      # 5. Architecture documentation
-  ManifestStep.new           # 6. .map.json cross-reference manifest
-]
-```
-
-**Context initialization:**
-```ruby
-{
-  target_dir:     expanded_project_path,
-  output_dir:     resolved_output_directory,
-  config:         loaded_config_instance,
-  module_roots:  ["/path/to/app", "/path/to/lib", ...],
-  analyses:       { file_path => { definitions:, docs:, imports: }, ... },
-  say:            ->(msg, color) { ... },
-  all_classes:    0,          # Accumulated by steps
-  all_methods:    0,          # Accumulated by steps
-  coverage_pct:   "0",        # Calculated by steps
-  schema_tables:  nil,        # Set if Rails project
-  models:         nil,        # Set if Rails project
-  class_hierarchy: [],        # Accumulated by DiagramStep
-  container_data_flows: []    # Accumulated by DiagramStep
-}
-```
-
-**Return shape:**
-```ruby
-{
-  project:         File.basename(context[:target_dir]),
-  output_dir:      context[:output_dir],
-  module_roots:    [module_root_names],
-  analyses_count:  number_of_files_analyzed,
-  classes_count:   total_classes_and_modules,
-  methods_count:   total_methods,
-  coverage_pct:    coverage_percentage_float,
-  generated_at:    ISO8601_timestamp,
-  schema_tables:   schema_data_or_nil,
-  models:          model_data_or_nil
-}
-```
-
-### Pipeline Steps
-
-#### `AgentsMdStep`
-
-For each module root: builds file tree, transforms analyses to files data, calls `AgentsMdGenerator.generate` with `config: config`, writes `AGENTS.md` to output. The `config:` parameter enables LLM integration via the `llm_primary?` gate — when `llm.primary: false` (default), no LLM call is made.
-
-#### `ReadmeStep`
-
-Generates project-level `README.md` with project stats, module summary, and file count. Calls `ReadmeGenerator.generate` with `config: config` and `analyses: context[:analyses]` to support LLM enhancement.
-
-#### `IndexSummaryVectorsStep`
-
-For each module root and the project level: generates `INDEX.md`, `SUMMARY.md`, and `VECTORS.json`. Calls `SummaryGenerator.generate` with `config` parameter from context for LLM gating via `llm_primary?`.
-
-#### `DiagramStep`
-
-Conditionally generates Mermaid diagrams based on project content:
-- DAG (dependency graph) — always if `generate_dag` config
-- Class diagram — if class inheritance detected
-- C4 context/container — always
-- ERD — if Rails schema detected
-
-#### `ArchitectureStep`
-
-Generates `architecture.md` using C4-informed template with context and container data. Passes `auto_doc_config: auto_doc_config` (the `AutoDoc::Config` instance) and `analyses: context[:analyses]` to `ArchitectureGenerator.generate` for LLM gating via `llm_primary?`.
-
-#### `ManifestStep`
-
-Generates `.map.json` cross-reference manifest listing all generated artifacts.
-
-## Data Flow Through Pipeline
+Orchestrates 7 generation steps in order:
 
 ```
-Input: analyses hash
-   │
-   ▼
-┌─────────────────┐
-│  AgentsMdStep    │ → writes AGENTS.md per module
-│  (FilesData      │
-│   Builder)       │
-└────────┬────────┘
-         ▼
-┌─────────────────┐
-│  ReadmeStep      │ → writes README.md
-└────────┬────────┘
-         ▼
-┌─────────────────────────┐
-│ IndexSummaryVectorsStep │ → writes INDEX.md, SUMMARY.md, VECTORS.json
-└────────┬────────────────┘
-         ▼
-┌─────────────────┐
-│  DiagramStep     │ → writes diagrams/*.mmd
-│  (GraphData      │
-│   Builders)      │
-└────────┬────────┘
-         ▼
-┌─────────────────┐
-│  ArchitectureStep│ → writes architecture.md
-└────────┬────────┘
-         ▼
-┌─────────────────┐
-│  ManifestStep    │ → writes .map.json
-└────────┬────────┘
-         ▼
-Output: stats hash
+1. AgentsOverviewStep
+2. AgentsMdStep
+3. ReadmeStep
+4. IndexSummaryVectorsStep
+5. DiagramStep
+6. ArchitectureStep
+7. ManifestStep
 ```
+
+Each step receives a shared `context` hash containing:
+- `target_dir`, `output_dir`, `config`, `module_roots`
+- `analyses` (the enriched analyses hash)
+- `say` (output callback)
+- `all_classes`, `all_methods`, `coverage_pct`
+- `schema_tables`, `models`
+- `class_hierarchy`, `container_data_flows`
+
+Returns a stats hash with project name, output dir, module roots, counts, coverage percentage, and timestamps.
+
+## Steps
+
+### `base_step.rb` — Step Base Class
+
+Abstract base class for pipeline steps. Provides common utilities like `say` formatting.
+
+### `index_summary_vectors_step.rb` — INDEX/SUMMARY/VECTORS Generation
+
+**Key change (from vectorize-everything task):**
+
+The `collect_symbol_summaries` method was refactored to read pre-enriched summaries from `analyses[:docs]` instead of making separate LLM calls. By the time this step runs, the Enricher has already populated `analyses[:docs]` arrays with LLM-generated summaries.
+
+**`collect_symbol_summaries(analyses, _module_roots, _config)`** — Builds an `llm_summaries` hash by iterating `analyses[:docs]` arrays and extracting `{entry_id => summary_text}` mappings. Returns nil when empty (preserving backward compat with code expecting nil).
+
+**`walk_subdirectories`** — For each module root and its subdirectories, generates:
+- INDEX.md (via `IndexGenerator`)
+- SUMMARY.md (via `SummaryGenerator`)
+- vectors.json (via `VectorGenerator.generate_directory`, for non-root dirs only)
+
+### `agents_md_step.rb` — AGENTS.md Generation
+
+Generates AGENTS.md files at each directory level.
+
+### `agents_overview_step.rb` — Project Overview Generation
+
+Generates the project-level AGENTS overview (overview, tech stack, architecture, conventions).
+
+### `readme_step.rb` — README Generation
+
+Generates project-level README.
+
+### `diagram_step.rb` — Diagram Generation
+
+Generates dependency, class, and ER diagrams.
+
+### `architecture_step.rb` — Architecture Documentation
+
+Generates architecture.md with LLM-powered content.
+
+### `manifest_step.rb` — Manifest Generation
+
+Generates the manifest.json cross-reference map.
+
+### `metrics_helper.rb` — Metrics Utilities
+
+Shared metrics calculation methods (counting classes, methods, coverage percentage).
+
+## Analysis Pipeline (`analyzer/analysis_pipeline.rb`)
+
+Distinct from `Orchestrator::Pipeline`. This is the source code analysis pipeline:
+
+**Flow:**
+```
+Source files → SourceParser (AST parsing) → YardReader (doc extraction) → GenericScanner (language detection) → analyses hash
+```
+
+Returns `Hash<String, Hash>` of `file_path => { definitions: [...], docs: [...], language: ... }`.
