@@ -59,6 +59,7 @@ module AutoDoc
 
   # Load orchestrator
   require_relative "auto_doc/orchestrator"
+  require_relative "auto_doc/orchestrator/metrics_helper"
 
   # Load orchestrator pipeline steps
   require_relative "auto_doc/orchestrator/base_step"

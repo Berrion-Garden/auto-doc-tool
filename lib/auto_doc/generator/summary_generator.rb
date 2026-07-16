@@ -52,9 +52,9 @@ module AutoDoc
         template_text = read_template(template_path)
 
         dir_name             = @dir_name
-        purpose              = infer_purpose
-        key_components       = extract_key_components
-        architecture_pattern = infer_architecture_pattern
+        purpose              = llm_purpose || infer_purpose
+        key_components       = llm_components || extract_key_components
+        architecture_pattern = llm_architecture || infer_architecture_pattern
         dependencies_overview = build_dependencies_overview
         generated_at         = Time.now.strftime("%Y-%m-%d %H:%M:%S %Z")
 
@@ -78,6 +78,45 @@ module AutoDoc
         end
 
         ERB.new(template_text).result(binding)
+      end
+
+      # Attempts LLM-generated purpose summary. Falls back to nil on any failure.
+      def llm_purpose
+        return nil unless (client = build_llm_client)
+        AutoDoc::LLM::Summarizer.summarize_module(@dir_name, @analyses, client)
+      rescue => e
+        nil
+      end
+
+      # Attempts LLM-generated architecture pattern. Falls back to nil on any failure.
+      def llm_architecture
+        return nil unless (client = build_llm_client)
+        AutoDoc::LLM::Summarizer.summarize_architecture(@dir_name, @analyses, client)
+      rescue => e
+        nil
+      end
+
+      # Attempts LLM-generated component descriptions. Falls back to nil on any failure.
+      def llm_components
+        return nil unless (client = build_llm_client)
+        result = AutoDoc::LLM::Summarizer.summarize_components(@analyses, client)
+        return nil unless result
+        # Wrap LLM text as a single key component entry
+        [{ name: @dir_name, type: "module", summary: result }]
+      rescue => e
+        nil
+      end
+
+      def build_llm_client
+        return nil unless @config.respond_to?(:llm_config)
+        cfg = @config.llm_config
+        return nil unless cfg
+        client = AutoDoc::LLM::Client.new(cfg)
+        return nil unless client.configured?
+        client
+      rescue => e
+        # LLM is best-effort; silent fallback on any error
+        nil
       end
 
       # Infers a purpose text from the directory name and file names.
