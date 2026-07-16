@@ -134,6 +134,7 @@ module AutoDoc
                        end
                      else
                        Dir.glob(File.join(base_dir, glob_pattern)).reject do |f|
+                         next true unless File.file?(f)
                          relative = f.sub("#{base_dir}/", "")
                          excludes.any? { |pat| File.fnmatch?(pat, relative, File::FNM_PATHNAME) }
                        end

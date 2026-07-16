@@ -11,12 +11,44 @@
       "signature": "AutoDoc",
       "visibility": "public",
       "keywords": [
-        "auto",
-        "doc"
+        "main",
+        "entry",
+        "point",
+        "loads",
+        "core",
+        "dependencies",
+        "initializes",
+        "library"
       ],
       "dependencies": [],
       "consumed_by": [],
-      "parent_module": null
+      "parent_module": null,
+      "llm_summary": "Main entry point that loads core dependencies and initializes the library."
+    },
+    {
+      "id": "module_AutoDoc",
+      "symbol": "AutoDoc",
+      "type": "module",
+      "scope": "public",
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/orchestrator/agents_overview_step.rb",
+      "line": 3,
+      "summary": "",
+      "signature": "AutoDoc",
+      "visibility": "public",
+      "keywords": [
+        "main",
+        "entry",
+        "point",
+        "loads",
+        "core",
+        "dependencies",
+        "initializes",
+        "library"
+      ],
+      "dependencies": [],
+      "consumed_by": [],
+      "parent_module": null,
+      "llm_summary": "Main entry point that loads core dependencies and initializes the library."
     },
     {
       "id": "module_AutoDoc",
@@ -29,12 +61,19 @@
       "signature": "AutoDoc",
       "visibility": "public",
       "keywords": [
-        "auto",
-        "doc"
+        "main",
+        "entry",
+        "point",
+        "loads",
+        "core",
+        "dependencies",
+        "initializes",
+        "library"
       ],
       "dependencies": [],
       "consumed_by": [],
-      "parent_module": null
+      "parent_module": null,
+      "llm_summary": "Main entry point that loads core dependencies and initializes the library."
     },
     {
       "id": "module_AutoDoc",
@@ -47,12 +86,19 @@
       "signature": "AutoDoc",
       "visibility": "public",
       "keywords": [
-        "auto",
-        "doc"
+        "main",
+        "entry",
+        "point",
+        "loads",
+        "core",
+        "dependencies",
+        "initializes",
+        "library"
       ],
       "dependencies": [],
       "consumed_by": [],
-      "parent_module": null
+      "parent_module": null,
+      "llm_summary": "Main entry point that loads core dependencies and initializes the library."
     },
     {
       "id": "module_AutoDoc",
@@ -65,12 +111,19 @@
       "signature": "AutoDoc",
       "visibility": "public",
       "keywords": [
-        "auto",
-        "doc"
+        "main",
+        "entry",
+        "point",
+        "loads",
+        "core",
+        "dependencies",
+        "initializes",
+        "library"
       ],
       "dependencies": [],
       "consumed_by": [],
-      "parent_module": null
+      "parent_module": null,
+      "llm_summary": "Main entry point that loads core dependencies and initializes the library."
     },
     {
       "id": "module_AutoDoc",
@@ -83,12 +136,19 @@
       "signature": "AutoDoc",
       "visibility": "public",
       "keywords": [
-        "auto",
-        "doc"
+        "main",
+        "entry",
+        "point",
+        "loads",
+        "core",
+        "dependencies",
+        "initializes",
+        "library"
       ],
       "dependencies": [],
       "consumed_by": [],
-      "parent_module": null
+      "parent_module": null,
+      "llm_summary": "Main entry point that loads core dependencies and initializes the library."
     },
     {
       "id": "module_AutoDoc",
@@ -101,12 +161,19 @@
       "signature": "AutoDoc",
       "visibility": "public",
       "keywords": [
-        "auto",
-        "doc"
+        "main",
+        "entry",
+        "point",
+        "loads",
+        "core",
+        "dependencies",
+        "initializes",
+        "library"
       ],
       "dependencies": [],
       "consumed_by": [],
-      "parent_module": null
+      "parent_module": null,
+      "llm_summary": "Main entry point that loads core dependencies and initializes the library."
     },
     {
       "id": "module_AutoDoc",
@@ -119,12 +186,19 @@
       "signature": "AutoDoc",
       "visibility": "public",
       "keywords": [
-        "auto",
-        "doc"
+        "main",
+        "entry",
+        "point",
+        "loads",
+        "core",
+        "dependencies",
+        "initializes",
+        "library"
       ],
       "dependencies": [],
       "consumed_by": [],
-      "parent_module": null
+      "parent_module": null,
+      "llm_summary": "Main entry point that loads core dependencies and initializes the library."
     },
     {
       "id": "module_AutoDoc",
@@ -137,12 +211,19 @@
       "signature": "AutoDoc",
       "visibility": "public",
       "keywords": [
-        "auto",
-        "doc"
+        "main",
+        "entry",
+        "point",
+        "loads",
+        "core",
+        "dependencies",
+        "initializes",
+        "library"
       ],
       "dependencies": [],
       "consumed_by": [],
-      "parent_module": null
+      "parent_module": null,
+      "llm_summary": "Main entry point that loads core dependencies and initializes the library."
     },
     {
       "id": "module_AutoDoc",
@@ -155,13 +236,20 @@
       "signature": "AutoDoc",
       "visibility": "public",
       "keywords": [
-        "auto",
-        "doc"
+        "main",
+        "entry",
+        "point",
+        "loads",
+        "core",
+        "dependencies",
+        "initializes",
+        "library"
       ],
       "dependencies": [],
       "consumed_by": [],
-      "parent_module": null
+      "parent_module": null,
+      "llm_summary": "Main entry point that loads core dependencies and initializes the library."
     }
   ],
-  "generated_at": "2026-07-16T09:52:01Z"
+  "generated_at": "2026-07-16T18:31:32Z"
 }

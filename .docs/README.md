@@ -1,21 +1,23 @@
 # auto-doc-tool
 
 ## Overview
-The **auto-doc-tool** module is a comprehensive, automated documentation generation system for Ruby projects. Its primary purpose is to analyze source code, extract structural and semantic information, and produce a variety of documentation artifacts including architecture diagrams, class diagrams, ER diagrams, README files, agent markdown, and indexed summaries. It leverages an LLM (large language model) to generate natural language descriptions and summaries.
+### **Purpose**
+The `auto-doc-tool` module is an automated documentation generation system designed to analyze software projects and produce comprehensive, structured developer documentation. Its primary goal is to eliminate manual documentation overhead by extracting architectural insights, code relationships, database schemas, and existing comments to generate maintenance-ready assets, while leveraging AI to fill content gaps and index documentation for semantic search.
 
-**Key components:**
+### **Core Functionality**
+The module follows a modular pipeline architecture that scans multi-language codebases (Ruby, Python, JavaScript, Rails), transforms parsed data into structured representations, and generates various documentation outputs. It supports incremental updates (diff tracking), AI-assisted content generation, and completeness auditing to ensure documentation stays aligned with the evolving codebase.
 
-- **Analyzer subsystem** (`analyzer/`): Parses source code, YARD comments, database schemas, model associations, imports, and diffs; detects orphaned documentation and builds analysis caches.
-- **Generator subsystem** (`generator/`): Produces output documents such as C4 diagrams, class diagrams, ERDs, architecture overviews, summary files, vector indices, and markdown documents.
-- **Orchestrator** (`orchestrator/`): Coordinates the documentation generation pipeline via discrete steps (architecture, diagrams, README, index/summary/vectors, manifest, agents markdown). Includes a metrics helper for tracking progress.
-- **LLM integration** (`llm/`): Provides a client, prompt builder, response parser, summarizer, and a top-level helper for interacting with language models to generate human-readable content.
-- **Transformer** (`transformer/`): Builds graph data structures from the codebase (class hierarchies, container data flows, ER relationships, file trees, etc.), which serve as input to generators.
-- **Reporter/Audit** (`reporter/`): Includes a completeness checker and an audit reporter to evaluate documentation coverage.
-- **Utilities** (`utils/`): File tree builder, markdown helper, output formatter, timestamp tracker, YAML config loader.
-- **Support modules**: Documentation index, search service, agent query service, CLI, config, version, and an application server.
-- **Testing framework**: Comprehensive RSpec tests for all components, plus end-to-end (e2e) self‑test specs and support for mocking LLM responses.
+### **Key Components**
+- **Analyzer Suite:** Parses source code, imports, dependencies, database schemas, and existing documentation standards (e.g., YARD). Handles language-agnostic scanning and tracks code changes via a diff service.
+- **Data Transformers:** Converts raw parsed data into structured graphs and metadata, including class hierarchies, container data flows, ERD relationships, and file system trees.
+- **LLM Integration:** Dedicated modules for client communication, prompt construction, response parsing, and content summarization, enabling AI-driven documentation generation and enhancement.
+- **Documentation Generators:** Produces diverse artifacts such as architecture maps, C4 diagrams, class/ERD diagrams, markdown guides, overview pages, and vector embeddings for search.
+- **Orchestrator & Pipeline:** Coordinates the end-to-end workflow using step-based execution. Manages caching, sequential task routing, metrics collection, and output indexing.
+- **Reporting & Auditing:** Includes completeness checkers and audit reporters that evaluate documentation coverage across the project and generate compliance summaries.
+- **Interface Layer:** Exposes functionality via a CLI (`cli.rb`) and a web server (`server.rb`), backed by configuration management, versioning, and error handling utilities.
 
-The tool is designed to be run against a Ruby project (including Rails apps) and produces a structured documentation set in a target directory.
+### **Architecture Overview**
+The tool operates on a clear separation of concerns: `analyzer` → `transformer` → `orchestrator` → `generator` → `reporter`. This design allows individual stages to be extended, tested, or replaced independently. Test fixtures demonstrate compatibility across Rails, standalone Ruby, Python, and JavaScript projects, highlighting its framework-agnostic analysis approach.
 
 ## Files
 | File | Classes/Modules | Methods | Documented? |
@@ -28,10 +30,10 @@ The tool is designed to be run against a Ruby project (including Rails apps) and
 
 ## Summary
 - Total modules: 2
-- Total classes: 84
+- Total classes: 957
 - Total methods: 7
-- Documentation coverage: 24.0%
+- Documentation coverage: 0.2%
 
 
 ---
-*Generated by auto-doc v1.0.0 on 2026-07-16 02:49:54 PDT. Review and commit as your documentation.*
+*Generated by auto-doc v1.0.0 on 2026-07-16 11:27:21 PDT. Review and commit as your documentation.*

@@ -11,13 +11,20 @@
       "signature": "AutoDoc",
       "visibility": "public",
       "keywords": [
-        "auto",
-        "doc"
+        "main",
+        "entry",
+        "point",
+        "loads",
+        "core",
+        "dependencies",
+        "initializes",
+        "library"
       ],
       "dependencies": [],
       "consumed_by": [],
-      "parent_module": null
+      "parent_module": null,
+      "llm_summary": "Main entry point that loads core dependencies and initializes the library."
     }
   ],
-  "generated_at": "2026-07-16T09:52:31Z"
+  "generated_at": "2026-07-16T18:32:23Z"
 }
