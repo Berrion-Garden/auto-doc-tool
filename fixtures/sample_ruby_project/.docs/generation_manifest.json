@@ -1,0 +1,9 @@
+{
+  "generated_at": "2026-07-15T19:05:12-07:00",
+  "files": {
+    "app/models/user.rb": 1783900647,
+    "lib/math_utils.rb": 1784058118,
+    "lib/undocumented_helper.rb": 1784145345,
+    "lib/yard_example.rb": 1784056319
+  }
+}

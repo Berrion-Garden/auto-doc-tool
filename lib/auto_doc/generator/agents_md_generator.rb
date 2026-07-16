@@ -70,6 +70,7 @@ module AutoDoc
 
       # Attempts LLM-generated purpose summary, falling back to nil on any failure.
       def llm_purpose_summary
+        return nil if ENV["AUTO_DOC_DISABLE_LLM"]
         return nil unless (client = build_llm_client)
         analyses = build_analyses(@files)
         result = AutoDoc::LLM::Summarizer.summarize_module(@module_name, analyses, client)
