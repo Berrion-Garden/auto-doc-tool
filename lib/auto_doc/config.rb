@@ -30,7 +30,8 @@ module AutoDoc
         provider: nil,
         endpoint: nil,
         api_key: nil,
-        model: nil
+        model: nil,
+        timeout: 30
       }
     }.freeze
 

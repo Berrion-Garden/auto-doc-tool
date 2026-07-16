@@ -78,6 +78,23 @@ module AutoDoc
       def self.from_config(config)
         new(config.llm_config)
       end
+
+      # Builds a Client from a config object if LLM is enabled and configured.
+      # Handles the ENV guard, config validity checks, and configured? check.
+      #
+      # @param config [#llm_config] An object that responds to +llm_config+
+      # @return [Client, nil]
+      def self.build_if_configured(config)
+        return nil if ENV["AUTO_DOC_DISABLE_LLM"]
+        return nil unless config.respond_to?(:llm_config)
+        cfg = config.llm_config
+        return nil unless cfg
+        client = new(cfg)
+        return nil unless client.configured?
+        client
+      rescue
+        nil
+      end
     end
   end
 end

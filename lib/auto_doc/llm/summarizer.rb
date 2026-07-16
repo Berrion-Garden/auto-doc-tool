@@ -108,7 +108,7 @@ module AutoDoc
             lines << "**File:** #{file_path}"
             definitions = analysis[:definitions] || []
             definitions.each do |defn|
-              case defn[:type]
+              case defn[:type].to_s
               when "class"
                 lines << "  - Class: `#{defn[:name]}`#{' (documented)' if defn[:has_doc?]}"
               when "module"

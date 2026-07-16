@@ -70,7 +70,6 @@ module AutoDoc
 
       # Attempts LLM-generated purpose summary, falling back to nil on any failure.
       def llm_purpose_summary
-        return nil if ENV["AUTO_DOC_DISABLE_LLM"]
         return nil unless (client = build_llm_client)
         analyses = build_analyses(@files)
         result = AutoDoc::LLM::Summarizer.summarize_module(@module_name, analyses, client)
@@ -81,15 +80,7 @@ module AutoDoc
       end
 
       def build_llm_client
-        return nil if ENV["AUTO_DOC_DISABLE_LLM"]
-        return nil unless @config.respond_to?(:llm_config)
-        cfg = @config.llm_config
-        return nil unless cfg
-        client = AutoDoc::LLM::Client.new(cfg)
-        return nil unless client.configured?
-        client
-      rescue
-        nil
+        AutoDoc::LLM::Client.build_if_configured(@config)
       end
 
       # Converts file analysis records into the analyses hash format expected by Summarizer.

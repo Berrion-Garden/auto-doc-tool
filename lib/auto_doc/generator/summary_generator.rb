@@ -93,16 +93,7 @@ module AutoDoc
       end
 
       def build_llm_client
-        return nil if ENV["AUTO_DOC_DISABLE_LLM"]
-        return nil unless @config.respond_to?(:llm_config)
-        cfg = @config.llm_config
-        return nil unless cfg
-        client = AutoDoc::LLM::Client.new(cfg)
-        return nil unless client.configured?
-        client
-      rescue => e
-        # LLM is best-effort; silent fallback on any error
-        nil
+        AutoDoc::LLM::Client.build_if_configured(@config)
       end
 
       # Infers a purpose text from the directory name and file names.

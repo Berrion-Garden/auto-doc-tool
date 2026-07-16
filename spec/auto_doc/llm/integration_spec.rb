@@ -5,7 +5,7 @@ require "tmpdir"
 require "net/http"
 require "json"
 
-RSpec.describe "LLM Integration: Client → Summarizer → Generator Output" do
+RSpec.describe "LLM Integration: Client → Summarizer → Generator Output", :integration do
   # This spec verifies the full LLM chain end-to-end with mocked HTTP:
   #   Config → Client#chat → Summarizer → Generator (SummaryGenerator / AgentsMdGenerator)
   #
