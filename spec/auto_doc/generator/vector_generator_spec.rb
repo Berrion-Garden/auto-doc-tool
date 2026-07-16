@@ -136,6 +136,31 @@ RSpec.describe AutoDoc::Generator::VectorGenerator do
       keywords = generator.keyword_extraction("VeryLongCamelCaseNameWithManyWordsInItForTesting")
       expect(keywords.size).to be <= 15
     end
+
+    it "merges keywords from name and summary text when summary_text provided" do
+      keywords = generator.keyword_extraction("Parser", "transforms raw data into structured objects")
+      expect(keywords).to include("parser")
+      expect(keywords).to include("transforms")
+      expect(keywords).to include("raw")
+      expect(keywords).to include("data")
+      expect(keywords).to include("structured")
+      expect(keywords).to include("objects")
+    end
+
+    it "returns only name-derived keywords when summary_text is nil" do
+      keywords = generator.keyword_extraction("Parser", nil)
+      expect(keywords).to eq(["parser"])
+    end
+
+    it "returns only name-derived keywords when summary_text is empty" do
+      keywords = generator.keyword_extraction("Parser", "")
+      expect(keywords).to eq(["parser"])
+    end
+
+    it "returns at most 15 keywords even with long summaries" do
+      keywords = generator.keyword_extraction("VeryLongCamelCaseName", "one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen")
+      expect(keywords.size).to be <= 15
+    end
   end
 
   describe ".extract_keywords_from_text" do
@@ -217,6 +242,41 @@ RSpec.describe AutoDoc::Generator::VectorGenerator do
       entry = generator.send(:build_vector_entry, defn, "/project/lib/foo.rb", doc_index, { "other_Symbol" => "nothing" })
       expect(entry[:keywords]).to include("foo")
       expect(entry).not_to have_key(:llm_summary)
+    end
+  end
+
+  describe ".build_vector_entry with doc_index summary" do
+    context "with doc_index summary" do
+      let(:defn) { { name: "DataTransformer", type: :class, line: 1, has_doc?: true, signature: "class DataTransformer", visibility: "public" } }
+      let(:doc_index) { { class_DataTransformer: { target_name: "DataTransformer", target_type: :class, summary: "Transforms raw data into structured objects" } } }
+      let(:llm_summaries) { nil }
+
+      it "includes keywords from both symbol name and doc summary" do
+        entry = generator.send(:build_vector_entry, defn, "/project/lib/transformer.rb", doc_index, llm_summaries)
+        expect(entry[:keywords]).to include("data")
+        expect(entry[:keywords]).to include("transformer")
+        expect(entry[:keywords]).to include("transforms")
+        expect(entry[:keywords]).to include("raw")
+        expect(entry[:keywords]).to include("structured")
+        expect(entry[:keywords]).to include("objects")
+      end
+
+      it "preserves summary field from doc_index" do
+        entry = generator.send(:build_vector_entry, defn, "/project/lib/transformer.rb", doc_index, llm_summaries)
+        expect(entry[:summary]).to eq("Transforms raw data into structured objects")
+      end
+    end
+
+    context "without doc_index summary" do
+      let(:defn) { { name: "Foo", type: :class, line: 1, has_doc?: true, signature: "class Foo", visibility: "public" } }
+      let(:doc_index) { { class_Foo: { target_name: "Foo", target_type: :class, summary: "" } } }
+      let(:llm_summaries) { nil }
+
+      it "derives keywords from symbol name only when summary is empty" do
+        entry = generator.send(:build_vector_entry, defn, "/project/lib/foo.rb", doc_index, llm_summaries)
+        expect(entry[:keywords]).to include("foo")
+        expect(entry[:keywords].size).to eq(1)
+      end
     end
   end
 

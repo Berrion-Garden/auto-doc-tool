@@ -63,7 +63,7 @@ module AutoDoc
       # CamelCase and snake_case, deduplicating, and removing stop words.
       # @param name [String] Symbol name (e.g., "AgentsMdGenerator", "foo_bar")
       # @return [Array<String>] Top 15 normalized keywords
-      def self.keyword_extraction(name)
+      def self.keyword_extraction(name, summary_text = nil)
         words = []
 
         # Split CamelCase
@@ -80,6 +80,12 @@ module AutoDoc
                      .reject { |w| STOP_WORDS.include?(w.downcase) }
                      .map(&:downcase)
                      .uniq
+
+        # Merge with summary-derived keywords when summary_text is provided
+        if summary_text && !summary_text.empty?
+          summary_keywords = extract_keywords_from_text(summary_text)
+          words = (words + summary_keywords).uniq
+        end
 
         words.first(15)
       end
@@ -128,7 +134,7 @@ module AutoDoc
           summary:       summary,
           signature:     signature.to_s,
           visibility:    defn[:visibility] || "public",
-          keywords:      keyword_extraction(defn[:name].to_s),
+          keywords:      keyword_extraction(defn[:name].to_s, summary),
           dependencies:  defn[:dependencies] || [],
           consumed_by:   [],
           parent_module: defn[:parent_module]
