@@ -63,7 +63,6 @@ module AutoDoc
 
   # Load orchestrator pipeline steps
   require_relative "auto_doc/orchestrator/base_step"
-  require_relative "auto_doc/orchestrator/counting_helper"
   require_relative "auto_doc/orchestrator/agents_md_step"
   require_relative "auto_doc/orchestrator/readme_step"
   require_relative "auto_doc/orchestrator/index_summary_vectors_step"

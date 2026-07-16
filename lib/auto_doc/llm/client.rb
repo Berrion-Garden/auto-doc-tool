@@ -58,7 +58,7 @@ module AutoDoc
 
         parsed = JSON.parse(response.body)
         parsed.dig("choices", 0, "message", "content")
-      rescue Net::OpenTimeout, Net::ReadTimeout, Net::HTTPError, Net::HTTPClientException, JSON::ParserError, SocketError, Errno::ECONNREFUSED, Errno::ECONNRESET
+      rescue Net::OpenTimeout, Net::ReadTimeout, Net::HTTPError, Net::HTTPClientException, Net::HTTPFatalError, JSON::ParserError, SocketError, Errno::ECONNREFUSED, Errno::ECONNRESET
         nil
       end
 

@@ -3,7 +3,7 @@
 module AutoDoc
   class Orchestrator
     class Pipeline
-      include CountingHelper
+      include MetricsHelper
 
       STEPS = [
         AgentsMdStep.new,

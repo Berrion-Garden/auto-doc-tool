@@ -176,8 +176,8 @@ RSpec.describe AutoDoc::Generator::SummaryGenerator do
     end
 
     it "rescues StandardError from LLM code and falls back to static values" do
-      # Make Client.from_config itself raise to trigger the outer rescue StandardError
-      allow(AutoDoc::LLM::Client).to receive(:from_config).and_raise(StandardError, "Unexpected LLM error")
+      # Make Client.new raise to trigger rescue inside private llm_xxx methods
+      allow(AutoDoc::LLM::Client).to receive(:new).and_raise(StandardError, "Unexpected LLM error")
 
       result = described_class.generate(dir_name, analyses, llm_config)
       expect(result).to include("Core library code")

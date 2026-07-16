@@ -113,6 +113,24 @@
       "symbol": "AutoDoc",
       "type": "module",
       "scope": "public",
+      "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/orchestrator/metrics_helper.rb",
+      "line": 3,
+      "summary": "",
+      "signature": "AutoDoc",
+      "visibility": "public",
+      "keywords": [
+        "auto",
+        "doc"
+      ],
+      "dependencies": [],
+      "consumed_by": [],
+      "parent_module": null
+    },
+    {
+      "id": "module_AutoDoc",
+      "symbol": "AutoDoc",
+      "type": "module",
+      "scope": "public",
       "file": "/home/kyle/Projects/auto-doc-tool/lib/auto_doc/orchestrator/pipeline.rb",
       "line": 3,
       "summary": "",
@@ -145,5 +163,5 @@
       "parent_module": null
     }
   ],
-  "generated_at": "2026-07-15T23:02:13Z"
+  "generated_at": "2026-07-16T01:28:04Z"
 }

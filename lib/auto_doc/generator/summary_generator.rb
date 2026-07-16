@@ -58,32 +58,15 @@ module AutoDoc
         dependencies_overview = build_dependencies_overview
         generated_at         = Time.now.strftime("%Y-%m-%d %H:%M:%S %Z")
 
-        # Attempt LLM-enhanced content (best-effort, fall back to static values)
-        begin
-          if @config.respond_to?(:llm_config) && (llm_cfg = @config.llm_config)
-            client = AutoDoc::LLM::Client.from_config(@config)
-            if client.configured?
-              llm_purpose = AutoDoc::LLM::Summarizer.summarize_module(@dir_name, @analyses, client)
-              purpose = llm_purpose if llm_purpose
-
-              llm_arch = AutoDoc::LLM::Summarizer.summarize_architecture(@dir_name, @analyses, client)
-              architecture_pattern = llm_arch if llm_arch
-
-              llm_components = AutoDoc::LLM::Summarizer.summarize_components(@analyses, client)
-              key_components = parse_llm_components(llm_components) || key_components if llm_components
-            end
-          end
-        rescue StandardError
-          warn "LLM enrichment failed: #{$!}"
-        end
-
         ERB.new(template_text).result(binding)
       end
 
       # Attempts LLM-generated purpose summary. Falls back to nil on any failure.
       def llm_purpose
         return nil unless (client = build_llm_client)
-        AutoDoc::LLM::Summarizer.summarize_module(@dir_name, @analyses, client)
+        result = AutoDoc::LLM::Summarizer.summarize_module(@dir_name, @analyses, client)
+        return nil if result.to_s.strip.empty?
+        result
       rescue => e
         nil
       end
@@ -91,7 +74,9 @@ module AutoDoc
       # Attempts LLM-generated architecture pattern. Falls back to nil on any failure.
       def llm_architecture
         return nil unless (client = build_llm_client)
-        AutoDoc::LLM::Summarizer.summarize_architecture(@dir_name, @analyses, client)
+        result = AutoDoc::LLM::Summarizer.summarize_architecture(@dir_name, @analyses, client)
+        return nil if result.to_s.strip.empty?
+        result
       rescue => e
         nil
       end
@@ -165,8 +150,8 @@ module AutoDoc
 
           defs.each do |defn|
             next unless defn.is_a?(Hash)
-            type = defn[:type].to_s.downcase
-            next unless [:class, :module].include?(type)
+            type = defn[:type]
+            next unless %i[class module].include?(type)
 
             # Look up doc summary
             def_name = defn[:name].to_s.gsub("::", "_")
@@ -232,21 +217,7 @@ module AutoDoc
         deps_map.values.sort_by { |d| d[:name].downcase }
       end
 
-      # Converts LLM component response text into the standard component format.
-      # Parses lines matching " - Name (Type): Summary" pattern.
-      #
-      # @param llm_text [String, nil] Raw LLM response text
-      # @return [Array<Hash>, nil] Array of component records or nil if parsing fails
-      def parse_llm_components(llm_text)
-        return nil unless llm_text.is_a?(String) && !llm_text.empty?
 
-        components = llm_text.each_line.filter_map do |line|
-          next unless line =~ /^\s*[-*]\s+(.+?)\s*\((.+?)\)\s*[:]?\s*(.+)/
-
-          { name: $1.strip, type: $2.strip.downcase, summary: $3.strip }
-        end
-        components.empty? ? nil : components.first(20)
-      end
     end
   end
 end

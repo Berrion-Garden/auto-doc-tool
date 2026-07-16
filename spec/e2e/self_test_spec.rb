@@ -6,20 +6,21 @@ require "json"
 require "tmpdir"
 
 RSpec.describe "E2E: auto-doc self-test" do
-  before(:each) do
+  before(:all) do
     @project_dir = File.expand_path("../../fixtures/sample_ruby_project", __dir__)
     @docs_dir = File.join(@project_dir, ".docs")
     @gem_lib = File.expand_path("../../lib", __dir__)
     @exe = File.expand_path("../../exe/auto-doc", __dir__)
+    # Generate docs once for all tests
+    `ruby -I#{@gem_lib} #{@exe} generate #{@project_dir} 2>&1`
   end
 
-  after(:each) do
+  after(:all) do
     FileUtils.rm_rf(@docs_dir) if File.directory?(@docs_dir)
   end
 
   it "generate creates .docs directory" do
-    output = `ruby -I#{@gem_lib} #{@exe} generate #{@project_dir} 2>&1`
-    expect(File.directory?(@docs_dir)).to be(true), "generate output: #{output}"
+    expect(File.directory?(@docs_dir)).to be(true)
   end
 
   it "generate creates README.md" do

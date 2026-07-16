@@ -3,7 +3,7 @@
 module AutoDoc
   class Orchestrator
     class ReadmeStep < BaseStep
-      include CountingHelper
+      include MetricsHelper
 
       def run(context)
         target_dir    = context[:target_dir]
