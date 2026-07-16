@@ -145,6 +145,61 @@ RSpec.describe AutoDoc::Generator::AgentsMdGenerator do
         ENV.delete("AUTO_DOC_DISABLE_LLM")
       end
     end
+
+    context "with LLM primary mode" do
+      let(:primary_project_dir) { Dir.mktmpdir }
+      let(:primary_config) do
+        File.write(File.join(primary_project_dir, ".autodoc.yml"), <<~YAML)
+          llm:
+            provider: openai
+            endpoint: https://api.openai.com/v1
+            api_key: sk-test
+            model: gpt-4o
+            primary: true
+        YAML
+        AutoDoc::Config.load(primary_project_dir)
+      end
+      after { FileUtils.remove_entry(primary_project_dir) }
+
+      before do
+        allow(Net::HTTP).to receive(:new).and_return(http)
+        allow(http).to receive(:open_timeout=)
+        allow(http).to receive(:read_timeout=)
+        allow(http).to receive(:use_ssl=)
+      end
+
+      it "uses LLM text when LLM succeeds" do
+        allow(http).to receive(:request).and_return(response)
+        allow(response).to receive(:value).and_return(nil)
+        allow(response).to receive(:body).and_return(
+          '{"choices":[{"message":{"content":"Primary mode LLM summary"}}]}'
+        )
+
+        result = generator.generate(module_name, tree_text, files, config: primary_config)
+        expect(result).to include("Primary mode LLM summary")
+        expect(result).not_to include("developer to fill in")
+        expect(result).not_to include("static summary")
+      end
+
+      it "shows warning text when LLM fails" do
+        allow(http).to receive(:request).and_raise(SocketError, "connection refused")
+
+        expect {
+          result = generator.generate(module_name, tree_text, files, config: primary_config)
+          expect(result).to include("⚠ LLM unavailable — static summary")
+          expect(result).not_to include("developer to fill in")
+        }.to output(/LLM unavailable/).to_stderr
+      end
+
+      it "does not emit stderr warning when llm_primary? is false" do
+        allow(http).to receive(:request).and_raise(SocketError, "connection refused")
+
+        expect {
+          result = generator.generate(module_name, tree_text, files, config: llm_config)
+          expect(result).to include("developer to fill in")
+        }.not_to output.to_stderr
+      end
+    end
   end
 
   describe "#generate" do

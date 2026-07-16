@@ -96,4 +96,123 @@ RSpec.describe AutoDoc::Generator::ReadmeGenerator do
       expect(result).to include("# MyProject")
     end
   end
+
+  describe "LLM integration" do
+    before do
+      @original_disable_llm = ENV["AUTO_DOC_DISABLE_LLM"]
+      ENV.delete("AUTO_DOC_DISABLE_LLM")
+    end
+
+    after do
+      if @original_disable_llm
+        ENV["AUTO_DOC_DISABLE_LLM"] = @original_disable_llm
+      else
+        ENV.delete("AUTO_DOC_DISABLE_LLM")
+      end
+    end
+
+    let(:analyses) { { "lib/foo.rb" => { definitions: [{ name: "Foo", type: :class }] } } }
+    let(:mock_client) { instance_double(AutoDoc::LLM::Client) }
+    let(:llm_project_dir) { Dir.mktmpdir }
+    let(:llm_config) do
+      File.write(File.join(llm_project_dir, ".autodoc.yml"), <<~YAML)
+        llm:
+          provider: openai
+          endpoint: https://api.openai.com/v1
+          api_key: sk-test
+          model: gpt-4o
+      YAML
+      AutoDoc::Config.load(llm_project_dir)
+    end
+    after { FileUtils.remove_entry(llm_project_dir) }
+
+    context "when llm_primary? is true" do
+      let(:primary_project_dir) { Dir.mktmpdir }
+      let(:primary_config) do
+        File.write(File.join(primary_project_dir, ".autodoc.yml"), <<~YAML)
+          llm:
+            provider: openai
+            endpoint: https://api.openai.com/v1
+            api_key: sk-test
+            model: gpt-4o
+            primary: true
+        YAML
+        AutoDoc::Config.load(primary_project_dir)
+      end
+      after { FileUtils.remove_entry(primary_project_dir) }
+
+      before do
+        allow(AutoDoc::LLM::Client).to receive(:build_if_configured).and_return(mock_client)
+      end
+
+      it "uses LLM-generated overview when LLM succeeds" do
+        allow(AutoDoc::LLM::Summarizer).to receive(:summarize_module)
+          .with(project_name, analyses, mock_client)
+          .and_return("LLM-powered project overview")
+
+        result = described_class.generate(project_name, structure, summary_stats,
+          config: primary_config, analyses: analyses)
+        expect(result).to include("LLM-powered project overview")
+        expect(result).not_to include("Developer to fill in")
+      end
+
+      it "falls back to default overview when LLM call fails" do
+        allow(AutoDoc::LLM::Summarizer).to receive(:summarize_module).and_raise(StandardError, "LLM error")
+
+        expect {
+          result = described_class.generate(project_name, structure, summary_stats,
+            config: primary_config, analyses: analyses)
+          expect(result).to include("Developer to fill in")
+        }.to output(/LLM unavailable/).to_stderr
+      end
+    end
+
+    context "when llm_primary? is false with LLM configured" do
+      it "does not emit stderr warning when llm_primary? is false" do
+        config_no_primary = instance_double(AutoDoc::Config,
+          llm_primary?: false,
+          llm_config: { endpoint: "https://test", api_key: "test", model: "test-model" })
+
+        allow(AutoDoc::LLM::Client).to receive(:build_if_configured).and_return(mock_client)
+        allow(AutoDoc::LLM::Summarizer).to receive(:summarize_module).and_return(nil)
+
+        expect {
+          result = described_class.generate(project_name, structure, summary_stats,
+            config: config_no_primary, analyses: analyses)
+          expect(result).to include("Developer to fill in")
+        }.not_to output.to_stderr
+      end
+    end
+
+    context "when llm_primary? is false" do
+      it "uses default overview even when config has LLM section" do
+        result = described_class.generate(project_name, structure, summary_stats,
+          config: llm_config, analyses: analyses)
+        expect(result).to include("Developer to fill in")
+      end
+    end
+
+    context "when config is not provided" do
+      it "uses default overview" do
+        result = described_class.generate(project_name, structure, summary_stats)
+        expect(result).to include("Developer to fill in")
+      end
+    end
+
+    context "when analyses is nil" do
+      it "uses default overview" do
+        result = described_class.generate(project_name, structure, summary_stats,
+          config: llm_config, analyses: nil)
+        expect(result).to include("Developer to fill in")
+      end
+    end
+
+    context "when analyses is empty" do
+      it "uses default overview" do
+        result = described_class.generate(project_name, structure, summary_stats,
+          config: llm_config, analyses: {})
+        expect(result).to include("Developer to fill in")
+      end
+    end
+  end
 end

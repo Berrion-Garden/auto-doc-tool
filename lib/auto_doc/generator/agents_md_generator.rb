@@ -63,7 +63,11 @@ module AutoDoc
         public_symbol_count = public_symbols.size
         dependencies      = []
 
-        purpose_summary = llm_purpose_summary
+        purpose_summary = if llm_primary?
+                            llm_purpose_summary || (warn_llm_fallback("purpose summary"); "⚠ LLM unavailable — static summary")
+                          else
+                            llm_purpose_summary
+                          end
 
         ERB.new(template_text).result(binding)
       end

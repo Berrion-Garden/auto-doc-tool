@@ -18,15 +18,19 @@ module AutoDoc
       # @param structure [Hash<String, String>] Mapping of root dirs to their tree output
       # @param summary_stats [Hash] Summary statistics including total_modules, total_classes, etc.
       # @param output_path [String] Where to write README.md (default: ".autodoc/README.md")
+      # @param config [AutoDoc::Config, nil] Optional configuration object for LLM integration
+      # @param analyses [Hash, nil] Optional analysis data for LLM summarization
       # @return [String] Generated markdown content
-      def self.generate(project_name, structure, summary_stats, output_path: nil)
-        new(project_name, structure, summary_stats).generate(output_path)
+      def self.generate(project_name, structure, summary_stats, output_path: nil, config: nil, analyses: nil)
+        new(project_name, structure, summary_stats, config: config, analyses: analyses).generate(output_path)
       end
 
-      def initialize(project_name, structure, summary_stats = {})
+      def initialize(project_name, structure, summary_stats = {}, config: nil, analyses: nil)
         @project_name  = project_name
         @structure     = structure
         @summary_stats = summary_stats
+        @config        = config
+        @analyses      = analyses
       end
 
       # Generates markdown and optionally writes to disk.
@@ -64,7 +68,29 @@ module AutoDoc
           }
         end
 
+        # LLM-generated overview text (only used in LLM primary mode)
+        overview_text = if llm_primary?
+                          llm_module_overview || (warn_llm_fallback("overview"); "Developer to fill in")
+                        else
+                          llm_module_overview || "Developer to fill in"
+                        end
+
         ERB.new(template_text).result(binding)
+      end
+
+      # Attempts LLM-generated module overview for the project.
+      # Falls back to nil on any failure.
+      def llm_module_overview
+        return nil unless (client = build_llm_client) && @analyses && !@analyses.empty?
+        result = AutoDoc::LLM::Summarizer.summarize_module(@project_name, @analyses, client)
+        return nil if result.to_s.strip.empty?
+        result
+      rescue => e
+        nil
+      end
+
+      def build_llm_client
+        AutoDoc::LLM::Client.build_if_configured(@config)
       end
 
     end

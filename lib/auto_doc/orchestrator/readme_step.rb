@@ -35,7 +35,7 @@ module AutoDoc
         readme_path  = File.join(target_dir, output_dir, "README.md")
         project_name = File.basename(target_dir)
 
-        AutoDoc::Generator::ReadmeGenerator.generate(project_name, structure, summary, output_path: readme_path)
+        AutoDoc::Generator::ReadmeGenerator.generate(project_name, structure, summary, output_path: readme_path, config: config, analyses: analyses)
         say(context, "  Created #{readme_path}", :green)
 
         context[:all_classes]  = all_cls

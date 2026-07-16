@@ -84,12 +84,18 @@ module AutoDoc
         end
 
         # Use LLM results where available, fall through to model-based logic
-        overview = llm_overview || @config[:overview] || "No overview provided."
+        overview = if llm_overview
+                     llm_overview
+                   else
+                     warn_llm_fallback("overview") if llm_primary?
+                     @config[:overview] || "No overview provided."
+                   end
 
         # Build modules — prefer LLM, fall back to model-based
         modules = if llm_modules && !llm_modules.empty?
                     llm_modules
                   else
+                    warn_llm_fallback("modules") if llm_primary?
                     @models.map do |m|
                       responsibility = if m[:associations] && m[:associations].any?
                                          m[:associations].map { |a| "#{a[:type]} #{a[:target]}" }.join(", ")
@@ -101,12 +107,18 @@ module AutoDoc
                   end
 
         # Detect or use explicit architecture style
-        architecture_style = llm_style || @config[:architecture_style] || detect_architecture_style(modules.size)
+        architecture_style = if llm_style
+                               llm_style
+                             else
+                               warn_llm_fallback("architecture style") if llm_primary?
+                               @config[:architecture_style] || detect_architecture_style(modules.size)
+                             end
 
         # Build data flows — prefer LLM, fall back to model-based
         data_flows = if llm_data_flows && !llm_data_flows.empty?
                        llm_data_flows
                      else
+                       warn_llm_fallback("data flows") if llm_primary?
                        @models.flat_map do |m|
                          (m[:associations] || []).map do |a|
                            { from: m[:model], to: a[:target], description: "#{a[:type]} relationship" }

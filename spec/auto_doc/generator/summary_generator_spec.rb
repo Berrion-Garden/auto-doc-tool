@@ -198,5 +198,60 @@ RSpec.describe AutoDoc::Generator::SummaryGenerator do
       expect(result).to include("Foo")
       expect(result).to include("Utils")
     end
+
+    context "with LLM primary mode" do
+      let(:primary_project_dir) { Dir.mktmpdir }
+      let(:primary_config) do
+        File.write(File.join(primary_project_dir, ".autodoc.yml"), <<~YAML)
+          llm:
+            provider: openai
+            endpoint: https://api.openai.com/v1
+            api_key: sk-test
+            model: gpt-4o
+            primary: true
+        YAML
+        AutoDoc::Config.load(primary_project_dir)
+      end
+      after { FileUtils.remove_entry(primary_project_dir) }
+
+      before do
+        allow(Net::HTTP).to receive(:new).and_return(http)
+        allow(http).to receive(:open_timeout=)
+        allow(http).to receive(:read_timeout=)
+        allow(http).to receive(:use_ssl=)
+      end
+
+      it "uses LLM text when LLM succeeds" do
+        allow(http).to receive(:request).and_return(response).exactly(3).times
+        allow(response).to receive(:value).and_return(nil).exactly(3).times
+        allow(response).to receive(:body).and_return(
+          '{"choices":[{"message":{"content":"LLM primary purpose"}}]}',
+          '{"choices":[{"message":{"content":"LLM primary architecture"}}]}',
+          '{"choices":[{"message":{"content":"LLM primary components"}}]}'
+        )
+
+        result = described_class.generate(dir_name, analyses, primary_config)
+        expect(result).to include("LLM primary purpose")
+        expect(result).to include("LLM primary architecture")
+        expect(result).to include("LLM primary components")
+      end
+
+      it "emits stderr warning and falls back to static when LLM fails" do
+        allow(http).to receive(:request).and_raise(SocketError, "connection refused")
+
+        result = nil
+        expect { result = described_class.generate(dir_name, analyses, primary_config) }
+          .to output(/LLM unavailable for lib/).to_stderr
+        expect(result).to include("Core library code")
+        expect(result).to include("Modular library")
+      end
+
+      it "does not emit stderr warning when llm_primary? is false" do
+        allow(http).to receive(:request).and_raise(SocketError, "connection refused")
+
+        expect { described_class.generate(dir_name, analyses, llm_config) }
+          .not_to output(/LLM unavailable/).to_stderr
+      end
+    end
   end
 end

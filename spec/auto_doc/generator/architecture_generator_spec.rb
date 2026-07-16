@@ -236,6 +236,39 @@ RSpec.describe AutoDoc::Generator::ArchitectureGenerator do
             analyses: analyses_hash, auto_doc_config: auto_doc_config_obj)
           expect(result).to include("Monolithic")
         end
+
+        context "with llm_primary? enabled" do
+          let(:primary_config_obj) do
+            instance_double(AutoDoc::Config,
+              llm_config: { endpoint: "https://test", api_key: "test", model: "test-model" },
+              llm_primary?: true)
+          end
+
+          it "emits stderr warning for each fallback field" do
+            expect {
+              generator.generate(project_name, schema_tables, models, class_hierarchy, config,
+                analyses: analyses_hash, auto_doc_config: primary_config_obj)
+            }.to output(/LLM unavailable for MyApp/).to_stderr
+          end
+
+          it "falls back to static values despite warnings" do
+            result = generator.generate(project_name, schema_tables, models, class_hierarchy, config,
+              analyses: analyses_hash, auto_doc_config: primary_config_obj)
+            expect(result).to include("No overview provided.")
+            expect(result).to include("Monolithic")
+          end
+        end
+
+        context "with llm_primary? false (default)" do
+          it "does not emit stderr warning" do
+            allow($stderr).to receive(:puts) # suppress unrelated output
+
+            expect {
+              generator.generate(project_name, schema_tables, models, class_hierarchy, config,
+                analyses: analyses_hash, auto_doc_config: auto_doc_config_obj)
+            }.not_to output(/LLM unavailable/).to_stderr
+          end
+        end
       end
 
       context "when auto_doc_config is nil" do
