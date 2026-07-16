@@ -69,10 +69,38 @@ RSpec.describe AutoDoc::CLI do
   end
 
   describe "serve" do
-    it "starts server and outputs Starting auto-doc server" do
-      expect { cli.start(["serve", "--port", "49876"]) }.to output(/Starting auto-doc server/).to_stdout
-    rescue SystemExit
-      # Thor may exit; we just want to verify the output was produced
+    it "starts server and responds to HTTP requests" do
+      require "net/http"
+      require "timeout"
+
+      # Use a subprocess to avoid modifying the Sinatra class-level settings
+      # which would break subsequent server_spec tests that use Rack::Test
+      gem_lib = File.expand_path("../../lib", __dir__)
+      exe = File.expand_path("../../exe/auto-doc", __dir__)
+      pid = spawn("ruby", "-I", gem_lib, exe, "serve", "--port", "49878",
+                  out: "/dev/null", err: "/dev/null")
+
+      response = nil
+      begin
+        Timeout.timeout(5) do
+          loop do
+            begin
+              response = Net::HTTP.get(URI("http://localhost:49878/"))
+              break
+            rescue Errno::ECONNREFUSED, Errno::ECONNRESET
+              sleep 0.2
+            end
+          end
+        end
+      rescue Timeout::Error
+        # Server didn't start in time
+      end
+
+      expect(response).not_to be_nil, "Server did not respond on port 49878"
+      expect(response).to include("auto-doc Server") if response
+    ensure
+      Process.kill("TERM", pid) rescue nil
+      Process.wait(pid) rescue nil
     end
   end
 
