@@ -48,6 +48,9 @@ module AutoDoc
                         analyze_project(target_dir, config)
                       end
 
+      # Enrich analyses with LLM-generated summaries (for pipeline consumption)
+      analyses = AutoDoc::LLM::Enricher.enrich_analyses(analyses, config, base_dir: target_dir)
+
       pipeline = Pipeline.new(config)
       stats    = pipeline.run(analyses,
                                target_dir: target_dir,

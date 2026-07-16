@@ -197,35 +197,6 @@ module AutoDoc
       results
     end
 
-    # Greps a markdown file for term matches.
-    # @param file_path [String] Absolute path to file
-    # @param term [String] Search term
-    # @param rel_path [String] Path relative to .docs/
-    # @param match_type [String] Type identifier for results
-    # @param score [Integer] Score for matches
-    # @return [Array<Hash>] Result entries
-    def self.grep_md_file(file_path, term, rel_path, match_type, score)
-      results = []
-      content = File.read(file_path, encoding: "UTF-8")
-      term_down = term.downcase
-
-      content.split("\n").each_with_index do |line, idx|
-        next if line.strip.empty?
-
-        if line.downcase.include?(term_down)
-          results << {
-            file: File.join(".docs", rel_path),
-            score: score,
-            match_type: match_type,
-            line: idx + 1,
-            context: line.strip
-          }
-        end
-      end
-
-      results
-    end
-
     # Greps source .rb files (excluding .docs/ directory).
     # @param project_dir [String] Path to the project root directory
     # @param term [String] Search term
@@ -261,6 +232,6 @@ module AutoDoc
 
     private_class_method :search_index_md, :search_vectors_json,
                          :search_summary_md, :search_agents_md,
-                         :grep_md_file, :search_source_files
+                         :search_source_files
   end
 end

@@ -11,8 +11,10 @@ module AutoDoc
         #
         # @param analyses [Hash] Analysis data: { file_path => { definitions:, docs: } }
         # @param config   [Config] Configuration object responding to llm_primary? and module_roots
+        # @param base_dir [String, nil] Optional project base directory for resolving relative module roots.
+        #   Required when module_roots are relative (e.g. %w[app lib]) to enable start_with? matching.
         # @return [Hash] The (potentially modified) analyses hash
-        def enrich_analyses(analyses, config)
+        def enrich_analyses(analyses, config, base_dir: nil)
           # Guard: only run when LLM is primary and configured
           return analyses unless config.llm_primary?
 
@@ -28,9 +30,14 @@ module AutoDoc
             end
           end
 
+          # Resolve potentially-relative module roots to absolute for start_with? matching
+          roots = config.module_roots.map do |r|
+            r.start_with?("/") ? r : (base_dir ? File.join(base_dir, r) : r)
+          end
+
           # Group files by module root and call LLM per module
-          config.module_roots.each do |root|
-            root_analyses = analyses.select { |fp, _| fp.include?("/#{root}/") }
+          roots.each do |root|
+            root_analyses = analyses.select { |fp, _| fp.start_with?("#{root}/") }
             next if root_analyses.empty?
 
             response = Summarizer.summarize_symbols(root, root_analyses, client)

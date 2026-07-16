@@ -82,6 +82,25 @@ RSpec.describe AutoDoc::SearchService do
         expect(match[:score]).to eq(60)
       end
     end
+
+    it "returns score 60 and match_type 'vector_keyword_high' when overlap is 4+ (multiple words)" do
+      with_project_dir do |dir|
+        vectors = {
+          "symbols" => [
+            { "symbol" => "BroadMatcher", "keywords" => %w[config parse validate render transform] }
+          ]
+        }
+        File.write(File.join(dir, ".docs", "vectors.json"), JSON.pretty_generate(vectors))
+
+        # "config parse validate render transform" overlaps all 5 keywords
+        result = service.search(dir, "config parse validate render transform")
+
+        expect(result[:total]).to be >= 1
+        match = result[:results].find { |r| r[:match_type] == "vector_keyword_high" }
+        expect(match).not_to be_nil
+        expect(match[:score]).to eq(60)
+      end
+    end
   end
 
   # ── Test 3: Full-text match in SUMMARY.md ───────────────────────────

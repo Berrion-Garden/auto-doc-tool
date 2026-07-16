@@ -141,7 +141,8 @@ module AutoDoc
         }
 
         if llm_summary_text
-          entry[:keywords]   = extract_keywords_from_text(llm_summary_text)
+          llm_keywords = extract_keywords_from_text(llm_summary_text)
+          entry[:keywords] = (entry[:keywords] + llm_keywords).uniq.first(15)
           entry[:llm_summary] = llm_summary_text
         end
 

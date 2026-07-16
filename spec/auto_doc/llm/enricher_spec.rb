@@ -46,7 +46,7 @@ RSpec.describe AutoDoc::LLM::Enricher do
       end
 
       it "populates docs arrays with summary entries" do
-        result = enricher.enrich_analyses(analyses, config)
+        result = enricher.enrich_analyses(analyses, config, base_dir: "/project")
 
         # users_controller.rb should have 2 docs
         users_controller_docs = result["/project/app/controllers/users_controller.rb"][:docs]
@@ -62,7 +62,7 @@ RSpec.describe AutoDoc::LLM::Enricher do
       end
 
       it "includes target_name, target_type, and summary in each doc entry" do
-        result = enricher.enrich_analyses(analyses, config)
+        result = enricher.enrich_analyses(analyses, config, base_dir: "/project")
         entry = result["/project/app/controllers/users_controller.rb"][:docs].first
 
         expect(entry).to have_key(:target_name)
@@ -71,7 +71,7 @@ RSpec.describe AutoDoc::LLM::Enricher do
       end
 
       it "assigns correct summary text to each symbol" do
-        result = enricher.enrich_analyses(analyses, config)
+        result = enricher.enrich_analyses(analyses, config, base_dir: "/project")
         users_controller_docs = result["/project/app/controllers/users_controller.rb"][:docs]
 
         users_controller_entry = users_controller_docs.find { |d| d[:target_name] == "UsersController" }
@@ -82,7 +82,7 @@ RSpec.describe AutoDoc::LLM::Enricher do
       end
 
       it "assigns summaries to the correct files across module roots" do
-        result = enricher.enrich_analyses(analyses, config)
+        result = enricher.enrich_analyses(analyses, config, base_dir: "/project")
 
         # UserService belongs to the lib module — its summary should come from the lib response
         user_service_docs = result["/project/lib/services/user_service.rb"][:docs]
@@ -92,7 +92,7 @@ RSpec.describe AutoDoc::LLM::Enricher do
       end
 
       it "returns the same analyses hash (object identity preserved)" do
-        result = enricher.enrich_analyses(analyses, config)
+        result = enricher.enrich_analyses(analyses, config, base_dir: "/project")
         expect(result.object_id).to eq(analyses.object_id)
       end
 
@@ -106,7 +106,7 @@ RSpec.describe AutoDoc::LLM::Enricher do
           }
         )
 
-        result = enricher.enrich_analyses(analyses_with_extra, config)
+        result = enricher.enrich_analyses(analyses_with_extra, config, base_dir: "/project")
         expect(result["/project/vendor/gem/lib/foo.rb"][:docs]).to be_empty
       end
     end
@@ -119,7 +119,7 @@ RSpec.describe AutoDoc::LLM::Enricher do
       end
 
       it "returns analyses unchanged" do
-        result = enricher.enrich_analyses(analyses, config)
+        result = enricher.enrich_analyses(analyses, config, base_dir: "/project")
 
         result.each_value do |analysis|
           expect(analysis[:docs]).to be_empty
@@ -127,7 +127,7 @@ RSpec.describe AutoDoc::LLM::Enricher do
       end
 
       it "does not call Client.build_if_configured" do
-        enricher.enrich_analyses(analyses, config)
+        enricher.enrich_analyses(analyses, config, base_dir: "/project")
         expect(AutoDoc::LLM::Client).not_to have_received(:build_if_configured)
       end
     end
@@ -142,7 +142,7 @@ RSpec.describe AutoDoc::LLM::Enricher do
       # spec_helper already stubs build_if_configured to return nil in before(:each)
 
       it "returns analyses unchanged" do
-        result = enricher.enrich_analyses(analyses, config)
+        result = enricher.enrich_analyses(analyses, config, base_dir: "/project")
 
         result.each_value do |analysis|
           expect(analysis[:docs]).to be_empty
@@ -168,7 +168,7 @@ RSpec.describe AutoDoc::LLM::Enricher do
       it "logs a warning for the nil module and continues processing other modules" do
         expect($stderr).to receive(:puts).with(/Enricher.*nil.*app/)
 
-        result = enricher.enrich_analyses(analyses, config)
+        result = enricher.enrich_analyses(analyses, config, base_dir: "/project")
 
         # The lib module should still be processed successfully
         user_service_docs = result["/project/lib/services/user_service.rb"][:docs]
@@ -195,7 +195,7 @@ RSpec.describe AutoDoc::LLM::Enricher do
       end
 
       it "does not modify docs arrays" do
-        result = enricher.enrich_analyses(analyses, config)
+        result = enricher.enrich_analyses(analyses, config, base_dir: "/project")
 
         result.each_value do |analysis|
           expect(analysis[:docs]).to be_empty
@@ -229,7 +229,7 @@ RSpec.describe AutoDoc::LLM::Enricher do
       end
 
       it "handles :: in symbol names by converting to underscores in entry_id" do
-        result = enricher.enrich_analyses(analyses_with_namespaced, config)
+        result = enricher.enrich_analyses(analyses_with_namespaced, config, base_dir: "/project")
         docs = result["/project/lib/services/payment.rb"][:docs]
 
         expect(docs.size).to eq(2)

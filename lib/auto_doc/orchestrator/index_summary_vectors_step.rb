@@ -41,32 +41,24 @@ module AutoDoc
 
       private
 
-      def collect_symbol_summaries(analyses, module_roots, config)
-        return nil unless config.respond_to?(:llm_primary?) && config.llm_primary?
-
-        client = AutoDoc::LLM::Client.build_if_configured(config)
-        return nil unless client
-
+      # Collects pre-enriched symbol summaries from analyses[:docs].
+      # By the time this step runs, the Enricher has already called
+      # Summarizer.summarize_symbols and stored results in each analysis[:docs].
+      # This avoids a second round of LLM calls.
+      #
+      # @param analyses [Hash] Analysis data with docs arrays populated by Enricher
+      # @param _module_roots [Array<String>] Unused; retained for signature compatibility
+      # @param _config [Object] Unused; retained for signature compatibility
+      # @return [Hash, nil] Map of entry_id => summary_text, or nil if empty
+      def collect_symbol_summaries(analyses, _module_roots = nil, _config = nil)
         llm_summaries = {}
 
-        # Build a lookup of symbol_name => type from analyses
-        symbol_types = {}
         analyses.each_value do |analysis|
-          (analysis[:definitions] || []).each do |defn|
-            next unless defn.is_a?(Hash)
-            symbol_types[defn[:name].to_s] = defn[:type].to_s.downcase
+          (analysis[:docs] || []).each do |doc|
+            next unless doc.is_a?(Hash)
+            entry_id = "#{doc[:target_type]}_#{doc[:target_name].to_s.gsub('::', '_')}"
+            llm_summaries[entry_id] = doc[:summary]
           end
-        end
-
-        module_roots.each do |root|
-          base_name = File.basename(root)
-          root_analyses = analyses.select { |fp, _| fp.start_with?("#{root}/") }
-          next if root_analyses.empty?
-
-          response = AutoDoc::LLM::Summarizer.summarize_symbols(base_name, root_analyses, client)
-          next unless response.is_a?(String) && !response.empty?
-
-          llm_summaries.merge!(AutoDoc::LLM::ResponseParser.parse_symbol_summaries(response, symbol_types))
         end
 
         llm_summaries.empty? ? nil : llm_summaries
