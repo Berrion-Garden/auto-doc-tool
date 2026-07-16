@@ -41,7 +41,8 @@ require 'auto_doc'
     ├── auto_doc/version.rb → VERSION constant
     │
     ├── auto_doc/config.rb → Config class
-    │   └── utils/yaml_config_loader.rb → YAML parser
+    │   ├── utils/yaml_config_loader.rb → YAML parser
+    │   └── errors.rb → LLMError class
     │
     ├── auto_doc/utils/* → Utility modules
     │
@@ -50,6 +51,7 @@ require 'auto_doc'
     ├── auto_doc/analyzer/* → Analysis modules
     │   ├── analysis_cache.rb → Cache
     │   ├── source_parser.rb → Ripper parser
+    │   ├── generic_scanner.rb → Regex-based non-Ruby scanner
     │   ├── schema_parser.rb → Rails schema parser
     │   ├── model_association_parser.rb → Rails associations
     │   ├── import_extractor.rb → Import extraction
@@ -61,12 +63,13 @@ require 'auto_doc'
     ├── auto_doc/llm.rb → LLM module loader
     │   ├── llm/client.rb → HTTP client
     │   ├── llm/summarizer.rb → Delegates to PromptBuilder + ResponseParser
-    │   ├── llm/prompt_builder.rb → Prompt construction (8 types)
-    │   └── llm/response_parser.rb → Response parsing (markdown/JSON/bullets)
+    │   ├── llm/prompt_builder.rb → Prompt construction (12 types)
+    │   └── llm/response_parser.rb → Response parsing (markdown/JSON/bullets/symbols)
     │
     ├── auto_doc/generator/* → Document generators
-    │   ├── template_helper.rb → Template mixin
+    │   ├── template_helper.rb → Template + LLM error handling mixin
     │   ├── agents_md_generator.rb
+    │   ├── agents_overview_generator.rb → Root AGENTS.md generation
     │   ├── readme_generator.rb
     │   ├── index_generator.rb
     │   ├── summary_generator.rb
@@ -92,12 +95,14 @@ require 'auto_doc'
     │
     ├── auto_doc/orchestrator/* → Pipeline steps
     │   ├── base_step.rb
+    │   ├── agents_overview_step.rb → Root AGENTS.md step
     │   ├── agents_md_step.rb
     │   ├── readme_step.rb
     │   ├── index_summary_vectors_step.rb
     │   ├── diagram_step.rb
     │   ├── architecture_step.rb
     │   ├── manifest_step.rb
+    │   ├── metrics_helper.rb → Class/method counting
     │   └── pipeline.rb
     │
     ├── auto_doc/cli.rb → CLI (Thor)
@@ -160,14 +165,15 @@ llm:
   api_key: autodoc
   model: summarizer
   timeout: 120
-  primary: false
+  primary: true
+  fail_fast: false
 ```
 
 ### LLM Configuration
 
-The `llm:` section enables optional LLM-powered summarization for `SUMMARY.md`, `AGENTS.md`, `README.md`, and `architecture.md` generation. LLM usage is **off by default** (`llm.primary: false`) and only activates when `--llm-primary` CLI flag is passed or `llm.primary: true` is set in `.autodoc.yml`.
+The `llm:` section configures optional LLM-powered summarization for `SUMMARY.md`, `AGENTS.md`, `README.md`, and `architecture.md` generation. LLM usage is **on by default** (`llm.primary: true`) and can be deactivated by setting `llm.primary: false` in `.autodoc.yml`.
 
-When `llm.primary: true`:
+When `llm.primary: true` (default):
 - Generators try LLM first for each section (purpose, architecture, components)
 - On failure (timeout, error, empty response), a warning is emitted to stderr and the generator falls back to static analysis
 - `ArchitectureGenerator` makes 1 LLM call for the full structured overview
@@ -175,8 +181,9 @@ When `llm.primary: true`:
 - `AgentsMdGenerator` makes 1 LLM call (module purpose)
 - `ReadmeGenerator` makes 1 LLM call (overview text)
 - `DiagramStep` makes up to 2 LLM calls (C4 context, C4 containers)
+- `VectorGenerator` can make LLM calls for summary keyword enrichment (when `llm_summaries` kwarg is passed)
 
-When `llm.primary: false` (default):
+When `llm.primary: false`:
 - Zero LLM calls are made by any generator or pipeline step
 - All content is generated via static analysis and heuristics
 
@@ -184,7 +191,7 @@ Default config uses `https://llms.berrion.garden/v1` with model `summarizer` and
 
 Set `AUTO_DOC_DISABLE_LLM=true` to disable LLM calls regardless of `llm.primary` setting.
 
-Config is discovered by walking up from the target directory. CLI flags override config values. The `--llm-primary` flag is available on `generate`, `verify`, and `audit` commands.
+Config is discovered by walking up from the target directory. CLI flags override config values. The `--llm-primary` flag is available on `generate`, `verify`, and `audit` commands. Setting `llm.fail_fast: true` causes LLM failures to raise `LLMError` instead of falling back.
 
 ### Environment Variables
 

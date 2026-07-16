@@ -39,6 +39,20 @@ Orchestrator.generate(path, say:)
     │
     └── Pipeline.run(analyses, target_dir:, output_dir:, module_roots:, say:)
             │
+            ├── AgentsOverviewStep.run(context)
+            │       │
+            │       └── AgentsOverviewGenerator.generate(project_name, tree_text, analyses,
+            │               config:, output_path:)
+            │               │
+            │               ├── llm_primary? == true
+            │               │       ├── llm_generate_section(:agents_overview_overview)
+            │               │       ├── llm_generate_section(:agents_overview_tech_stack)
+            │               │       ├── llm_generate_section(:agents_overview_architecture)
+            │               │       └── llm_generate_section(:agents_overview_conventions)
+            │               │       └── All delegate to PromptBuilder.build(:agents_overview_*)
+            │               │
+            │               └── llm_primary? == false → static overview text
+            │
             ├── AgentsMdStep.run(context)
             │       │
             │       └── for each module_root:
@@ -46,19 +60,19 @@ Orchestrator.generate(path, say:)
             │               FilesDataBuilder.build(file_analyses)
             │               AgentsMdGenerator.generate(name, tree, files, config:, output_path:)
             │                       │
-            │                       ├── llm_primary? == false
-            │                       │       └── purpose_summary = placeholder text (zero LLM calls)
+            │                       ├── llm_primary? == true (default)
+            │                       │       ├── Client.build_if_configured(config)
+            │                       │       │       ├── AUTO_DOC_DISABLE_LLM check
+            │                       │       │       ├── config.llm_config validation
+            │                       │       │       └── Client.configured? check
+            │                       │       ├── (client available) Summarizer.summarize_module
+            │                       │       │       └── PromptBuilder.build(:agents_md, ...)
+            │                       │       │       └── ResponseParser.parse_purpose(...)
+            │                       │       ├── (success) → purpose_summary = LLM result
+            │                       │       └── (failure) → warn_llm_fallback + placeholder text
             │                       │
-            │                       └── llm_primary? == true
-            │                               ├── Client.build_if_configured(config)
-            │                               │       ├── AUTO_DOC_DISABLE_LLM check
-            │                               │       ├── config.llm_config validation
-            │                               │       └── Client.configured? check
-            │                               ├── (client available) Summarizer.summarize_module
-            │                               │       └── PromptBuilder.build(:agents_md, ...)
-            │                               │       └── ResponseParser.parse_purpose(...)
-            │                               ├── (success) → purpose_summary = LLM result
-            │                               └── (failure) → warn_llm_fallback + placeholder text
+            │                       └── llm_primary? == false
+            │                               └── purpose_summary = placeholder text (zero LLM calls)
             │
             ├── ReadmeStep.run(context)
             │       │

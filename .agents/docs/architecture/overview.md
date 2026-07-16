@@ -64,15 +64,16 @@
 
 ## Inverted LLM Priority Architecture
 
-All LLM integration follows the **Inverted Priority Pattern** — rather than always attempting LLM and silently falling back to static analysis, LLM usage is **off by default** (`llm.primary: false`) and only activates when `--llm-primary` is passed (or `llm.primary: true` is set in config). This ensures backward compatibility and zero unexpected network calls.
+All LLM integration follows the **Inverted Priority Pattern** — rather than always attempting LLM and silently falling back to static analysis, LLM usage is **on by default** (`llm.primary: true`) and can be deactivated by setting `llm.primary: false` in `.autodoc.yml`. This ensures LLM-generated summaries are used by default while allowing users to disable with zero network calls.
 
 ### Key Design Decisions
 
-1. **LLM Primary Gate (`llm_primary?`)** — Each generator checks `llm_primary?` before making any LLM call. When `false` (default), zero LLM calls are made — generators use pure static analysis.
-2. **Graceful Degradation** — When `llm.primary: true`, generators try LLM first on each section. On failure (timeout, error, empty response), they log a warning via `warn_llm_fallback` and fall through to the same static analysis used in non-primary mode.
+1. **LLM Primary Gate (`llm_primary?`)** — Each generator checks `llm_primary?` before making any LLM call. When `true` (default), generators attempt LLM first for each section. On failure (timeout, error, empty response), they log a warning via `warn_llm_fallback` and fall through to the same static analysis used in non-primary mode.
+2. **Graceful Degradation** — When `llm.primary: true` (default), generators try LLM first on each section. On failure (timeout, error, empty response), they log a warning via `warn_llm_fallback` and fall through to the same static analysis used in non-primary mode.
 3. **Single LLM Call per Generator** — `ArchitectureGenerator` uses one LLM call for the full structured overview (purpose, style, modules, data flows); `SummaryGenerator` uses up to 3 calls (purpose, architecture, components); `AgentsMdGenerator` and `ReadmeGenerator` use 1 call each.
-4. **TemplateHelper Mixin** — Shared `llm_primary?` and `warn_llm_fallback` methods in one place, included by all four LLM-aware generators.
+4. **TemplateHelper Mixin** — Shared `llm_primary?`, `fail_fast?`, and `handle_llm_failure` methods in one place, included by all generators.
 5. **PromptBuilder + ResponseParser** — Prompt construction and response parsing were extracted from `Summarizer` into dedicated classes for testability and separation of concerns.
+6. **Fail-fast mode** — `LLMError` exception class with `fail_fast?` config gate. When enabled, LLM failures raise immediately instead of silently falling back.
 
 ### LLM Call Flow
 
@@ -82,7 +83,7 @@ Generator.render_template
     ├── llm_primary? == false
     │       └── Use static analysis (zero LLM calls, backward compatible)
     │
-    └── llm_primary? == true
+    └── llm_primary? == true (default)
             │
             ├── Client.build_if_configured(config)
             │       └── nil → warn_llm_fallback + static fallback
@@ -159,18 +160,20 @@ spec/                              # RSpec test suite
 
 This project refactored the LLM integration from a "try LLM first, silently fall back" pattern to an **Inverted Priority Pattern** where LLM is off by default (`llm.primary: false`) and only activates when explicitly enabled.
 
+**Note:** The `primary` default was later changed to `true` in a subsequent project (2026-07-16-best-llm-powered-doc). The current default is `llm.primary: true` (LLM primary on by default).
+
 **Completed milestone:** LLM Primary Driver Architecture (06e6d3d → 4c04a36, remediated in a6430ae)
 
 **Changes implemented:**
-1. **Config layer:** Added `llm: { primary: false }` default and `llm_primary?` accessor to `AutoDoc::Config`
+1. **Config layer:** Added `llm: { primary: true }` default (changed from original plan's `false` in best-llm-powered-doc project) and `llm_primary?` accessor to `AutoDoc::Config`
 2. **CLI:** Added `--llm-primary` flag to `generate`, `verify`, and `audit` commands; `cli_overrides` maps to `{ llm: { primary: true } }`
 3. **TemplateHelper mixin** (`generator/template_helper.rb`): Added `llm_primary?` gate (checks `@auto_doc_config` then `@config`) and `warn_llm_fallback` for consistent stderr warnings
 4. **All 4 LLM-aware generators** now use `llm_primary?` gate — non-primary mode makes zero LLM calls
 5. **ArchitectureGenerator** LLM call wrapped in `begin/rescue StandardError` with full fallback to static mode
 6. **ArchitectureGenerator** parsing centralized through `Summarizer.parse_architecture_modules` and `Summarizer.parse_architecture_data_flows`
-7. **PromptBuilder** (`llm/prompt_builder.rb`): Extracted prompt construction (8 generator types: agents_md, summary, architecture, components, architecture_full, system_context, containers, readme)
-8. **ResponseParser** (`llm/response_parser.rb`): Extracted response parsing (markdown headings, JSON arrays, bullet lists)
-9. **Summarizer** refactored to delegate to PromptBuilder and ResponseParser; added `parse_architecture_modules` and `parse_architecture_data_flows` methods
+7. **PromptBuilder** (`llm/prompt_builder.rb`): Extracted prompt construction (12 generator types: agents_md, summary, architecture, components, architecture_full, system_context, containers, readme, agents_overview_overview, agents_overview_tech_stack, agents_overview_architecture, agents_overview_conventions) — originally 8, later expanded by best-llm-powered-doc project.
+8. **ResponseParser** (`llm/response_parser.rb`): Extracted response parsing (markdown headings, JSON arrays, bullet lists, symbol summaries). Added `parse_symbol_summaries` method in best-llm-powered-doc project.
+9. **Summarizer** refactored to delegate to PromptBuilder and ResponseParser; added `parse_architecture_modules`, `parse_architecture_data_flows`, and `summarize_symbols` methods (originally added `summarize_architecture_full`, `summarize_system_context`, `summarize_containers` in earlier project).
 10. **ReadmeGenerator**: New signature accepts `config:` and `analyses:` kwargs; LLM enhancement for `overview_text`
 11. **ReadmeStep**: Forwards config and analyses to ReadmeGenerator
 12. **ArchitectureStep**: Forwards `auto_doc_config` and `analyses` to ArchitectureGenerator
@@ -196,7 +199,7 @@ This project refactored the LLM integration from a "try LLM first, silently fall
 
 **Plan:** Add `llm:` section to `DEFAULTS` with provider/endpoint/api_key/model. Add `llm_config` accessor method.
 
-**Resolved:** `Config::DEFAULTS` now includes an `llm:` section with `provider: "openai"`, `endpoint: "https://llms.berrion.garden/v1"`, `api_key: "autodoc"`, `model: "summarizer"`, `timeout: 120`, `primary: false`. The `llm_config` accessor method is present alongside `llm_primary?`.
+**Resolved:** `Config::DEFAULTS` now includes an `llm:` section with `provider: "openai"`, `endpoint: "https://llms.berrion.garden/v1"`, `api_key: "autodoc"`, `model: "summarizer"`, `timeout: 120`, `primary: true`, `fail_fast: false`. The `llm_config` accessor method is present alongside `llm_primary?` and `llm_fail_fast?`. (Note: `primary` was `false` at time of LLM Primary Driver Architecture project, changed to `true` in best-llm-powered-doc project.)
 
 ### 3. SummaryGenerator LLM Integration (FIXED, refactored in primary driver project)
 
@@ -236,3 +239,9 @@ At the time of LLM Primary Driver Architecture final review (commit `4c04a36`, r
 - Integration tests tagged with `:integration` for selective execution
 - New shared test helper `spec/support/llm_mock_helper.rb` provides `mock_llm_client`, `primary_llm_config`, `standard_llm_config` for LLM-related tests
 - E2E generation verified in both primary and non-primary modes
+
+## Project: 2026-07-16-best-llm-powered-doc
+
+A comprehensive project that added 4 milestones to the auto-doc tool: a language-agnostic file scanner, fail-fast LLM error handling, root AGENTS.md generation, and LLM-enriched VECTORS.json. All milestones completed on first attempt. Final test count: **784 passing, 0 failures**.
+
+### Deviations from the Original Plan

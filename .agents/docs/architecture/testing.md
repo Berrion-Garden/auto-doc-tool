@@ -29,10 +29,12 @@ end
 | Spec File | Target | Coverage |
 |-----------|--------|----------|
 | `spec/auto_doc/llm_spec.rb` | `AutoDoc::LLM`, `Client`, `Summarizer` constants | Module loading |
-| `spec/auto_doc/config_spec.rb` | `Config.load`, defaults, YAML merge, CLI overrides, output_dir fallback | Full |
+| `spec/auto_doc/config_spec.rb` | `Config.load`, defaults, YAML merge, CLI overrides, output_dir fallback, fail_fast | Full |
 | `spec/auto_doc/generator/summary_generator_spec.rb` | `SummaryGenerator.generate` with various inputs | Full |
 | `spec/auto-doc/generator/agents_md_generator_spec.rb` | `AgentsMdGenerator.generate` with various inputs | Full |
 | `spec/auto_doc/analyzer/source_parser_spec.rb` | `SourceParser.parse_file` on various Ruby files | Full |
+| `spec/auto_doc/analyzer/generic_scanner_spec.rb` | `GenericScanner` language detection, regex parsing, unsupported extensions | Full |
+| `spec/auto_doc/analyzer/analysis_pipeline_spec.rb` | `AnalysisPipeline` fallback behavior, language/scanner keys | Full |
 | `spec/auto_doc/analyzer/yard_reader_spec.rb` | YARD comment extraction | Full |
 | `spec/auto_doc/analyzer/import_extractor_spec.rb` | Import statement extraction | Full |
 | `spec/auto_doc/analyzer/schema_parser_spec.rb` | Rails schema parsing | Full |
@@ -48,6 +50,8 @@ end
 | `spec/auto_doc/search_service_spec.rb` | Full-text search | Full |
 | `spec/auto_doc/agent_query_service_spec.rb` | Natural-language queries | Full |
 | `spec/auto_doc/transformer/graph_data_builder_spec.rb` | DAG graph building | Full |
+| `spec/auto_doc/errors_spec.rb` | `LLMError` class definition | Full |
+| `spec/auto_doc/generator/template_helper_spec.rb` | `TemplateHelper` methods including fail_fast | Full |
 
 ### Generator Tests
 
@@ -60,8 +64,9 @@ end
 | `spec/auto_doc/generator/class_diagram_generator_spec.rb` | `ClassDiagramGenerator` |
 | `spec/auto_doc/generator/erd_generator_spec.rb` | `ErdGenerator` |
 | `spec/auto_doc/generator/architecture_generator_spec.rb` | `ArchitectureGenerator` |
-| `spec/auto_doc/generator/vector_generator_spec.rb` | `VectorGenerator` |
+| `spec/auto_doc/generator/vector_generator_spec.rb` | `VectorGenerator` (includes LLM summary integration tests) |
 | `spec/auto_doc/generator/map_generator_spec.rb` | `MapGenerator` |
+| `spec/auto_doc/generator/agents_overview_generator_spec.rb` | `AgentsOverviewGenerator` (7 sections, tech stack, conventions) |
 
 ### Integration Tests
 
@@ -71,6 +76,11 @@ end
 | `spec/auto_doc/cli_spec.rb` | CLI command execution |
 | `spec/auto_doc/server_spec.rb` | Sinatra server HTTP endpoints |
 | `spec/e2e/self_test_spec.rb` | End-to-end self-test against project source |
+| `spec/auto_doc/orchestrator/pipeline_spec.rb` | Pipeline step execution with context flow |
+| `spec/auto_doc/orchestrator/agents_md_step_spec.rb` | AgentsMdStep orchestration |
+| `spec/auto_doc/orchestrator/diagram_step_spec.rb` | DiagramStep orchestration |
+| `spec/auto_doc/orchestrator/base_step_spec.rb` | BaseStep interface |
+| `spec/auto_doc/orchestrator/metrics_helper_spec.rb` | MetricsHelper count_classes_and_methods, calculate_coverage |
 
 ## Stubbing Policy
 
@@ -100,12 +110,6 @@ The `spec/auto_doc/llm/integration_spec.rb` provides integration-level coverage 
 - `AUTO_DOC_DISABLE_LLM` environment variable disables LLM in all generators
 - Backward compatibility when no config is passed
 
-### Config Tests
-
-### Config Tests
-
-Config specs create temporary directories with `Dir.mktmpdir` and write `.autodoc.yml` files. Directories are cleaned up in `after` blocks.
-
 ### Generator Tests
 
 Generator specs use in-memory analysis data (hardcoded hashes) rather than reading from disk. Output file tests use `Dir.mktmpdir` for temporary output paths.
@@ -121,3 +125,7 @@ At time of LLM Primary Driver Architecture final review (commit `4c04a36`):
 - Pre-existing failures unchanged from baseline
 - Integration tests tagged with `:integration` for selective execution via `rspec --tag integration`
 - `LlmMockHelper` provides reusable stubs for all LLM-related tests
+
+Current state (post-project 2026-07-16-best-llm-powered-doc, commit `08bbc78`):
+- **784 specs passing, 0 failures**
+- New specs added by project: `generic_scanner_spec.rb`, `analysis_pipeline_spec.rb`, `errors_spec.rb`, `template_helper_spec.rb`, `agents_overview_generator_spec.rb`, `vector_generator_spec.rb` (LLM summary tests), `pipeline_spec.rb`, `agents_md_step_spec.rb`, `diagram_step_spec.rb`, `base_step_spec.rb`, `metrics_helper_spec.rb`
