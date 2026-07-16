@@ -80,11 +80,11 @@ Loads `.autodoc.yml` configuration with fallback defaults. Walks up directory tr
 - `audit.max_module_size`: `50`
 - `diagrams.generate_dag`: `true`
 - `diagrams.diagram_directory`: `"diagrams"`
-- `llm.provider`: `nil`
-- `llm.endpoint`: `nil`
-- `llm.api_key`: `nil`
-- `llm.model`: `nil`
-- `llm.timeout`: `30`
+- `llm.provider`: `"openai"`
+- `llm.endpoint`: `"https://llms.berrion.garden/v1"`
+- `llm.api_key`: `"autodoc"` (reverted from `__PLACEHOLDER__` for out-of-box usage)
+- `llm.model`: `"summarizer"`
+- `llm.timeout`: `120`
 
 **Accessors:** `module_roots`, `exclude_patterns`, `output_dir`, `min_doc_coverage`, `max_module_size`, `generate_dag?`, `diagram_directory`, `llm_config`
 

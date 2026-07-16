@@ -103,8 +103,8 @@ Fixtures are in `fixtures/` and `test_fixtures/` directories. Used by generator 
 
 ## Known Test Status
 
-At time of final review (commit `18a75b3`):
-- **589 specs passing** (includes 15 integration tests)
+At time of final review (commit `8e7254a`):
+- **592 specs passing** (includes 15 integration tests)
 - **42 pre-existing failures** (not introduced by LLM work):
   - `server_spec.rb`: 36 failures (Sinatra server test issues)
   - `cli_spec.rb`: 1 failure

@@ -53,6 +53,8 @@ Generates per-module `SUMMARY.md` files with executive summaries. Uses LLM when 
 - `llm_architecture` — Same pattern, calls `Summarizer.summarize_architecture`
 - `llm_components` — Same pattern, calls `Summarizer.summarize_components`, wraps result as single component entry
 
+**Note:** `Summarizer` has additional methods (`summarize_architecture_full`, `summarize_system_context`, `summarize_containers`) added in final commit `8e7254a` that are not yet integrated into this generator.
+
 **Static inference fallback methods:**
 - `infer_purpose` — Case statement on directory name (lib, app, spec, bin, config, db, docs) with fallback to file count description
 - `extract_key_components` — Filters definitions to classes/modules, looks up YARD summaries, limits to 20

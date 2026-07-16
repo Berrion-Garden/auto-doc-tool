@@ -42,13 +42,9 @@
 │  YARD     │               │  MapGen                 │
 │  Reader   │               │                         │
 ├───────────┴───────────────┴─────────────────────────┤
-│                   LLM Layer                          │
-│  Client (OpenAI-compatible HTTP)                     │
-│  Summarizer (metadata-only prompts)                  │
-├─────────────────────────────────────────────────────┤
 │              LLM Layer (Integrated)                  │
 │  Client (OpenAI-compatible HTTP, build_if_configured)│
-│  Summarizer (metadata-only prompts)                  │
+│  Summarizer (metadata-only prompts, 6 public methods)│
 │  Used by: SummaryGenerator (3 calls),                │
 │            AgentsMdGenerator (1 call)                │
 │  All LLM calls have graceful fallback to static     │
@@ -120,39 +116,45 @@ spec/                              # RSpec test suite
 
 ## Deviations from Plan
 
-All planned LLM integration features have been implemented and verified. The following deviations were identified during the initial review and subsequently remediated (commit `18a75b3`):
+All planned LLM integration features have been implemented and verified. The following deviations were identified during the review process and subsequently remediated:
 
-### 1. Config `llm_config` Accessor (FIXED)
+### 1. Summarizer Self-Doc Regeneration (commit `8e7254a`)
+
+**Plan:** The Summarizer class already has 3 public methods: `summarize_module`, `summarize_architecture`, `summarize_components`.
+
+**Resolved:** LLM self-doc regeneration added 3 new public methods (`summarize_architecture_full`, `summarize_system_context`, `summarize_containers`) and standardized prompt text from "Ruby project" to "software project". These new methods are available but not yet integrated into a pipeline step.
+
+### 2. Config `llm_config` Accessor (FIXED, commit `ce3f596`)
 
 **Plan:** Add `llm:` section to `DEFAULTS` with provider/endpoint/api_key/model. Add `llm_config` accessor method.
 
-**Resolved:** `Config::DEFAULTS` now includes an `llm:` section with `provider`, `endpoint`, `api_key`, `model` (all `nil`) and `timeout: 30`. The `llm_config` accessor method is present at line 115 of `config.rb`.
+**Resolved:** `Config::DEFAULTS` now includes an `llm:` section with `provider: "openai"`, `endpoint: "https://llms.berrion.garden/v1"`, `api_key: "autodoc"`, `model: "summarizer"`, `timeout: 120`. The `llm_config` accessor method is present at line 115 of `config.rb`.
 
-### 2. SummaryGenerator LLM Integration (FIXED)
+### 3. SummaryGenerator LLM Integration (FIXED)
 
 **Plan:** In `render_template`, build an `AutoDoc::LLM::Client` from config if configured. Call `Summarizer` methods — only use results if non-nil; otherwise fall back to existing static methods.
 
 **Resolved:** `SummaryGenerator#render_template` (line 50) calls `llm_purpose`, `llm_architecture`, and `llm_components` which use `Client.build_if_configured(@config)` and delegate to `Summarizer.summarize_module/summarize_architecture/summarize_components`. All three fall back to static inference methods on any failure.
 
-### 3. AgentsMdGenerator LLM Integration (FIXED)
+### 4. AgentsMdGenerator LLM Integration (FIXED)
 
 **Plan:** Update `self.generate` signature to accept optional `config:` parameter. In `render_template`, use LLM for `purpose_summary`.
 
 **Resolved:** `AgentsMdGenerator.generate` signature accepts `config: nil` keyword parameter (line 24). The generator stores `@config`, calls `llm_purpose_summary` which uses `Client.build_if_configured(@config)` and `Summarizer.summarize_module`. Falls back to `nil` (template renders placeholder text) on any failure.
 
-### 4. AgentsMdStep Config Threading (FIXED)
+### 5. AgentsMdStep Config Threading (FIXED)
 
 **Plan:** Update the call to `AgentsMdGenerator.generate` to pass `config: config`.
 
 **Resolved:** `AgentsMdStep#run` calls `AgentsMdGenerator.generate(dir_name, tree_text, files_data, config: config, output_path: output_path)` (line 21 of `agents_md_step.rb`).
 
-### 5. LLM Layer Integration (FIXED)
+### 6. API Key Default Revert (FIXED, commit `ce3f596`)
 
-**Plan:** The LLM layer (`Client` + `Summarizer`) created in Milestone 1, integrated in Milestone 2.
+**Plan:** Use `"__PLACEHOLDER__"` as default api_key value.
 
-**Resolved:** The LLM layer is fully integrated into both `SummaryGenerator` (3 LLM calls with fallback) and `AgentsMdGenerator` (1 LLM call with fallback). `Client.build_if_configured` provides a centralized, safe client construction with ENV guard, config validation, and configured? check.
+**Resolved:** Reverted from `"__PLACEHOLDER__"` (commit `b5b893f`) back to `"autodoc"` (commit `ce3f596`) for out-of-box LLM usage. The `configured?` method in `Client` checks for non-empty string, so `"autodoc"` passes the check and enables LLM usage by default.
 
-### 6. Ruby 3.4 Compatibility (VERIFIED)
+### 7. Ruby 3.4 Compatibility (VERIFIED)
 
 **Execution Log Note:** Two source fixes: `Net::HTTPExceptions` for Ruby 3.4 compatibility and String-based type comparison in `extract_key_components`.
 
@@ -160,8 +162,9 @@ All planned LLM integration features have been implemented and verified. The fol
 
 ## Test Status
 
-At the time of final review (commit `18a75b3`):
-- Total specs: 589 passing (473 unit + 15 integration + 101 additional from remediation)
+At the time of final review (commit `8e7254a`):
+- Total specs: 592 passing (unit + integration)
 - Pre-existing failures: 42 (server_spec: 36, cli_spec: 1, self_test_spec: 5) — confirmed unchanged from baseline
 - Integration tests tagged with `:integration` for selective execution
 - E2E generation verified with graceful LLM fallback when live provider is unreachable
+- Final commit (`8e7254a`) added 3 new public methods to `Summarizer` (self-doc regeneration)

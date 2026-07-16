@@ -154,15 +154,15 @@ diagrams:
 
 llm:
   provider: openai
-  endpoint: https://api.openai.com/v1
-  api_key: sk-...
-  model: gpt-4o
-  timeout: 30
+  endpoint: https://llms.berrion.garden/v1
+  api_key: autodoc
+  model: summarizer
+  timeout: 120
 ```
 
 ### LLM Configuration
 
-The `llm:` section enables optional LLM-powered summarization for `SUMMARY.md` and `AGENTS.md` generation. When `endpoint` and `api_key` are both present and non-empty, LLM calls are attempted with graceful fallback to static inference on any failure.
+The `llm:` section enables optional LLM-powered summarization for `SUMMARY.md` and `AGENTS.md` generation. When `endpoint` and `api_key` are both present and non-empty, LLM calls are attempted with graceful fallback to static inference on any failure. Default config uses `https://llms.berrion.garden/v1` with model `summarizer` and api_key `autodoc`.
 
 Set `AUTO_DOC_DISABLE_LLM=true` to disable LLM calls regardless of config.
 

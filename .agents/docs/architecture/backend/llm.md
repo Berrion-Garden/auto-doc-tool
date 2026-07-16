@@ -41,10 +41,15 @@ Builds metadata-only prompts and delegates to a `Client` instance.
 
 **Key property:** Never includes full source code — only file names, class/module names, method names, and structural relationships.
 
-**Interface (class methods):**
+**Interface (public class methods):**
 - `summarize_module(dir_name, analyses, client)` — Summary of a specific module directory
 - `summarize_architecture(project_name, analyses, client)` — Overall project architecture summary
 - `summarize_components(analyses, client)` — Component relationships and dependencies
+- `summarize_architecture_full(project_name, analyses, client)` — Multi-paragraph architecture overview covering purpose, style, modules, and data flow
+- `summarize_system_context(project_name, analyses, client)` — External systems interaction list (JSON or bullet list format)
+- `summarize_containers(analyses, module_roots, client)` — Container/module descriptions keyed by module root name
+
+**Private prompt builders:** `build_module_prompt`, `build_architecture_prompt`, `build_components_prompt`, `build_architecture_full_prompt`, `build_system_context_prompt`, `build_containers_prompt`, `extract_metadata_lines`
 
 **Prompt structure:** Each method builds a prompt with:
 1. System persona ("You are a software documentation expert...")
@@ -65,10 +70,15 @@ Builds metadata-only prompts and delegates to a `Client` instance.
 
 The LLM module is **fully implemented and integrated** into the generation pipeline:
 
-1. **Config:** `llm:` defaults with `timeout: 30` and `llm_config` accessor are present
+1. **Config:** `llm:` defaults with `provider: "openai"`, `endpoint: "https://llms.berrion.garden/v1"`, `api_key: "autodoc"`, `model: "summarizer"`, `timeout: 120` and `llm_config` accessor are present
 2. **SummaryGenerator:** Calls `Summarizer.summarize_module`, `summarize_architecture`, and `summarize_components` via `llm_purpose`, `llm_architecture`, `llm_components` methods. Falls back to `infer_purpose`, `extract_key_components`, `infer_architecture_pattern` when LLM unavailable
 3. **AgentsMdGenerator:** Accepts `config:` keyword parameter. Calls `Summarizer.summarize_module` via `llm_purpose_summary` method. Falls back to `nil` (template renders placeholder text) when LLM unavailable
 4. **AgentsMdStep:** Passes `config: config` to `AgentsMdGenerator.generate`
 5. **Client.build_if_configured:** Centralized safe construction with `AUTO_DOC_DISABLE_LLM` ENV guard, config validation, and `configured?` check
+6. **Additional Summarizer methods** (added in final commit `8e7254a` by LLM self-doc regeneration): `summarize_architecture_full` (multi-paragraph overview), `summarize_system_context` (external systems list), `summarize_containers` (module root descriptions) — available but not yet wired into a pipeline step or generator
 
 All LLM calls use `rescue` blocks that return `nil` on any failure, ensuring graceful degradation. The integration is verified by `spec/auto_doc/llm/integration_spec.rb` (15 examples, tagged `:integration`).
+
+## Prompt Safety
+
+All Summarizer prompt methods are metadata-only: they never include full source code (`def ` or `class ` keyword patterns). The `extract_metadata_lines` private method produces structured output with file paths, class/module/method/constant names, types, and documentation status — but no source code. Prompt text was also standardized from "Ruby project" to "software project" for broader applicability.

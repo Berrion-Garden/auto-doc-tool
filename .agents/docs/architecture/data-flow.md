@@ -53,6 +53,11 @@ Orchestrator.generate(path, say:)
             │                       ├── (if client available) Summarizer.summarize_module → purpose_summary
             │                       └── (fallback) purpose_summary = nil → placeholder text
             │
+            │   Additional Summarizer methods (available but not yet wired into pipeline steps):
+            │   ├── Summarizer.summarize_architecture_full → multi-paragraph architecture overview
+            │   ├── Summarizer.summarize_system_context → external systems interaction list (JSON or bullets)
+            │   └── Summarizer.summarize_container_descriptions → module root descriptions keyed by name
+            │
             ├── ReadmeStep.run(context)
             │       │
             │       └── ReadmeGenerator.generate(...)
@@ -66,6 +71,11 @@ Orchestrator.generate(path, say:)
             │       │       ├── (if LLM configured) llm_architecture → Summarizer.summarize_architecture
             │       │       ├── (if LLM configured) llm_components → Summarizer.summarize_components
             │       │       └── (fallback) infer_purpose, extract_key_components, infer_architecture_pattern
+            │       │
+            │       │   Additional Summarizer methods (available but not yet wired into SummaryGenerator):
+            │       │   ├── Summarizer.summarize_architecture_full → multi-paragraph overview
+            │       │   ├── Summarizer.summarize_system_context → external systems list
+            │       │   └── Summarizer.summarize_container_descriptions → module descriptions
             │       ├── VectorGenerator.generate(project-level)
             │       └── for each module_root:
             │               IndexGenerator.generate(module-level)
