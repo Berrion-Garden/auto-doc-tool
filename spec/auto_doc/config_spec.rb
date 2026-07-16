@@ -66,14 +66,9 @@ RSpec.describe AutoDoc::Config do
       expect(cfg.module_roots).to eq(%w[app lib bin])
     end
 
-    it "llm_config returns berrion garden defaults when no YAML config" do
+    it "llm_config returns nil when no YAML config (LLM must be explicitly configured)" do
       cfg = config.load(project_dir)
-      llm = cfg.llm_config
-      expect(llm[:provider]).to eq("openai")
-      expect(llm[:endpoint]).to eq("https://llms.berrion.garden/v1")
-      expect(llm[:api_key]).to eq("autodoc")
-      expect(llm[:model]).to eq("summarizer")
-      expect(llm[:timeout]).to eq(120)
+      expect(cfg.llm_config).to be_nil
     end
 
     it "llm_config returns merged values from .autodoc.yml with llm section" do
@@ -91,6 +86,21 @@ RSpec.describe AutoDoc::Config do
       expect(llm[:endpoint]).to eq("https://api.openai.com/v1")
       expect(llm[:api_key]).to eq("sk-test")
       expect(llm[:model]).to eq("gpt-4o")
+    end
+
+    it "llm_config merges partial YAML with DEFAULTS for unspecified fields" do
+      File.write(File.join(project_dir, ".autodoc.yml"), <<~YAML)
+        llm:
+          endpoint: https://custom.endpoint/v1
+      YAML
+
+      cfg = config.load(project_dir)
+      llm = cfg.llm_config
+      expect(llm[:endpoint]).to eq("https://custom.endpoint/v1")
+      expect(llm[:provider]).to eq("openai") # falls back to DEFAULT
+      expect(llm[:api_key]).to eq("autodoc") # falls back to DEFAULT
+      expect(llm[:model]).to eq("summarizer") # falls back to DEFAULT
+      expect(llm[:timeout]).to eq(120) # falls back to DEFAULT
     end
 
     it "handles nested output config" do

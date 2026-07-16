@@ -66,6 +66,7 @@ module AutoDoc
       #
       # @return [Boolean]
       def configured?
+        return false unless @config
         endpoint = @config[:endpoint]
         api_key  = @config[:api_key]
         !endpoint.nil? && !endpoint.empty? && !api_key.nil? && !api_key.empty?

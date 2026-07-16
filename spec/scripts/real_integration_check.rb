@@ -1,25 +1,24 @@
 # frozen_string_literal: true
 
 # REAL integration test that hits https://llms.berrion.garden/v1
-# Run with: unset AUTO_DOC_DISABLE_LLM && bundle exec ruby -I lib spec/auto_doc/llm/real_integration_spec.rb
+# Run with: unset AUTO_DOC_DISABLE_LLM && bundle exec ruby -I lib spec/scripts/real_integration_check.rb
 
 require "auto_doc"
 require "json"
-
-PASS = 0
-FAIL = 0
+require "tmpdir"
+require "fileutils"
 
 def assert(description, condition, detail = "")
   if condition
     puts "  ✅ #{description}"
-    PASS
+    true
   else
     puts "  ❌ #{description}#{detail.empty? ? '' : " — #{detail}"}"
-    FAIL
+    false
   end
 rescue => e
   puts "  ❌ #{description} — ERROR: #{e.message}"
-  FAIL
+  false
 end
 
 def section(title)
@@ -93,7 +92,16 @@ puts "  → Components: #{comps.inspect}" if comps
 # ── Test 5: SummaryGenerator with real LLM ─────────────────────
 section("SummaryGenerator — full pipeline with real LLM")
 
-config = AutoDoc::Config.load("/tmp")
+llm_test_dir = Dir.mktmpdir
+File.write(File.join(llm_test_dir, ".autodoc.yml"), <<~YAML)
+  llm:
+    provider: openai
+    endpoint: https://llms.berrion.garden/v1
+    api_key: autodoc
+    model: summarizer
+    timeout: 120
+YAML
+config = AutoDoc::Config.load(llm_test_dir)
 output = AutoDoc::Generator::SummaryGenerator.generate("lib", analyses, config)
 results << assert("SUMMARY.md includes SUMMARY header", output.include?("SUMMARY: lib"), "missing header")
 results << assert("SUMMARY.md purpose is LLM-generated (not static fallback)", !output.include?("Core library code"), "contains static fallback text")
@@ -129,5 +137,7 @@ total = results.size
 puts "\n#{'=' * 50}"
 puts "RESULTS: #{passed}/#{total} passed, #{failed}/#{total} failed"
 puts "#{'=' * 50}"
+
+FileUtils.remove_entry(llm_test_dir)
 
 exit(1) if failed > 0

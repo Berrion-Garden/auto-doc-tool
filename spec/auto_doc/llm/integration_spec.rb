@@ -29,7 +29,11 @@ RSpec.describe "LLM Integration: Client → Summarizer → Generator Output", :i
   end
 
   let(:project_dir) { Dir.mktmpdir }
-  after { FileUtils.remove_entry(project_dir) }
+  let(:nil_llm_project_dir) { Dir.mktmpdir }
+  after do
+    FileUtils.remove_entry(project_dir)
+    FileUtils.remove_entry(nil_llm_project_dir)
+  end
 
   # Config with LLM settings — makes Client.configured? return true
   let(:config) do
@@ -44,7 +48,7 @@ RSpec.describe "LLM Integration: Client → Summarizer → Generator Output", :i
   end
 
   # Config without LLM settings — makes Client.configured? return false
-  let(:no_llm_config) { AutoDoc::Config.load(Dir.mktmpdir) }
+  let(:nil_llm_config) { AutoDoc::Config.load(nil_llm_project_dir, { llm: { endpoint: nil, api_key: nil } }) }
 
   let(:http) { double("Net::HTTP") }
   let(:response) { double("Net::HTTPResponse") }
@@ -74,7 +78,7 @@ RSpec.describe "LLM Integration: Client → Summarizer → Generator Output", :i
     end
 
     it "returns nil when config has no LLM settings" do
-      client = AutoDoc::LLM::Client.from_config(no_llm_config)
+      client = AutoDoc::LLM::Client.from_config(nil_llm_config)
       expect(client.configured?).to be false
       result = client.chat([{ role: "user", content: "Hi" }])
       expect(result).to be_nil
@@ -130,7 +134,7 @@ RSpec.describe "LLM Integration: Client → Summarizer → Generator Output", :i
     end
 
     it "returns nil when client is not configured" do
-      unconfigured_client = AutoDoc::LLM::Client.from_config(no_llm_config)
+      unconfigured_client = AutoDoc::LLM::Client.from_config(nil_llm_config)
       result = AutoDoc::LLM::Summarizer.summarize_module("app", analyses, unconfigured_client)
       expect(result).to be_nil
     end
@@ -167,7 +171,7 @@ RSpec.describe "LLM Integration: Client → Summarizer → Generator Output", :i
     end
 
     it "falls back to static inference when no LLM config" do
-      result = AutoDoc::Generator::SummaryGenerator.generate(dir_name, analyses, no_llm_config)
+      result = AutoDoc::Generator::SummaryGenerator.generate(dir_name, analyses, nil_llm_config)
       expect(result).to include("Core library code")
       expect(result).to include("Modular library")
     end

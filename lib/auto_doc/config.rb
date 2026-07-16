@@ -47,8 +47,12 @@ module AutoDoc
     def initialize(path, overrides = {})
       @path = File.expand_path(path)
       file_config = read_file_config
+      @explicit_llm = file_config.key?(:llm)
       @config = deep_merge(DEFAULTS.dup, file_config)
-      @config = deep_merge(@config, overrides) unless (overrides || {}).empty?
+      unless overrides.empty?
+        @explicit_llm ||= overrides.key?(:llm)
+        @config = deep_merge(@config, overrides)
+      end
     end
 
     # Convenience accessors for nested config keys
@@ -113,7 +117,8 @@ module AutoDoc
     end
 
     def llm_config
-      (@config[:llm] || DEFAULTS[:llm])
+      return nil unless @explicit_llm
+      @config[:llm] || DEFAULTS[:llm]
     end
 
     private
