@@ -1,7 +1,7 @@
 {
   "project": "/home/kyle/Projects/auto-doc-tool/fixtures/sample_ruby_project",
   "project_path": "/home/kyle/Projects/auto-doc-tool/fixtures/sample_ruby_project",
-  "generated_at": "2026-07-15T21:58:07-07:00",
+  "generated_at": "2026-07-16T05:15:04+00:00",
   "overall_coverage": 75.0,
   "total_symbols": 4,
   "documented_symbols": 3,
@@ -10,7 +10,14 @@
   "undocumented": [
     "module_UndocumentedHelper"
   ],
-  "low_coverage": [],
+  "low_coverage": [
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/fixtures/sample_ruby_project/lib/undocumented_helper.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    }
+  ],
   "modules": {
     "user": {
       "file": "/home/kyle/Projects/auto-doc-tool/fixtures/sample_ruby_project/app/models/user.rb",
@@ -37,7 +44,14 @@
       "coverage_pct": 100.0
     }
   },
-  "failures": [],
-  "passed": true,
-  "min_coverage": 0
+  "failures": [
+    {
+      "file": "/home/kyle/Projects/auto-doc-tool/fixtures/sample_ruby_project/lib/undocumented_helper.rb",
+      "reason": "low_coverage",
+      "coverage_pct": 0.0,
+      "threshold": 80
+    }
+  ],
+  "passed": false,
+  "min_coverage": 80
 }
