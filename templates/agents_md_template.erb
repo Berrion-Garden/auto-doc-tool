@@ -24,14 +24,14 @@ _This directory contains:_ <%= purpose_summary || "developer to fill in" %>
 <% end %>
 
 ## Public API Surface
-| Symbol | Type | Documented | Line |
-|--------|------|------------|------|
+| Symbol | Type | Documented | Summary | Line |
+|--------|------|------------|---------|------|
 <% if public_symbols.any? %>
 <% public_symbols.each do |sym| %>
-| <%= sym[:name] %> | <%= sym[:type] %> | <%= sym[:has_doc?] ? "✅" : "❌" %> | <%= sym[:line] %> |
+| <%= sym[:name] %> | <%= sym[:type] %> | <%= (sym[:has_doc?] || sym[:llm_summary]) ? "✅" : "❌" %> | <%= sym[:llm_summary] || "—" %> | <%= sym[:line] %> |
 <% end %>
 <% else %>
-| _No public symbols found (v1 limitation: dynamic Ruby patterns not parsed)_ | — | — | — |
+| _No public symbols found (v1 limitation: dynamic Ruby patterns not parsed)_ | — | — | — | — |
 <% end %>
 
 ---

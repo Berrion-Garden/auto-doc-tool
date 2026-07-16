@@ -20,16 +20,18 @@ module AutoDoc
       # @param files [Array<Hash>] Array of file analysis records: {name:, path:, classes:[], imports:[]}
       # @param config [AutoDoc::Config, nil] Optional configuration object for LLM integration
       # @param output_path [String] Where to write AGENTS.md (default: ".autodoc/AGENTS.md")
+      # @param llm_summaries [Hash, nil] Optional pre-collected LLM summaries keyed by symbol name
       # @return [String] Generated markdown content
-      def self.generate(module_name, tree_text, files, config: nil, output_path: nil)
-        new(module_name, tree_text, files, config).generate(output_path)
+      def self.generate(module_name, tree_text, files, config: nil, output_path: nil, llm_summaries: nil)
+        new(module_name, tree_text, files, config, llm_summaries).generate(output_path)
       end
 
-      def initialize(module_name, tree_text, files, config = nil)
-        @module_name = module_name
-        @tree_text   = tree_text
-        @files       = files
-        @config      = config
+      def initialize(module_name, tree_text, files, config = nil, llm_summaries = nil)
+        @module_name   = module_name
+        @tree_text     = tree_text
+        @files         = files
+        @config        = config
+        @llm_summaries = llm_summaries
       end
 
       # Generates markdown and optionally writes to disk.
@@ -59,7 +61,7 @@ module AutoDoc
 
         # Derived variables for the template binding
         source_file_count = files.size
-        public_symbols    = build_public_symbols(files)
+        public_symbols    = build_public_symbols(files, @llm_summaries)
         public_symbol_count = public_symbols.size
         dependencies      = []
 
@@ -103,7 +105,7 @@ module AutoDoc
         analyses
       end
 
-      def build_public_symbols(files)
+      def build_public_symbols(files, llm_summaries = nil)
         return nil if files.nil?
         symbols = []
         files.each do |file_info|
@@ -112,10 +114,11 @@ module AutoDoc
             type_sym = defn[:type].to_s.downcase.to_sym
             next unless %i[class module method].include?(type_sym)
             symbols << {
-              name:     defn[:name],
-              type:     type_sym.to_s,
-              line:     defn[:line] || 0,
-              has_doc?: (defn[:has_doc?] == true)
+              name:        defn[:name],
+              type:        type_sym.to_s,
+              line:        defn[:line] || 0,
+              has_doc?:    (defn[:has_doc?] == true),
+              llm_summary: llm_summaries&.[](defn[:name].to_s) || defn[:llm_summary]
             }
           end
         end

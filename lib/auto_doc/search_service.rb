@@ -121,22 +121,70 @@ module AutoDoc
         }
       end
 
-      # Second pass: summary full-text match (independent of keyword overlap)
-      symbols.each do |entry|
-        summary = entry["summary"]
-        if summary.is_a?(String) && !summary.empty?
-          summary_down = summary.downcase
-          if search_words.any? { |w| summary_down.include?(w) }
-            results << {
-              file: ".docs/vectors.json",
-              score: 15,
-              match_type: "vector_summary_match",
-              line: 0,
-              context: entry["symbol"].to_s
-            }
+# Second pass: summary full-text match (independent of keyword overlap)
+        symbols.each do |entry|
+          summary = entry["summary"]
+          if summary.is_a?(String) && !summary.empty?
+            summary_down = summary.downcase
+            if search_words.any? { |w| summary_down.include?(w) }
+              results << {
+                file: ".docs/vectors.json",
+                score: 15,
+                match_type: "vector_summary_match",
+                line: 0,
+                context: entry["symbol"].to_s
+              }
+            end
           end
         end
-      end
+
+        # Third pass: llm_summary full-text match (higher score than regular summary)
+        symbols.each do |entry|
+          llm_summary = entry["llm_summary"]
+          if llm_summary.is_a?(String) && !llm_summary.empty?
+            llm_summary_down = llm_summary.downcase
+            if search_words.any? { |w| llm_summary_down.include?(w) }
+              results << {
+                file: ".docs/vectors.json",
+                score: 25,
+                match_type: "vector_llm_summary_match",
+                line: 0,
+                context: entry["symbol"].to_s
+              }
+            end
+          end
+        end
+
+       # Fourth pass: extract keywords from llm_summary and add to keyword search
+       symbols.each do |entry|
+         llm_summary = entry["llm_summary"]
+         next unless llm_summary.is_a?(String) && !llm_summary.empty?
+
+         llm_keywords = llm_summary.split(/\s+/).reject(&:empty?).map(&:downcase)
+         keywords = entry["keywords"]
+         next unless keywords.is_a?(Array)
+
+         # Merge llm keywords into the keyword pool
+         keyword_words = keywords.map(&:downcase) | llm_keywords
+         overlap = search_words.count { |w| keyword_words.include?(w) }
+
+         next if overlap < 1
+
+         # Only emit if llm_summary keywords increased overlap
+         original_overlap = search_words.count { |w| keywords.map(&:downcase).include?(w) }
+         next unless overlap > original_overlap
+
+         score = overlap >= 3 ? 60 : 40
+         match_type = overlap >= 3 ? "vector_llm_keyword_high" : "vector_llm_keyword_low"
+
+         results << {
+           file: ".docs/vectors.json",
+           score: score,
+           match_type: match_type,
+           line: 0,
+           context: entry["symbol"].to_s
+         }
+       end
 
       results
     end

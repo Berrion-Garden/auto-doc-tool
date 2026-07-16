@@ -38,10 +38,10 @@ RSpec.describe AutoDoc::Transformer::GraphDataBuilder do
     it "converts imports into edges with from, to, and type keys" do
       _, edges = builder.build(analyses)
 
+      # active_record and json are filtered by STD_LIBRARY_PATTERN (lowercase stdlib/gem names)
+      # Only Enumerable remains (starts with uppercase)
       expect(edges).to match_array([
-        { from: "user.rb", to: "active_record", type: "require" },
-        { from: "user.rb", to: "Enumerable", type: "include" },
-        { from: "math_utils.rb", to: "json", type: "require" }
+        { from: "user.rb", to: "Enumerable", type: "include" }
       ])
     end
 
@@ -92,8 +92,8 @@ RSpec.describe AutoDoc::Transformer::GraphDataBuilder do
       expect(result).to eq([[], []])
     end
 
-    # ── Test 8: definitions missing type field are skipped ──────────────
-    it "skips definitions without a type field" do
+    # ── Test 8: definitions missing type field are still extracted (only name is required) ──
+    it "extracts definitions even when type field is missing" do
       analyses = {
         "no_type.rb" => {
           definitions: [
@@ -103,7 +103,7 @@ RSpec.describe AutoDoc::Transformer::GraphDataBuilder do
         }
       }
       nodes, = builder.build(analyses)
-      expect(nodes).to contain_exactly("ValidClass")
+      expect(nodes).to contain_exactly("SkippedOne", "ValidClass")
     end
 
     # ── Test 9: string keys instead of symbol keys ──────────────────────
@@ -173,13 +173,13 @@ RSpec.describe AutoDoc::Transformer::GraphDataBuilder do
       analyses = {
         "app.rb" => {
           "imports" => [
-            { "path" => "json", "type" => "require" }
+            { "path" => "SomeLibrary", "type" => "require" }
           ]
         }
       }
       _, edges = builder.build(analyses)
       expect(edges).to match_array([
-        { from: "app.rb", to: "json", type: "require" }
+        { from: "app.rb", to: "SomeLibrary", type: "require" }
       ])
     end
 
@@ -191,14 +191,14 @@ RSpec.describe AutoDoc::Transformer::GraphDataBuilder do
             { "name" => "LibClass", "type" => "class" }
           ],
           "imports" => [
-            { "path" => "logger", "type" => "require" }
+            { "path" => "SomeModule", "type" => "require" }
           ]
         }
       }
       nodes, edges = builder.build(analyses)
       expect(nodes).to contain_exactly("LibClass")
       expect(edges).to match_array([
-        { from: "lib.rb", to: "logger", type: "require" }
+        { from: "lib.rb", to: "SomeModule", type: "require" }
       ])
     end
   end

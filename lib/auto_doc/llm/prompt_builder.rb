@@ -148,7 +148,7 @@ module AutoDoc
           lines << "## Project: #{project_name}"
           lines << ""
 
-          extract_metadata_lines(analyses, lines)
+          extract_metadata_lines_with_imports(analyses, lines)
 
           [{ role: "user", content: lines.join("\n") }]
         end
@@ -170,7 +170,7 @@ module AutoDoc
 
             lines << "## Module Root: #{root}"
             lines << ""
-            extract_metadata_lines(filtered, lines)
+            extract_metadata_lines_with_imports(filtered, lines)
           end
 
           [{ role: "user", content: lines.join("\n") }]
@@ -317,6 +317,36 @@ module AutoDoc
                 lines << "  - Method: `#{defn[:name]}`#{' (documented)' if defn[:has_doc?]}"
               when "constant"
                 lines << "  - Constant: `#{defn[:name]}`"
+              end
+            end
+            lines << ""
+          end
+        end
+
+        # Like extract_metadata_lines but also includes import/require data
+        # for each file. Used by system_context and containers prompts.
+        def extract_metadata_lines_with_imports(analyses, lines)
+          analyses.each do |file_path, analysis|
+            lines << "**File:** #{file_path}"
+            definitions = analysis[:definitions] || []
+            definitions.each do |defn|
+              case defn[:type].to_s
+              when "class"
+                lines << "  - Class: `#{defn[:name]}`#{' (documented)' if defn[:has_doc?]}"
+              when "module"
+                lines << "  - Module: `#{defn[:name]}`#{' (documented)' if defn[:has_doc?]}"
+              when "method"
+                lines << "  - Method: `#{defn[:name]}`#{' (documented)' if defn[:has_doc?]}"
+              when "constant"
+                lines << "  - Constant: `#{defn[:name]}`"
+              end
+            end
+            imports = analysis[:imports] || analysis["imports"] || []
+            if imports.any?
+              imports.each do |imp|
+                imp_path = imp[:path] || imp["path"]
+                imp_type = imp[:type] || imp["type"]
+                lines << "  - Import: `#{imp_path}` (#{imp_type})" if imp_path
               end
             end
             lines << ""
