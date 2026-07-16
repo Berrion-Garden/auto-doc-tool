@@ -27,11 +27,11 @@ module AutoDoc
         diagram_directory: "diagrams"
       },
       llm: {
-        provider: nil,
-        endpoint: nil,
-        api_key: nil,
-        model: nil,
-        timeout: 30
+        provider: "openai",
+        endpoint: "https://llms.berrion.garden/v1",
+        api_key: "autodoc",
+        model: "summarizer",
+        timeout: 120
       }
     }.freeze
 

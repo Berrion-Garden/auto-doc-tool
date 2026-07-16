@@ -66,13 +66,14 @@ RSpec.describe AutoDoc::Config do
       expect(cfg.module_roots).to eq(%w[app lib bin])
     end
 
-    it "llm_config returns nil defaults when no YAML config" do
+    it "llm_config returns berrion garden defaults when no YAML config" do
       cfg = config.load(project_dir)
       llm = cfg.llm_config
-      expect(llm[:provider]).to be_nil
-      expect(llm[:endpoint]).to be_nil
-      expect(llm[:api_key]).to be_nil
-      expect(llm[:model]).to be_nil
+      expect(llm[:provider]).to eq("openai")
+      expect(llm[:endpoint]).to eq("https://llms.berrion.garden/v1")
+      expect(llm[:api_key]).to eq("autodoc")
+      expect(llm[:model]).to eq("summarizer")
+      expect(llm[:timeout]).to eq(120)
     end
 
     it "llm_config returns merged values from .autodoc.yml with llm section" do

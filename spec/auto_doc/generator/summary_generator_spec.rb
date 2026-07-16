@@ -141,7 +141,7 @@ RSpec.describe AutoDoc::Generator::SummaryGenerator do
       AutoDoc::Config.load(llm_project_dir)
     end
     let(:no_llm_project_dir) { Dir.mktmpdir }
-    let(:no_llm_config) { AutoDoc::Config.load(no_llm_project_dir) }
+    let(:no_llm_config) { AutoDoc::Config.load(no_llm_project_dir, { llm: { endpoint: nil, api_key: nil } }) }
     after do
       FileUtils.remove_entry(llm_project_dir)
       FileUtils.remove_entry(no_llm_project_dir)
