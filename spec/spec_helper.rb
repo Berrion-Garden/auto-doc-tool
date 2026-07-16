@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+ENV["AUTO_DOC_DISABLE_LLM"] = "true"
+
 require "auto_doc"
 require "rack/test"
 

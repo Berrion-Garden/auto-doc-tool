@@ -62,6 +62,19 @@ RSpec.describe AutoDoc::Generator::AgentsMdGenerator do
   end
 
   describe "LLM integration" do
+    before do
+      @original_disable_llm = ENV["AUTO_DOC_DISABLE_LLM"]
+      ENV.delete("AUTO_DOC_DISABLE_LLM")
+    end
+
+    after do
+      if @original_disable_llm
+        ENV["AUTO_DOC_DISABLE_LLM"] = @original_disable_llm
+      else
+        ENV.delete("AUTO_DOC_DISABLE_LLM")
+      end
+    end
+
     let(:llm_project_dir) { Dir.mktmpdir }
     let(:llm_config) do
       File.write(File.join(llm_project_dir, ".autodoc.yml"), <<~YAML)

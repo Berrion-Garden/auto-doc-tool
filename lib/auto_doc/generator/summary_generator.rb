@@ -93,6 +93,7 @@ module AutoDoc
       end
 
       def build_llm_client
+        return nil if ENV["AUTO_DOC_DISABLE_LLM"]
         return nil unless @config.respond_to?(:llm_config)
         cfg = @config.llm_config
         return nil unless cfg
