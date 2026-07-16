@@ -249,49 +249,9 @@ RSpec.describe AutoDoc::Generator::ArchitectureGenerator do
     end
   end
 
-  describe "#parse_llm_modules" do
-    subject(:instance) { described_class.new("test", [], [], [], {}) }
-
-    it "parses **Name** - Description format" do
-      result = instance.send(:parse_llm_modules, "- **IngestService** - Handles data ingestion")
-      expect(result).to eq([{ name: "IngestService", responsibility: "Handles data ingestion" }])
-    end
-
-    it "parses Name: Description format" do
-      result = instance.send(:parse_llm_modules, "- IngestService: Handles data ingestion")
-      expect(result).to eq([{ name: "IngestService", responsibility: "Handles data ingestion" }])
-    end
-
-    it "returns empty array for nil input" do
-      expect(instance.send(:parse_llm_modules, nil)).to eq([])
-    end
-
-    it "returns empty array for empty string" do
-      expect(instance.send(:parse_llm_modules, "")).to eq([])
-    end
-  end
-
-  describe "#parse_llm_data_flows" do
-    subject(:instance) { described_class.new("test", [], [], [], {}) }
-
-    it "parses From -> To: Description format" do
-      result = instance.send(:parse_llm_data_flows, "- IngestService -> ProcessPipeline: Raw data flows")
-      expect(result).to eq([{ from: "IngestService", to: "ProcessPipeline", description: "Raw data flows" }])
-    end
-
-    it "parses From → To: Description format (unicode arrow)" do
-      result = instance.send(:parse_llm_data_flows, "- IngestService → ProcessPipeline: Raw data flows")
-      expect(result).to eq([{ from: "IngestService", to: "ProcessPipeline", description: "Raw data flows" }])
-    end
-
-    it "returns empty array for nil input" do
-      expect(instance.send(:parse_llm_data_flows, nil)).to eq([])
-    end
-
-    it "returns empty array for empty string" do
-      expect(instance.send(:parse_llm_data_flows, "")).to eq([])
-    end
-  end
+  # Parsing logic (parse_llm_modules, parse_llm_data_flows) has moved to
+  # AutoDoc::LLM::ResponseParser — tested in response_parser_spec.rb.
+  # LLM integration tests above verify the delegation works end-to-end.
 
   describe "#generate" do
     it "works with instance as well" do

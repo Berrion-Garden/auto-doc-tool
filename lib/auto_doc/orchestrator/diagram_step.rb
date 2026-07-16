@@ -66,7 +66,13 @@ module AutoDoc
 
         # C4 context diagram (always)
         c4_context_path = File.join(diagrams_dir, "c4_context.mmd")
-        external_systems = [
+        client = AutoDoc::LLM::Client.build_if_configured(config)
+        external_systems = nil
+        if client
+          llm_systems = AutoDoc::LLM::Summarizer.summarize_system_context(project_name, analyses, client)
+          external_systems = llm_systems if llm_systems.is_a?(Array)
+        end
+        external_systems ||= [
           { name: "Developer", interaction: "Writes code and runs documentation commands" },
           { name: "File System", interaction: "Reads/writes documentation files" },
           { name: "Git", interaction: "Version control integration for diff and orphans" }
@@ -78,7 +84,17 @@ module AutoDoc
 
         # C4 container diagram (always)
         c4_container_path = File.join(diagrams_dir, "c4_container.mmd")
-        module_info = module_roots.map do |root|
+        module_info = nil
+        if client
+          llm_containers = AutoDoc::LLM::Summarizer.summarize_containers(analyses, module_roots, client)
+          if llm_containers.is_a?(Hash)
+            module_info = module_roots.map do |root|
+              name = File.basename(root)
+              { name: name, description: llm_containers[name] || "#{name} module" }
+            end
+          end
+        end
+        module_info ||= module_roots.map do |root|
           { name: File.basename(root), description: "#{File.basename(root)} module" }
         end
         container_data_flows = AutoDoc::Transformer::ContainerDataFlowBuilder.build(analyses, module_roots)

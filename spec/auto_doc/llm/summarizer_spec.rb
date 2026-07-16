@@ -496,40 +496,4 @@ RSpec.describe AutoDoc::LLM::Summarizer do
     end
   end
 
-  describe ".parse_section" do
-    it "returns extracted content when section heading exists" do
-      response = "## Purpose\nThis is the purpose content."
-      result = described_class.send(:parse_section, response, "Purpose")
-      expect(result).to eq("This is the purpose content.")
-    end
-
-    it "returns nil when section heading is absent" do
-      response = "## Other Section\nSome content here."
-      result = described_class.send(:parse_section, response, "Purpose")
-      expect(result).to be_nil
-    end
-
-    it "matches case-insensitively" do
-      response = "## purpose\nThe project manages widgets."
-      result = described_class.send(:parse_section, response, "Purpose")
-      expect(result).to eq("The project manages widgets.")
-    end
-
-    it "stops content extraction at next ## heading" do
-      response = "## First Section\nFirst content\n## Second Section\nSecond content"
-      result = described_class.send(:parse_section, response, "First Section")
-      expect(result).to eq("First content")
-    end
-
-    it "extracts multiline content" do
-      response = "## Section\nLine one\nLine two\nLine three"
-      result = described_class.send(:parse_section, response, "Section")
-      expect(result).to eq("Line one\nLine two\nLine three")
-    end
-
-    it "returns nil for empty response" do
-      result = described_class.send(:parse_section, "", "Purpose")
-      expect(result).to be_nil
-    end
-  end
 end

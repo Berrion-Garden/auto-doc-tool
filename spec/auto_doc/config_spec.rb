@@ -158,5 +158,32 @@ RSpec.describe AutoDoc::Config do
       expect(cfg.generate_dag?).to be false
       expect(cfg.diagram_directory).to eq("graphs")
     end
+
+    describe "#llm_primary?" do
+      it "returns false by default" do
+        cfg = config.load(project_dir)
+        expect(cfg.llm_primary?).to be false
+      end
+
+      it "returns true when configured with primary: true" do
+        File.write(File.join(project_dir, ".autodoc.yml"), <<~YAML)
+          llm:
+            primary: true
+        YAML
+
+        cfg = config.load(project_dir)
+        expect(cfg.llm_primary?).to be true
+      end
+
+      it "returns false when primary is explicitly false" do
+        File.write(File.join(project_dir, ".autodoc.yml"), <<~YAML)
+          llm:
+            primary: false
+        YAML
+
+        cfg = config.load(project_dir)
+        expect(cfg.llm_primary?).to be false
+      end
+    end
   end
 end

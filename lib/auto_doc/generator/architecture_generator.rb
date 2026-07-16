@@ -77,8 +77,8 @@ module AutoDoc
             if summary.is_a?(Hash)
               llm_overview = summary[:purpose] if summary[:purpose] && !summary[:purpose].empty?
               llm_style    = summary[:style] if summary[:style] && !summary[:style].empty?
-              llm_modules  = parse_llm_modules(summary[:modules])
-              llm_data_flows = parse_llm_data_flows(summary[:data_flow])
+              llm_modules  = AutoDoc::LLM::ResponseParser.parse_llm_modules(summary[:modules])
+              llm_data_flows = AutoDoc::LLM::ResponseParser.parse_llm_data_flows(summary[:data_flow])
             end
           end
         end
@@ -127,54 +127,7 @@ module AutoDoc
         end
       end
 
-      # Parses LLM markdown bullet list for modules.
-      # Supports patterns:
-      #   - **Name** - Description
-      #   - Name: Description
-      #   * Name: Description
-      # @param text [String, nil] Markdown bullet list from LLM
-      # @return [Array<Hash>] Array of {name:, responsibility:}
-      def parse_llm_modules(text)
-        return [] if text.nil? || text.empty?
 
-        text.each_line.filter_map do |line|
-          stripped = line.strip
-          next if stripped.empty?
-
-          # Try **Name** - Description first
-          match = stripped.match(/^[\s]*[-*]\s+\*\*(.+?)\*\*\s*[-–—]\s*(.+)$/)
-          if match
-            { name: match[1].strip, responsibility: match[2].strip }
-          else
-            # Try Name: Description
-            match = stripped.match(/^[\s]*[-*]\s+(.+?):\s+(.+)$/)
-            if match
-              { name: match[1].strip, responsibility: match[2].strip }
-            end
-          end
-        end
-      end
-
-      # Parses LLM markdown bullet list for data flows.
-      # Supports patterns:
-      #   - From -> To: Description
-      #   - From → To: Description
-      # @param text [String, nil] Markdown bullet list from LLM
-      # @return [Array<Hash>] Array of {from:, to:, description:}
-      def parse_llm_data_flows(text)
-        return [] if text.nil? || text.empty?
-
-        text.each_line.filter_map do |line|
-          stripped = line.strip
-          next if stripped.empty?
-
-          # Match: - From -> To: Description  or  - From → To: Description
-          match = stripped.match(/^[\s]*[-*]\s+(.+?)\s*(?:->|→)\s*(.+?):\s+(.+)$/)
-          if match
-            { from: match[1].strip, to: match[2].strip, description: match[3].strip }
-          end
-        end
-      end
     end
   end
 end

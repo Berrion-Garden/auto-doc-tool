@@ -31,7 +31,8 @@ module AutoDoc
         endpoint: "https://llms.berrion.garden/v1",
         api_key: "autodoc",
         model: "summarizer",
-        timeout: 120
+        timeout: 120,
+        primary: false
       }
     }.freeze
 
@@ -114,6 +115,10 @@ module AutoDoc
 
     def llm_config
       @config[:llm] || DEFAULTS[:llm]
+    end
+
+    def llm_primary?
+      @config.dig(:llm, :primary) == true
     end
 
     private
