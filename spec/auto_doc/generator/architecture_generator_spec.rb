@@ -171,7 +171,7 @@ RSpec.describe AutoDoc::Generator::ArchitectureGenerator do
       after { FileUtils.remove_entry(tmpdir) }
 
       let(:auto_doc_config_obj) do
-        AutoDoc::Config.load(tmpdir, llm: { endpoint: "https://test", api_key: "test", model: "test-model" })
+        AutoDoc::Config.load(tmpdir, llm: { endpoint: "https://test", api_key: "test", model: "test-model", primary: false })
       end
 
       context "when LLM returns structured data with primary mode" do

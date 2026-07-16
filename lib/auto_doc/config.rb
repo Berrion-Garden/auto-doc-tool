@@ -32,7 +32,7 @@ module AutoDoc
         api_key: "autodoc",
         model: "summarizer",
         timeout: 120,
-        primary: false
+        primary: true
       }
     }.freeze
 

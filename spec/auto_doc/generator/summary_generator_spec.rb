@@ -120,9 +120,9 @@ RSpec.describe AutoDoc::Generator::SummaryGenerator do
     after { FileUtils.remove_entry(tmpdir) }
 
     let(:llm_config) do
-      AutoDoc::Config.load(tmpdir, llm: { endpoint: "https://test", api_key: "test", model: "gpt-4o" })
+      AutoDoc::Config.load(tmpdir, llm: { endpoint: "https://test", api_key: "test", model: "gpt-4o", primary: false })
     end
-    let(:no_llm_config) { AutoDoc::Config.load(tmpdir) }
+    let(:no_llm_config) { AutoDoc::Config.load(tmpdir, llm: { primary: false, endpoint: nil, api_key: nil }) }
 
     it "uses LLM when client is configured with primary mode" do
       mock_llm_client({

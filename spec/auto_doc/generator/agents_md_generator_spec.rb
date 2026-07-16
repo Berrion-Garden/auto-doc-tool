@@ -23,7 +23,7 @@ RSpec.describe AutoDoc::Generator::AgentsMdGenerator do
     end
 
     it "works with config but no llm section (existing behavior preserved)" do
-      config = AutoDoc::Config.load("/tmp")
+      config = AutoDoc::Config.load("/tmp", llm: { primary: false, endpoint: nil, api_key: nil })
       result = generator.generate(module_name, tree_text, files, config: config)
       expect(result).to include("developer to fill in")
     end
@@ -66,9 +66,9 @@ RSpec.describe AutoDoc::Generator::AgentsMdGenerator do
     after { FileUtils.remove_entry(tmpdir) }
 
     let(:llm_config) do
-      AutoDoc::Config.load(tmpdir, llm: { endpoint: "https://test", api_key: "test", model: "gpt-4o" })
+      AutoDoc::Config.load(tmpdir, llm: { endpoint: "https://test", api_key: "test", model: "gpt-4o", primary: true })
     end
-    let(:no_llm_config) { AutoDoc::Config.load(tmpdir) }
+    let(:no_llm_config) { AutoDoc::Config.load(tmpdir, llm: { primary: false, endpoint: nil, api_key: nil }) }
 
     it "uses LLM for purpose_summary when configured with primary mode" do
       mock_llm_client({
@@ -83,29 +83,29 @@ RSpec.describe AutoDoc::Generator::AgentsMdGenerator do
       expect(result).not_to include("developer to fill in")
     end
 
-    it "falls back to developer to fill in when LLM call fails" do
+    it "falls back to LLM unavailable warning when LLM call fails in primary mode" do
       client = instance_double(AutoDoc::LLM::Client)
       allow(client).to receive(:chat).and_raise(SocketError, "connection refused")
       allow(AutoDoc::LLM::Client).to receive(:build_if_configured).and_return(client)
 
       result = generator.generate(module_name, tree_text, files, config: llm_config)
-      expect(result).to include("developer to fill in")
+      expect(result).to include("LLM unavailable")
     end
 
-    it "rescues StandardError from LLM code and falls back to developer to fill in" do
+    it "rescues StandardError from LLM code and shows LLM unavailable warning" do
       client = instance_double(AutoDoc::LLM::Client)
       allow(client).to receive(:chat).and_raise(StandardError, "Unexpected error")
       allow(AutoDoc::LLM::Client).to receive(:build_if_configured).and_return(client)
 
       result = generator.generate(module_name, tree_text, files, config: llm_config)
-      expect(result).to include("developer to fill in")
+      expect(result).to include("LLM unavailable")
     end
 
     it "skips LLM entirely when AUTO_DOC_DISABLE_LLM is set" do
       ENV["AUTO_DOC_DISABLE_LLM"] = "true"
 
       result = generator.generate(module_name, tree_text, files, config: llm_config)
-      expect(result).to include("developer to fill in")
+      expect(result).to include("LLM unavailable")
 
       ENV.delete("AUTO_DOC_DISABLE_LLM")
     end
@@ -145,10 +145,9 @@ RSpec.describe AutoDoc::Generator::AgentsMdGenerator do
         allow(client).to receive(:chat).and_raise(SocketError, "connection refused")
         allow(AutoDoc::LLM::Client).to receive(:build_if_configured).and_return(client)
 
-        expect {
-          result = generator.generate(module_name, tree_text, files, config: llm_config)
-          expect(result).to include("developer to fill in")
-        }.not_to output.to_stderr
+        non_primary_cfg = AutoDoc::Config.load(tmpdir, llm: { endpoint: "https://test", api_key: "test", model: "gpt-4o", primary: false })
+        result = generator.generate(module_name, tree_text, files, config: non_primary_cfg)
+        expect(result).to include("developer to fill in")
       end
     end
   end

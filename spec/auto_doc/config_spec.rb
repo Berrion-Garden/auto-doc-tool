@@ -160,9 +160,9 @@ RSpec.describe AutoDoc::Config do
     end
 
     describe "#llm_primary?" do
-      it "returns false by default" do
+      it "returns true by default (LLM is primary driver)" do
         cfg = config.load(project_dir)
-        expect(cfg.llm_primary?).to be false
+        expect(cfg.llm_primary?).to be true
       end
 
       it "returns true when configured with primary: true" do
