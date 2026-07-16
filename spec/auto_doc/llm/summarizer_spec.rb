@@ -415,6 +415,40 @@ RSpec.describe AutoDoc::LLM::Summarizer do
     end
   end
 
+  describe ".summarize_symbols" do
+    context "when client returns nil" do
+      before do
+        allow(client).to receive(:chat).and_return(nil)
+      end
+
+      it "returns nil" do
+        result = summarizer.summarize_symbols("lib", sample_analyses, client)
+        expect(result).to be_nil
+      end
+
+      it "logs a warning to stderr" do
+        expect($stderr).to receive(:puts).with(/Summarizer.*nil.*lib/)
+        summarizer.summarize_symbols("lib", sample_analyses, client)
+      end
+    end
+
+    context "when client returns a response" do
+      before do
+        allow(client).to receive(:chat).and_return("Foo: handles foo")
+      end
+
+      it "returns the response" do
+        result = summarizer.summarize_symbols("lib", sample_analyses, client)
+        expect(result).to eq("Foo: handles foo")
+      end
+
+      it "does not log a warning" do
+        expect($stderr).not_to receive(:puts)
+        summarizer.summarize_symbols("lib", sample_analyses, client)
+      end
+    end
+  end
+
   describe ".summarize_containers" do
     let(:module_roots) { ["lib"] }
 

@@ -232,6 +232,18 @@ RSpec.describe AutoDoc::LLM::ResponseParser do
       expect(result).to eq({ "class_Foo" => "does X", "module_Bar" => "does Y" })
     end
 
+    it "parses numbered-list format" do
+      response = "1. Foo: does X\n2. Bar: does Y"
+      result = described_class.parse_symbol_summaries(response, symbol_types)
+      expect(result).to eq({ "class_Foo" => "does X", "module_Bar" => "does Y" })
+    end
+
+    it "parses numbered-list format with leading whitespace" do
+      response = "  1. Foo: does X\n  2. Bar: does Y"
+      result = described_class.parse_symbol_summaries(response, symbol_types)
+      expect(result).to eq({ "class_Foo" => "does X", "module_Bar" => "does Y" })
+    end
+
     it "returns empty hash for empty string" do
       expect(described_class.parse_symbol_summaries("", symbol_types)).to eq({})
     end
@@ -244,6 +256,33 @@ RSpec.describe AutoDoc::LLM::ResponseParser do
       response = "Foo::Bar: does the thing"
       result = described_class.parse_symbol_summaries(response, symbol_types)
       expect(result).to eq({ "class_Foo_Bar" => "does the thing" })
+    end
+
+    it "parses numbered :: symbol names" do
+      response = "1. Foo::Bar: does the thing"
+      result = described_class.parse_symbol_summaries(response, symbol_types)
+      expect(result).to eq({ "class_Foo_Bar" => "does the thing" })
+    end
+
+    it "handles single-character symbol names" do
+      single_char_types = { "X" => "class" }
+      response = "X: a single class"
+      result = described_class.parse_symbol_summaries(response, single_char_types)
+      expect(result).to eq({ "class_X" => "a single class" })
+    end
+
+    it "handles single-character numbered symbol names" do
+      single_char_types = { "X" => "class" }
+      response = "1. X: a single class"
+      result = described_class.parse_symbol_summaries(response, single_char_types)
+      expect(result).to eq({ "class_X" => "a single class" })
+    end
+
+    it "handles symbol names with colons and dashes" do
+      complex_types = { "Foo-Bar" => "class", "Foo::Bar" => "module" }
+      response = "1. Foo-Bar: first\n2. Foo::Bar: second"
+      result = described_class.parse_symbol_summaries(response, complex_types)
+      expect(result).to eq({ "class_Foo-Bar" => "first", "module_Foo_Bar" => "second" })
     end
   end
 end

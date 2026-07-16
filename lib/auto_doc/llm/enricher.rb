@@ -41,11 +41,7 @@ module AutoDoc
             next if root_analyses.empty?
 
             response = Summarizer.summarize_symbols(root, root_analyses, client)
-
-            if response.nil?
-              $stderr.puts "[AutoDoc] Enricher: LLM returned nil for module '#{root}'"
-              next
-            end
+            next if response.nil?
 
             parsed = ResponseParser.parse_symbol_summaries(response, symbol_types)
             next if parsed.empty?

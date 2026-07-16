@@ -291,13 +291,13 @@ module AutoDoc
           lines << ""
           lines << "Below is the metadata for each file and symbol in this module."
           lines << ""
-          lines << "For each symbol (class, module, method, constant), provide a one-line summary describing what it does."
-          lines << "Format your response EXACTLY like this, one line per symbol:"
-          lines << "  symbol_name: one-line summary of what this symbol does"
+          lines << "For EACH symbol below, provide a UNIQUE one-sentence description of what it specifically does. "
+          lines << "Two symbols MUST NOT have the same description."
+          lines << "Format EXACTLY: SymbolName: Unique description."
           lines << "Do NOT include any other text, headings, or commentary."
           lines << ""
 
-          extract_metadata_lines(analyses, lines)
+          extract_numbered_metadata_lines(analyses, lines)
 
           [{ role: "user", content: lines.join("\n") }]
         end
@@ -318,6 +318,22 @@ module AutoDoc
               when "constant"
                 lines << "  - Constant: `#{defn[:name]}`"
               end
+            end
+            lines << ""
+          end
+        end
+
+        # Like extract_metadata_lines but uses a single numbered list for all symbols
+        # across all files, making it easier for the LLM to iterate through each one.
+        def extract_numbered_metadata_lines(analyses, lines)
+          num = 0
+          analyses.each do |file_path, analysis|
+            lines << "**File:** #{file_path}"
+            definitions = analysis[:definitions] || []
+            definitions.each do |defn|
+              num += 1
+              type_label = defn[:type].to_s.capitalize
+              lines << "  #{num}. #{type_label}: #{defn[:name]}#{' (documented)' if defn[:has_doc?]}"
             end
             lines << ""
           end

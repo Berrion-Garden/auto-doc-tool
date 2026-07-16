@@ -136,6 +136,7 @@ module AutoDoc
         end
 
         # Parses symbol summaries from LLM response in "symbol_name: summary" format.
+        # Also supports numbered-list format: "1. SymbolName: description".
         #
         # @param response [String] Raw LLM response with "name: summary" lines
         # @param symbol_types [Hash] Map of symbol_name => type_string (e.g. {"Foo" => "class"})
@@ -144,10 +145,8 @@ module AutoDoc
           return {} if response.nil? || response.empty?
           result = {}
           response.each_line do |line|
-            match = line.match(/^\s*(\w[\w:]*\w)\s*:\s*(.+)$/)
-            next unless match
-            symbol_name = match[1]
-            summary_text = match[2].strip
+            symbol_name, summary_text = extract_symbol_summary(line)
+            next unless symbol_name && summary_text
             type = symbol_types[symbol_name]
             next unless type
             entry_id = "#{type}_#{symbol_name.gsub("::", "_")}"
@@ -206,6 +205,29 @@ module AutoDoc
         end
 
         private
+
+        # Extracts a symbol name and summary from a single line of LLM output.
+        # Supports two formats:
+        #   1. Numbered-list: "1. SymbolName: description"
+        #   2. Plain: "SymbolName: description"
+        #
+        # @param line [String] A single line from the LLM response
+        # @return [Array<String, String>, nil] [symbol_name, summary_text] or nil if no match
+        def extract_symbol_summary(line)
+          # Try numbered-list format first: "1. SymbolName: description"
+          numbered_match = line.match(/^\s*\d+\.\s*(\S[\S:]*\S|\S)\s*:\s*(.+)$/)
+          if numbered_match
+            return [numbered_match[1], numbered_match[2].strip]
+          end
+
+          # Try plain format: "SymbolName: description"
+          plain_match = line.match(/^\s*(\S[\S:]*\S|\S)\s*:\s*(.+)$/)
+          if plain_match
+            return [plain_match[1], plain_match[2].strip]
+          end
+
+          nil
+        end
 
         # Extracts content under a named markdown section heading from an LLM response.
         # Looks for `## section_name` (case-insensitive) and returns content until

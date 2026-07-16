@@ -97,7 +97,13 @@ module AutoDoc
         # @return [String, nil]       Raw LLM response with symbol_name: summary lines, or nil on failure
         def summarize_symbols(module_name, analyses, client)
           messages = PromptBuilder.build(:symbol_summaries, module_name, analyses)
-          client.chat(messages)
+          response = client.chat(messages)
+
+          if response.nil?
+            $stderr.puts "[AutoDoc] Summarizer: LLM returned nil for module '#{module_name}'"
+          end
+
+          response
         end
 
         # Returns container/module descriptions keyed by module root name.

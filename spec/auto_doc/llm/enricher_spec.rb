@@ -166,7 +166,7 @@ RSpec.describe AutoDoc::LLM::Enricher do
       end
 
       it "logs a warning for the nil module and continues processing other modules" do
-        expect($stderr).to receive(:puts).with(/Enricher.*nil.*app/)
+        expect($stderr).to receive(:puts).with(/Summarizer.*nil.*app/)
 
         result = enricher.enrich_analyses(analyses, config, base_dir: "/project")
 

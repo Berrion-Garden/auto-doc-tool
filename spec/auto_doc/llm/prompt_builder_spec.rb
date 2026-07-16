@@ -187,5 +187,41 @@ RSpec.describe AutoDoc::LLM::PromptBuilder do
         expect(content).not_to include("vendor/gem.rb")
       end
     end
+
+    context "with :symbol_summaries type" do
+      it "includes uniqueness requirement in the prompt" do
+        messages = described_class.build(:symbol_summaries, "lib", sample_analyses)
+        content = messages.first[:content]
+        expect(content).to include("UNIQUE")
+        expect(content).to match(/MUST NOT have the same description/i)
+      end
+
+      it "uses numbered list format for symbol metadata" do
+        messages = described_class.build(:symbol_summaries, "lib", sample_analyses)
+        content = messages.first[:content]
+        expect(content).to include("1.")
+        expect(content).to include("2.")
+        # Should NOT use bullet points for numbered metadata
+        expect(content).not_to match(/^\s*[-*]\s+/)
+      end
+
+      it "continues numbering across files" do
+        messages = described_class.build(:symbol_summaries, "lib", sample_analyses)
+        content = messages.first[:content]
+        # sample_analyses has 3 definitions (2 in foo.rb, 1 in baz.rb)
+        # Numbering should be continuous: 1, 2, 3
+        expect(content).to include("1.")
+        expect(content).to include("2.")
+        expect(content).to include("3.")
+      end
+
+      it "includes type labels in numbered list" do
+        messages = described_class.build(:symbol_summaries, "lib", sample_analyses)
+        content = messages.first[:content]
+        expect(content).to match(/\d+\. Class:.*Foo/)
+        expect(content).to match(/\d+\. Method:.*bar/)
+        expect(content).to match(/\d+\. Module:.*Baz/)
+      end
+    end
   end
 end
