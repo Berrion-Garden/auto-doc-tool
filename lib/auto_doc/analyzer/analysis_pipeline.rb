@@ -9,10 +9,12 @@ module AutoDoc
     # Import extraction is NOT included here — it is orchestrator-only and
     # handled separately by the caller.
     class AnalysisPipeline
-      # Analyzes a list of Ruby files and returns structured analysis data.
+      # Analyzes a list of files and returns structured analysis data.
+      # Uses SourceParser for Ruby files and falls back to GenericScanner
+      # for non-Ruby files.
       #
       # @param file_list [Array<String>] Absolute file paths to analyze
-      # @return [Hash<String, Hash>] Analysis data: { file_path => { definitions:, docs: } }
+      # @return [Hash<String, Hash>] Analysis data: { file_path => { definitions:, docs:, scanner: } }
       def self.run(file_list)
         analyses = {}
 
@@ -20,23 +22,33 @@ module AutoDoc
           next unless File.exist?(file_path)
 
           definitions = AutoDoc::Analyzer::SourceParser.parse_file(file_path)
-          docs        = AutoDoc::Analyzer::YardReader.extract(file_path)
+          scanner = :ripper
+
+          if definitions.empty?
+            definitions = AutoDoc::Analyzer::GenericScanner.parse_file(file_path)
+            scanner = :generic unless definitions.empty?
+          end
+
+          docs = AutoDoc::Analyzer::YardReader.extract(file_path)
 
           # Build lookup index: key = :"class_Foo" / :"module_Bar" / :"method_baz"
-          doc_index = docs.each_with_object({}) do |d, h|
-            key_name = d[:target_name].to_s.gsub("::", "_")
-            h[:"#{d[:target_type]}_#{key_name}"] = d
+          # Only merge docs when there are actual doc records
+          unless docs.empty?
+            doc_index = docs.each_with_object({}) do |d, h|
+              key_name = d[:target_name].to_s.gsub("::", "_")
+              h[:"#{d[:target_type]}_#{key_name}"] = d
+            end
+
+            # Merge documentation presence into each definition.
+            definitions.each do |defn|
+              def_name = defn[:name].to_s.gsub("::", "_")
+              key      = :"#{defn[:type]}_#{def_name}"
+              doc_rec  = doc_index[key]
+              defn[:has_doc?] = doc_rec && doc_rec[:has_summary?] == true
+            end
           end
 
-          # Merge documentation presence into each definition.
-          definitions.each do |defn|
-            def_name = defn[:name].to_s.gsub("::", "_")
-            key      = :"#{defn[:type]}_#{def_name}"
-            doc_rec  = doc_index[key]
-            defn[:has_doc?] = doc_rec && doc_rec[:has_summary?] == true
-          end
-
-          analyses[file_path] = { definitions: definitions, docs: docs }
+          analyses[file_path] = { definitions: definitions, docs: docs, scanner: scanner }
         end
 
         analyses

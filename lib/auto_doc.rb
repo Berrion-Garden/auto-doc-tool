@@ -28,6 +28,7 @@ module AutoDoc
   require_relative "auto_doc/analyzer/analysis_pipeline"
   require_relative "auto_doc/analyzer/diff_service"
   require_relative "auto_doc/analyzer/orphans_service"
+  require_relative "auto_doc/analyzer/generic_scanner"
 
   # Load LLM services
   require_relative "auto_doc/llm"

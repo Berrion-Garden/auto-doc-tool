@@ -122,24 +122,34 @@ module AutoDoc
       run_analysis_pipeline(base_dir, excludes, file_list)
     end
 
-    # Runs the full analysis pipeline: file globbing → Ripper → YARD → import extraction.
+    # Runs the full analysis pipeline: file globbing → SourceParser/GenericScanner → YARD → import extraction.
     def run_analysis_pipeline(base_dir, excludes, file_list)
-      ruby_files = if file_list
-                     file_list.reject do |f|
-                       relative = f.sub("#{base_dir}/", "")
-                       excludes.any? { |pat| File.fnmatch?(pat, relative, File::FNM_PATHNAME) }
-                     end
-                   else
-                     Dir.glob(File.join(base_dir, "**", "*.rb")).reject do |f|
-                       relative = f.sub("#{base_dir}/", "")
-                       excludes.any? { |pat| File.fnmatch?(pat, relative, File::FNM_PATHNAME) }
-                     end
-                   end
+      extensions = AutoDoc::Analyzer::GenericScanner::SUPPORTED_EXTENSIONS.keys.map { |e| e.delete_prefix(".") }
+      glob_pattern = "**/*.{#{extensions.join(",")}}"
 
-      analyses = AutoDoc::Analyzer::AnalysisPipeline.run(ruby_files)
+      source_files = if file_list
+                       file_list.reject do |f|
+                         relative = f.sub("#{base_dir}/", "")
+                         excludes.any? { |pat| File.fnmatch?(pat, relative, File::FNM_PATHNAME) }
+                       end
+                     else
+                       Dir.glob(File.join(base_dir, glob_pattern)).reject do |f|
+                         relative = f.sub("#{base_dir}/", "")
+                         excludes.any? { |pat| File.fnmatch?(pat, relative, File::FNM_PATHNAME) }
+                       end
+                     end
 
-      # Add import data (orchestrator-only — DiffService does not need it)
+      analyses = AutoDoc::Analyzer::AnalysisPipeline.run(source_files)
+
+      # Add language detection and import data
       analyses.each_key do |file_path|
+        # Detect language
+        if File.exist?(file_path)
+          first_lines = File.read(file_path, 1024, encoding: "UTF-8")
+          analyses[file_path][:language] = AutoDoc::Analyzer::GenericScanner.detect_language(file_path, first_lines)
+        end
+
+        # Add import data (orchestrator-only — DiffService does not need it)
         imports = AutoDoc::Analyzer::ImportExtractor.extract(file_path)
         analyses[file_path][:imports] = imports
       end

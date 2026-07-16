@@ -88,5 +88,23 @@ RSpec.describe AutoDoc::Analyzer::AnalysisPipeline do
         expect(result[md_file][:definitions]).to eq([])
       end
     end
+
+    it "uses GenericScanner as fallback for non-Ruby files" do
+      py_file = fixture_path("sample_python_project", "app.py")
+      result = described_class.run([py_file])
+
+      expect(result).to have_key(py_file)
+      expect(result[py_file][:definitions]).not_to be_empty
+      expect(result[py_file][:scanner]).to eq(:generic)
+    end
+
+    it "uses Ripper for Ruby files and adds scanner :ripper key" do
+      rb_file = fixture_path("sample_ruby_project", "app", "models", "user.rb")
+      result = described_class.run([rb_file])
+
+      expect(result).to have_key(rb_file)
+      expect(result[rb_file][:definitions]).not_to be_empty
+      expect(result[rb_file][:scanner]).to eq(:ripper)
+    end
   end
 end
