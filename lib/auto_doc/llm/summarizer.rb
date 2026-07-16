@@ -39,12 +39,50 @@ module AutoDoc
           client.chat([{ role: "user", content: prompt }])
         end
 
+        # Returns a multi-paragraph architecture overview covering purpose, style,
+        # modules, and data flow. The prompt asks for markdown sections but does
+        # NOT include source code.
+        #
+        # @param project_name [String]  The project name
+        # @param analyses     [Hash]    Analysis data
+        # @param client       [Client]  An LLM Client instance
+        # @return [String, nil]         Summary text or nil on failure
+        def summarize_architecture_full(project_name, analyses, client)
+          prompt = build_architecture_full_prompt(project_name, analyses)
+          client.chat([{ role: "user", content: prompt }])
+        end
+
+        # Returns a structured list of external systems the project interacts with
+        # (name + interaction description). The prompt asks for JSON or bullet list format.
+        #
+        # @param project_name [String]  The project name
+        # @param analyses     [Hash]    Analysis data
+        # @param client       [Client]  An LLM Client instance
+        # @return [String, nil]         Summary text or nil on failure
+        def summarize_system_context(project_name, analyses, client)
+          prompt = build_system_context_prompt(project_name, analyses)
+          client.chat([{ role: "user", content: prompt }])
+        end
+
+        # Returns container/module descriptions keyed by module root name.
+        # Filters analyses to only include files within the given module roots,
+        # then includes metadata grouped by root.
+        #
+        # @param analyses     [Hash]    Analysis data
+        # @param module_roots [Array<String>] Module root directory names
+        # @param client       [Client]  An LLM Client instance
+        # @return [String, nil]         Summary text or nil on failure
+        def summarize_containers(analyses, module_roots, client)
+          prompt = build_containers_prompt(analyses, module_roots)
+          client.chat([{ role: "user", content: prompt }])
+        end
+
         private
 
         # rubocop:disable Metrics/MethodLength
         def build_module_prompt(dir_name, analyses)
           lines = []
-          lines << "You are a software documentation expert analyzing a Ruby project."
+          lines << "You are a software documentation expert analyzing a software project."
           lines << ""
           lines << "Below is the metadata for the \"#{dir_name}\" module. "
           lines << "Provide a concise summary of what this module does, its purpose, and its key components."
