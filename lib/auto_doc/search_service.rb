@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require "json"
-require_relative "utils/markdown_helper"
 
 module AutoDoc
   # Multi-strategy ranked search engine for .docs/ documentation artifacts.

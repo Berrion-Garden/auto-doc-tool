@@ -13,7 +13,7 @@ module AutoDoc
         analyses     = context[:analyses]
 
         # Collect LLM symbol summaries if LLM is available
-        llm_summaries = collect_symbol_summaries(analyses, module_roots, config)
+        llm_summaries = collect_symbol_summaries(analyses)
 
         # Per-directory INDEX.md, SUMMARY.md, vectors.json
         module_roots.each do |root|
@@ -40,29 +40,6 @@ module AutoDoc
       end
 
       private
-
-      # Collects pre-enriched symbol summaries from analyses[:docs].
-      # By the time this step runs, the Enricher has already called
-      # Summarizer.summarize_symbols and stored results in each analysis[:docs].
-      # This avoids a second round of LLM calls.
-      #
-      # @param analyses [Hash] Analysis data with docs arrays populated by Enricher
-      # @param _module_roots [Array<String>] Unused; retained for signature compatibility
-      # @param _config [Object] Unused; retained for signature compatibility
-      # @return [Hash, nil] Map of entry_id => summary_text, or nil if empty
-      def collect_symbol_summaries(analyses, _module_roots = nil, _config = nil)
-        llm_summaries = {}
-
-        analyses.each_value do |analysis|
-          (analysis[:docs] || []).each do |doc|
-            next unless doc.is_a?(Hash)
-            entry_id = "#{doc[:target_type]}_#{doc[:target_name].to_s.gsub('::', '_')}"
-            llm_summaries[entry_id] = doc[:summary]
-          end
-        end
-
-        llm_summaries.empty? ? nil : llm_summaries
-      end
 
       def walk_subdirectories(context, root, analyses, target_dir, output_dir, config, llm_summaries: nil)
         dirs_to_process = [root]
