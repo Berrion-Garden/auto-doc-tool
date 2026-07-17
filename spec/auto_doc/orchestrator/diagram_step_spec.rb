@@ -204,6 +204,44 @@ RSpec.describe AutoDoc::Orchestrator::DiagramStep do
       end
     end
 
+    context "when LLM is configured but summarize_containers returns nil" do
+      before do
+        allow(config).to receive(:llm_primary?).and_return(true)
+      end
+
+      it "falls back to hardcoded module descriptions" do
+        allow(AutoDoc::LLM::Summarizer).to receive(:summarize_containers).and_return(nil)
+        mock_llm_client({
+          "List the external systems, services, or libraries" => '[{"name": "Database", "interaction": "Stores data"}]'
+        })
+
+        step.run(context)
+
+        c4_content = File.read(File.join(diagrams_dir, "c4_container.mmd"))
+        expect(c4_content).to include("lib module")
+        expect(c4_content).to include("app module")
+      end
+    end
+
+    context "when summarize_containers raises an error" do
+      before do
+        allow(config).to receive(:llm_primary?).and_return(true)
+      end
+
+      it "falls back to hardcoded module descriptions without crashing" do
+        allow(AutoDoc::LLM::Summarizer).to receive(:summarize_containers).and_raise(StandardError.new("parse error"))
+        mock_llm_client({
+          "List the external systems, services, or libraries" => '[{"name": "Database", "interaction": "Stores data"}]'
+        })
+
+        expect { step.run(context) }.not_to raise_error
+
+        c4_content = File.read(File.join(diagrams_dir, "c4_container.mmd"))
+        expect(c4_content).to include("lib module")
+        expect(c4_content).to include("app module")
+      end
+    end
+
     context "with Rails project (db/schema.rb exists)" do
       before do
         allow(File).to receive(:exist?).and_call_original

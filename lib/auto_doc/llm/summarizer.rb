@@ -120,6 +120,9 @@ module AutoDoc
           return nil if response.nil?
 
           ResponseParser.parse_containers(response)
+        rescue StandardError => e
+          $stderr.puts "[Summarizer] Error parsing container descriptions: #{e.message}"
+          nil
         end
       end
     end

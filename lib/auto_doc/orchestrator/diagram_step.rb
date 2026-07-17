@@ -91,18 +91,27 @@ module AutoDoc
 
         # C4 container diagram (always)
         c4_container_path = File.join(diagrams_dir, "c4_container.mmd")
-        module_info = nil
+        llm_containers = nil
         if client
-          llm_containers = AutoDoc::LLM::Summarizer.summarize_containers(analyses, module_roots, client)
-          if llm_containers.is_a?(Hash)
-            module_info = module_roots.map do |root|
-              name = File.basename(root)
-              { name: name, description: llm_containers[name] || "#{name} module" }
-            end
+          begin
+            llm_containers = AutoDoc::LLM::Summarizer.summarize_containers(analyses, module_roots, client)
+          rescue StandardError => e
+            $stderr.puts "[DiagramStep] Error from LLM container summarizer: #{e.message}"
           end
         end
-        module_info ||= module_roots.map do |root|
-          { name: File.basename(root), description: "#{File.basename(root)} module" }
+        module_info = nil
+        if llm_containers.is_a?(Hash)
+          $stderr.puts "[DiagramStep] Using LLM-generated container descriptions"
+          module_info = module_roots.map do |root|
+            name = File.basename(root)
+            { name: name, description: llm_containers[name] || "#{name} module" }
+          end
+        end
+        if module_info.nil?
+          $stderr.puts "[DiagramStep] Falling back to hardcoded container descriptions"
+          module_info = module_roots.map do |root|
+            { name: File.basename(root), description: "#{File.basename(root)} module" }
+          end
         end
         container_data_flows = AutoDoc::Transformer::ContainerDataFlowBuilder.build(analyses, module_roots)
         context[:container_data_flows] = container_data_flows
