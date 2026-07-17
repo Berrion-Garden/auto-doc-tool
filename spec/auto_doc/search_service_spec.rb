@@ -679,4 +679,156 @@ RSpec.describe AutoDoc::SearchService do
       end
     end
   end
+
+  # ── .autodoc/ fallback ──────────────────────────────────────────────
+
+  describe ".autodoc/ fallback" do
+    it "searches .autodoc/ directory when .docs/ does not exist and returns correct file paths" do
+      dir = Dir.mktmpdir("search_autodoc_spec")
+      begin
+        # Create ONLY .autodoc/ directory (no .docs/)
+        FileUtils.mkdir_p(File.join(dir, ".autodoc"))
+
+        # Create vectors.json in .autodoc/
+        vectors = {
+          "symbols" => [
+            { "symbol" => "TestSymbol", "keywords" => %w[test symbol] }
+          ]
+        }
+        File.write(File.join(dir, ".autodoc", "vectors.json"), JSON.pretty_generate(vectors))
+
+        result = service.search(dir, "test symbol")
+
+        expect(result[:total]).to be >= 1
+        match = result[:results].find { |r| r[:match_type] == "vector_keyword_low" }
+        expect(match).not_to be_nil
+        # File path should use .autodoc/ not .docs/
+        expect(match[:file]).to start_with(".autodoc/")
+      ensure
+        FileUtils.remove_entry(dir) if Dir.exist?(dir)
+      end
+    end
+
+    it "prefers .docs/ when both .docs/ and .autodoc/ exist" do
+      dir = Dir.mktmpdir("search_autodoc_spec")
+      begin
+        # Create BOTH directories
+        FileUtils.mkdir_p(File.join(dir, ".docs"))
+        FileUtils.mkdir_p(File.join(dir, ".autodoc"))
+
+        # Create vectors.json in .autodoc/
+        vectors_autodoc = {
+          "symbols" => [
+            { "symbol" => "AutodocSymbol", "keywords" => %w[autodoc] }
+          ]
+        }
+        File.write(File.join(dir, ".autodoc", "vectors.json"), JSON.pretty_generate(vectors_autodoc))
+
+        # Create vectors.json in .docs/
+        vectors_docs = {
+          "symbols" => [
+            { "symbol" => "DocsSymbol", "keywords" => %w[docs] }
+          ]
+        }
+        File.write(File.join(dir, ".docs", "vectors.json"), JSON.pretty_generate(vectors_docs))
+
+        result = service.search(dir, "docs")
+
+        # Should only find docs results
+        expect(result[:results]).not_to be_empty
+        result[:results].each do |r|
+          expect(r[:file]).to start_with(".docs/")
+        end
+      ensure
+        FileUtils.remove_entry(dir) if Dir.exist?(dir)
+      end
+    end
+  end
+
+  # ── Keyword splitting for CamelCase matching ─────────────────────────
+
+  describe "keyword splitting for CamelCase matching" do
+    it "searching 'extensions' matches keyword 'ExtensionsController'" do
+      with_project_dir do |dir|
+        vectors = {
+          "symbols" => [
+            { "symbol" => "ExtensionsController", "keywords" => %w[ExtensionsController] }
+          ]
+        }
+        File.write(File.join(dir, ".docs", "vectors.json"), JSON.pretty_generate(vectors))
+
+        result = service.search(dir, "extensions")
+
+        match = result[:results].find { |r| r[:match_type] == "vector_keyword_low" }
+        expect(match).not_to be_nil
+        expect(match[:score]).to eq(40)
+        expect(match[:context]).to eq("ExtensionsController")
+      end
+    end
+
+    it "searching 'controller' matches keyword 'ExtensionsController'" do
+      with_project_dir do |dir|
+        vectors = {
+          "symbols" => [
+            { "symbol" => "ExtensionsController", "keywords" => %w[ExtensionsController] }
+          ]
+        }
+        File.write(File.join(dir, ".docs", "vectors.json"), JSON.pretty_generate(vectors))
+
+        result = service.search(dir, "controller")
+
+        match = result[:results].find { |r| r[:match_type] == "vector_keyword_low" }
+        expect(match).not_to be_nil
+      end
+    end
+
+    it "no regression: searching 'ExtensionsController' still matches keyword 'ExtensionsController'" do
+      with_project_dir do |dir|
+        vectors = {
+          "symbols" => [
+            { "symbol" => "ExtensionsController", "keywords" => %w[ExtensionsController] }
+          ]
+        }
+        File.write(File.join(dir, ".docs", "vectors.json"), JSON.pretty_generate(vectors))
+
+        result = service.search(dir, "ExtensionsController")
+
+        match = result[:results].find { |r| r[:match_type] == "vector_keyword_low" }
+        expect(match).not_to be_nil
+      end
+    end
+
+    it "no regression: existing keyword splitting tests still work" do
+      with_project_dir do |dir|
+        vectors = {
+          "symbols" => [
+            { "symbol" => "PiManager", "keywords" => %w[pi manager] }
+          ]
+        }
+        File.write(File.join(dir, ".docs", "vectors.json"), JSON.pretty_generate(vectors))
+
+        result = service.search(dir, "pi_manager")
+
+        match = result[:results].find { |r| r[:match_type] == "vector_keyword_low" }
+        expect(match).not_to be_nil
+      end
+    end
+
+    it "searching single word matches compound keyword like 'HTTPHandler'" do
+      with_project_dir do |dir|
+        vectors = {
+          "symbols" => [
+            { "symbol" => "HTTPHandler", "keywords" => %w[HTTPHandler] }
+          ]
+        }
+        File.write(File.join(dir, ".docs", "vectors.json"), JSON.pretty_generate(vectors))
+
+        # Searching "http" should match the split "http" from "HTTPHandler"
+        result = service.search(dir, "http")
+
+        match = result[:results].find { |r| r[:match_type] == "vector_keyword_low" }
+        expect(match).not_to be_nil
+      end
+    end
+  end
 end

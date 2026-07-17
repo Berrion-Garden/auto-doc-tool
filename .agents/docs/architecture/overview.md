@@ -74,7 +74,12 @@ auto-doc/
 │   │   ├── output_formatter.rb
 │   │   └── markdown_helper.rb
 │   └── transformer/              # Markdown transformation steps
-├── spec/                         # RSpec test suite (811 examples)
+│       ├── files_data_builder.rb
+│       ├── class_hierarchy_builder.rb
+│       ├── container_data_flow_builder.rb
+│       ├── erd_relationship_builder.rb
+│       └── graph_data_builder.rb
+├── spec/                         # RSpec test suite (832 examples)
 │   ├── spec_helper.rb
 │   ├── support/llm_mock_helper.rb
 │   ├── auto_doc/
@@ -128,3 +133,7 @@ The project plan specified 5 milestones (Enricher creation, Orchestrator wiring,
 - **Orchestrator always calls Enricher**: The plan suggested guarding Enricher calls in the orchestrator with `@config.respond_to?(:llm_primary?) && @config.llm_primary?`. The actual implementation always calls `Enricher.enrich_analyses` unconditionally — the guard is deferred inside `Enricher.enrich_analyses` itself (line 19: `return analyses unless config.llm_primary?`). This simplifies the orchestrator and keeps the LLM gate localized.
 
 - **`grep_md_file` removal from SearchService**: The remediation removed dead code `grep_md_file` from `search_service.rb` (31 lines). This was not in the original plan but was required to pass review.
+
+- **`collect_symbol_summaries` extracted to `BaseStep`**: The plan described `agents_md_step.rb` as collecting LLM summaries "similar to `collect_symbol_summaries` in `index_summary_vectors_step`", implying a duplicated implementation. Instead, the M3-R remediation extracted `collect_symbol_summaries` into `BaseStep` as a shared protected method, making both `AgentsMdStep` and `IndexSummaryVectorsStep` inherit it. This is DRY and ensures consistent behavior across all steps.
+
+- **LLM summaries flow via `FilesDataBuilder`**: The plan described accepting `llm_summaries` as a separate parameter in `AgentsMdGenerator.build_public_symbols`. The actual implementation passes `llm_summaries` through `FilesDataBuilder.build(analyses, llm_summaries)`, which injects `:llm_summary` into each definition hash. This keeps the data transformation centralized in the transformer submodule rather than scattered across generators.

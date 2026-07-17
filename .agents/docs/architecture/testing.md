@@ -3,9 +3,11 @@
 ## Test Suite Overview
 
 - **Framework:** RSpec
-- **Example count:** 811
+- **Example count:** 832
 - **Failures:** 0
 - **Persistence:** `spec/examples.txt` for example status tracking
+
+The test count increased from 811 (pre-milestone) to 832 (post-milestone 3-R remediation). All milestones completed without retry — the final count reflects all added test files for schema_parser, response_parser, prompt_builder, enricher, summarizer, base_step, and transformer builders.
 
 ## Test Organization
 
@@ -23,20 +25,64 @@ spec/
 │   ├── search_service_spec.rb
 │   ├── server_spec.rb
 │   ├── llm/
-│   │   ├── enricher_spec.rb                # Enricher unit tests (new)
-│   │   └── ...
+│   │   ├── client_spec.rb
+│   │   ├── enricher_spec.rb                # Enricher unit tests (new in Milestone 2)
+│   │   ├── prompt_builder_spec.rb           # PromptBuilder tests (new in Milestone 2)
+│   │   ├── response_parser_spec.rb          # ResponseParser tests (new in Milestone 2)
+│   │   ├── summarizer_spec.rb               # Summarizer tests (new in Milestone 2)
+│   │   ├── integration_spec.rb              # LLM integration tests
+│   │   └── llm_spec.rb
 │   ├── generator/
 │   │   ├── vector_generator_spec.rb        # VectorGenerator tests
-│   │   └── ...
+│   │   ├── agents_md_generator_spec.rb     # AgentsMdGenerator tests
+│   │   ├── agents_overview_generator_spec.rb
+│   │   ├── architecture_generator_spec.rb
+│   │   ├── c4_diagram_generator_spec.rb
+│   │   ├── class_diagram_generator_spec.rb
+│   │   ├── diagram_generator_spec.rb
+│   │   ├── erd_generator_spec.rb
+│   │   ├── index_generator_spec.rb
+│   │   ├── map_generator_spec.rb
+│   │   ├── readme_generator_spec.rb
+│   │   ├── summary_generator_spec.rb
+│   │   └── template_helper_spec.rb
 │   ├── orchestrator/
-│   │   ├── index_summary_vectors_step_spec.rb
-│   │   └── ...
+│   │   ├── orchestrator_spec.rb
+│   │   ├── pipeline_spec.rb
+│   │   ├── base_step_spec.rb                # BaseStep collect_symbol_summaries (new in M3-R)
+│   │   ├── agents_md_step_spec.rb           # AgentsMdStep tests (new in Milestone 3)
+│   │   ├── diagram_step_spec.rb
+│   │   ├── metrics_helper_spec.rb
+│   │   └── index_summary_vectors_step_spec.rb
 │   ├── reporter/
-│   │   └── ...
+│   │   ├── audit_reporter_spec.rb
+│   │   └── completeness_checker_spec.rb
+│   ├── transformer/
+│   │   ├── graph_data_builder_spec.rb       # New in Milestone 3
+│   │   ├── files_data_builder_spec.rb       # New in Milestone 3
+│   │   ├── class_hierarchy_builder_spec.rb
+│   │   ├── container_data_flow_builder_spec.rb
+│   │   └── erd_relationship_builder_spec.rb
+│   ├── analyzer/
+│   │   ├── schema_parser_spec.rb            # New in Milestone 1
+│   │   ├── model_association_parser_spec.rb
+│   │   ├── analysis_pipeline_spec.rb
+│   │   ├── analysis_cache_spec.rb
+│   │   ├── source_parser_spec.rb
+│   │   ├── yard_reader_spec.rb
+│   │   ├── import_extractor_spec.rb
+│   │   ├── generic_scanner_spec.rb
+│   │   ├── diff_service_spec.rb
+│   │   └── orphans_service_spec.rb
 │   └── utils/
-│       └── ...
-├── e2e/                                    # End-to-end integration tests
-└── scripts/                                # Test utility scripts
+│       ├── yaml_config_loader_spec.rb
+│       ├── file_tree_builder_spec.rb
+│       ├── timestamp_tracker_spec.rb
+│       ├── output_formatter_spec.rb
+│       └── markdown_helper_spec.rb
+├── e2e/
+│   └── self_test_spec.rb                    # E2E tests using E2ERunner
+└── scripts/                                 # Test utility scripts
 ```
 
 ## Test Configuration (`spec_helper.rb`)

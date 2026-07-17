@@ -11,6 +11,7 @@ module AutoDoc
   #   results = AutoDoc::SearchService.search("/path/to/project", "processor", options: { source: true, limit: 10 })
   class SearchService
     # Performs a multi-strategy ranked search across .docs/ documentation artifacts.
+    # Falls back to .autodoc/ if .docs/ does not exist.
     #
     # @param project_dir [String] Path to the project root directory
     # @param term [String] The search term
@@ -20,17 +21,25 @@ module AutoDoc
     # @return [Hash] Search results with query, results array, and total
     def self.search(project_dir, term, options: {})
       docs_dir = File.join(project_dir, ".docs")
+      if Dir.exist?(docs_dir)
+        docs_dir_name = ".docs"
+      elsif Dir.exist?(File.join(project_dir, ".autodoc"))
+        docs_dir = File.join(project_dir, ".autodoc")
+        docs_dir_name = ".autodoc"
+      else
+        docs_dir = nil
+      end
 
       limit = options.fetch(:limit, 20)
       results = []
 
-      # Walk .docs/ directory using DocumentationIndex (only if it exists)
-      if Dir.exist?(docs_dir)
+      # Walk docs directory using DocumentationIndex (only if it exists)
+      if docs_dir && Dir.exist?(docs_dir)
         doc_index = DocumentationIndex.new(docs_dir)
-        results.concat(search_index_md(doc_index, term))
-        results.concat(search_vectors_json(doc_index, term))
-        results.concat(search_summary_md(doc_index, term))
-        results.concat(search_agents_md(doc_index, term))
+        results.concat(search_index_md(doc_index, term, docs_dir_name: docs_dir_name))
+        results.concat(search_vectors_json(doc_index, term, docs_dir_name: docs_dir_name))
+        results.concat(search_summary_md(doc_index, term, docs_dir_name: docs_dir_name))
+        results.concat(search_agents_md(doc_index, term, docs_dir_name: docs_dir_name))
       end
 
       # Source grep (only when source: true)
@@ -53,8 +62,9 @@ module AutoDoc
     # Searches INDEX.md symbols/dependencies via DocumentationIndex.
     # @param doc_index [DocumentationIndex] The unified data-access layer
     # @param term [String] Search term
+    # @param docs_dir_name [String] The resolved docs directory name (e.g. ".docs" or ".autodoc")
     # @return [Array<Hash>] Result entries
-    def self.search_index_md(doc_index, term)
+    def self.search_index_md(doc_index, term, docs_dir_name: ".docs")
       results = []
       term_down = term.downcase
 
@@ -62,7 +72,7 @@ module AutoDoc
       doc_index.symbols.each do |sym|
         if sym[:symbol].downcase == term_down
           results << {
-            file: File.join(".docs", sym[:source_file]),
+            file: File.join(docs_dir_name, sym[:source_file]),
             score: 100,
             match_type: "symbol_exact",
             line: 0,
@@ -75,7 +85,7 @@ module AutoDoc
       doc_index.dependencies.each do |dep|
         if dep[:from].downcase.include?(term_down) || dep[:to].downcase.include?(term_down)
           results << {
-            file: File.join(".docs", dep[:source_file]),
+            file: File.join(docs_dir_name, dep[:source_file]),
             score: 80,
             match_type: "dependency_match",
             line: 0,
@@ -90,8 +100,9 @@ module AutoDoc
     # Searches vectors.json via DocumentationIndex for keyword overlap matches.
     # @param doc_index [DocumentationIndex] The unified data-access layer
     # @param term [String] Search term
+    # @param docs_dir_name [String] The resolved docs directory name (e.g. ".docs" or ".autodoc")
     # @return [Array<Hash>] Result entries
-    def self.search_vectors_json(doc_index, term)
+    def self.search_vectors_json(doc_index, term, docs_dir_name: ".docs")
       results = []
       data = doc_index.vectors
       symbols = data["symbols"]
@@ -103,8 +114,10 @@ module AutoDoc
         keywords = entry["keywords"]
         next unless keywords.is_a?(Array)
 
-        keyword_words = keywords.map(&:downcase)
-        overlap = search_words.count { |w| keyword_words.include?(w) }
+        all_keyword_parts = keywords.flat_map do |kw|
+          kw.split(/\s+|_|(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])/).reject(&:empty?).map(&:downcase)
+        end
+        overlap = search_words.count { |w| all_keyword_parts.include?(w) }
 
         next if overlap < 1
 
@@ -112,7 +125,7 @@ module AutoDoc
         match_type = overlap >= 3 ? "vector_keyword_high" : "vector_keyword_low"
 
         results << {
-          file: ".docs/vectors.json",
+          file: "#{docs_dir_name}/vectors.json",
           score: score,
           match_type: match_type,
           line: 0,
@@ -127,7 +140,7 @@ module AutoDoc
             summary_down = summary.downcase
             if search_words.any? { |w| summary_down.include?(w) }
               results << {
-                file: ".docs/vectors.json",
+                file: "#{docs_dir_name}/vectors.json",
                 score: 15,
                 match_type: "vector_summary_match",
                 line: 0,
@@ -144,7 +157,7 @@ module AutoDoc
             llm_summary_down = llm_summary.downcase
             if search_words.any? { |w| llm_summary_down.include?(w) }
               results << {
-                file: ".docs/vectors.json",
+                file: "#{docs_dir_name}/vectors.json",
                 score: 25,
                 match_type: "vector_llm_summary_match",
                 line: 0,
@@ -156,34 +169,37 @@ module AutoDoc
 
        # Fourth pass: extract keywords from llm_summary and add to keyword search
        symbols.each do |entry|
-         llm_summary = entry["llm_summary"]
-         next unless llm_summary.is_a?(String) && !llm_summary.empty?
+          llm_summary = entry["llm_summary"]
+          next unless llm_summary.is_a?(String) && !llm_summary.empty?
 
-         llm_keywords = llm_summary.split(/\s+/).reject(&:empty?).map(&:downcase)
-         keywords = entry["keywords"]
-         next unless keywords.is_a?(Array)
+          llm_keywords = llm_summary.split(/\s+/).reject(&:empty?).map(&:downcase)
+          keywords = entry["keywords"]
+          next unless keywords.is_a?(Array)
 
-         # Merge llm keywords into the keyword pool
-         keyword_words = keywords.map(&:downcase) | llm_keywords
-         overlap = search_words.count { |w| keyword_words.include?(w) }
+          # Merge llm keywords into the keyword pool (with keyword splitting)
+          split_keywords = keywords.flat_map do |kw|
+            kw.split(/\s+|_|(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])/).reject(&:empty?).map(&:downcase)
+          end
+          keyword_words = split_keywords | llm_keywords
+          overlap = search_words.count { |w| keyword_words.include?(w) }
 
-         next if overlap < 1
+          next if overlap < 1
 
-         # Only emit if llm_summary keywords increased overlap
-         original_overlap = search_words.count { |w| keywords.map(&:downcase).include?(w) }
-         next unless overlap > original_overlap
+          # Only emit if llm_summary keywords increased overlap
+          original_overlap = search_words.count { |w| split_keywords.include?(w) }
+          next unless overlap > original_overlap
 
-         score = overlap >= 3 ? 60 : 40
-         match_type = overlap >= 3 ? "vector_llm_keyword_high" : "vector_llm_keyword_low"
+          score = overlap >= 3 ? 60 : 40
+          match_type = overlap >= 3 ? "vector_llm_keyword_high" : "vector_llm_keyword_low"
 
-         results << {
-           file: ".docs/vectors.json",
-           score: score,
-           match_type: match_type,
-           line: 0,
-           context: entry["symbol"].to_s
-         }
-       end
+          results << {
+            file: "#{docs_dir_name}/vectors.json",
+            score: score,
+            match_type: match_type,
+            line: 0,
+            context: entry["symbol"].to_s
+          }
+        end
 
       results
     end
@@ -191,8 +207,9 @@ module AutoDoc
     # Searches SUMMARY.md files via DocumentationIndex for full-text matches.
     # @param doc_index [DocumentationIndex] The unified data-access layer
     # @param term [String] Search term
+    # @param docs_dir_name [String] The resolved docs directory name (e.g. ".docs" or ".autodoc")
     # @return [Array<Hash>] Result entries
-    def self.search_summary_md(doc_index, term)
+    def self.search_summary_md(doc_index, term, docs_dir_name: ".docs")
       results = []
       term_down = term.downcase
 
@@ -204,7 +221,7 @@ module AutoDoc
           next unless line.downcase.include?(term_down)
 
           results << {
-            file: File.join(".docs", rel_path),
+            file: File.join(docs_dir_name, rel_path),
             score: 20,
             match_type: "summary_text",
             line: idx + 1,
@@ -219,8 +236,9 @@ module AutoDoc
     # Searches AGENTS.md files via DocumentationIndex for full-text matches.
     # @param doc_index [DocumentationIndex] The unified data-access layer
     # @param term [String] Search term
+    # @param docs_dir_name [String] The resolved docs directory name (e.g. ".docs" or ".autodoc")
     # @return [Array<Hash>] Result entries
-    def self.search_agents_md(doc_index, term)
+    def self.search_agents_md(doc_index, term, docs_dir_name: ".docs")
       results = []
       term_down = term.downcase
 
@@ -232,7 +250,7 @@ module AutoDoc
           next unless line.downcase.include?(term_down)
 
           results << {
-            file: File.join(".docs", rel_path),
+            file: File.join(docs_dir_name, rel_path),
             score: 20,
             match_type: "summary_text",
             line: idx + 1,

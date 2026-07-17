@@ -59,7 +59,10 @@ Returns a stats hash with project name, output dir, module roots, counts, covera
 
 ### `base_step.rb` — Step Base Class
 
-Abstract base class for pipeline steps. Provides common utilities like `say` formatting.
+Abstract base class for pipeline steps. Provides common utilities:
+
+- `say(context, msg, color)` — Formatting output through context callback
+- `collect_symbol_summaries(analyses)` — **Shared method extracted during M3-R remediation**. Collects LLM-generated symbol summaries from `analyses[:docs]` arrays (populated by Enricher) and returns `{entry_id => summary_text}` hash. Used by both `AgentsMdStep` and `IndexSummaryVectorsStep`.
 
 ### `index_summary_vectors_step.rb` — INDEX/SUMMARY/VECTORS Generation
 
