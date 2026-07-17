@@ -400,3 +400,4 @@ When filing issues for bob, use this standardized format:
 |------|--------|---------|
 | 2026-07-16 | pi-kyle | Initial playbook — pi-manager Rails verification |
 | 2026-07-16 | pi-kyle | Added search path resolution, C4 content static, duplicate summary issues |
+| 2026-07-17 | pi-kyle | Added manual test results section after Milestone 1+2 verification |
