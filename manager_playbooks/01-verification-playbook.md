@@ -382,10 +382,15 @@ When filing issues for bob, use this standardized format:
 | Diagram | C4 diagram empty | Medium | Header only, no content |
 | Diagram | Dep graph has no edges | Medium | `graph TB A[A]` only |
 | CLI | Search misses vector matches | Medium | No `keyword_match` score in results |
+| CLI | Search path resolution wrong | Major | search_service.rb hardcodes `.docs/`, ignores `.autodoc/` |
 | CLI | Command crashes | Critical | Non-zero exit code |
 | Performance | Generation timeout | Medium | Takes >10 min |
-| Schema | schema.json empty | Major | 2-byte file (empty JSON) |
+| Schema | schema.json empty | Major | 2-byte file (empty JSON) — verify project actually has tables |
 | Vector | No LLM summaries | Major | All summaries empty/missing |
+| Vector | Duplicate summaries | Medium | `len(set(summaries)) < len(summaries)` — LLM prompt needs stronger uniqueness constraint |
+| Diagram | C4 content static | Medium | C4 diagrams show static module names, not LLM-generated descriptions |
+| Diagram | Arc diagram missing for non-Rails | Low | No non-Rails architecture relationship diagram generated |
+| AGENTS | "No documentation available." | Medium | Symbol table shows fallback text even when LLM summary exists |
 
 ---
 
@@ -394,3 +399,4 @@ When filing issues for bob, use this standardized format:
 | Date | Author | Changes |
 |------|--------|---------|
 | 2026-07-16 | pi-kyle | Initial playbook — pi-manager Rails verification |
+| 2026-07-16 | pi-kyle | Added search path resolution, C4 content static, duplicate summary issues |
